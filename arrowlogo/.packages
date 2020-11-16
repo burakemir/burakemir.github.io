@@ -1,4 +1,3 @@
-arrowlogo:packages/arrowlogo/
 analyzer:packages/analyzer/
 angular:packages/angular/
 angular_ast:packages/angular_ast/
@@ -6,11 +5,13 @@ angular_compiler:packages/angular_compiler/
 angular_test:packages/angular_test/
 archive:packages/archive/
 args:packages/args/
+arrowlogo:packages/arrowlogo/
 async:packages/async/
 bazel_worker:packages/bazel_worker/
 boolean_selector:packages/boolean_selector/
 build:packages/build/
 build_config:packages/build_config/
+build_daemon:packages/build_daemon/
 build_modules:packages/build_modules/
 build_resolvers:packages/build_resolvers/
 build_runner:packages/build_runner/
@@ -20,6 +21,7 @@ build_web_compilers:packages/build_web_compilers/
 built_collection:packages/built_collection/
 built_value:packages/built_value/
 charcode:packages/charcode/
+checked_yaml:packages/checked_yaml/
 code_builder:packages/code_builder/
 collection:packages/collection/
 convert:packages/convert/
@@ -46,12 +48,13 @@ meta:packages/meta/
 mime:packages/mime/
 mockito:packages/mockito/
 multi_server_socket:packages/multi_server_socket/
+node_interop:packages/node_interop/
+node_io:packages/node_io/
 node_preamble:packages/node_preamble/
 package_config:packages/package_config/
 package_resolver:packages/package_resolver/
 path:packages/path/
 pedantic:packages/pedantic/
-plugin:packages/plugin/
 pool:packages/pool/
 protobuf:packages/protobuf/
 pub_semver:packages/pub_semver/
@@ -76,7 +79,6 @@ test_api:packages/test_api/
 test_core:packages/test_core/
 timing:packages/timing/
 typed_data:packages/typed_data/
-utf:packages/utf/
 vm_service_client:packages/vm_service_client/
 watcher:packages/watcher/
 web_socket_channel:packages/web_socket_channel/
