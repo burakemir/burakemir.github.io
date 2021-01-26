@@ -1,0 +1,8 @@
+# Defines parameters for building and deploying.
+
+# Location of the arrow-logo repository
+location_arrow_logo = ~/projects/arrow-logo
+
+# Location of the burakemir.github.io repository
+location_deploy = /tmp/burakemir.github.io
+
