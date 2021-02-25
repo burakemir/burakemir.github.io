@@ -28,6 +28,7 @@ convert:packages/convert/
 crypto:packages/crypto/
 csslib:packages/csslib/
 dart_style:packages/dart_style/
+file:packages/file/
 fixnum:packages/fixnum/
 front_end:packages/front_end/
 glob:packages/glob/
