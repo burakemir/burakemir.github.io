@@ -35,7 +35,7 @@
        Translation Correctness for First-Order Object-Oriented Pattern Matching}. APLAS 2007
   }}}}
   @div[class: "row"]{
-   @h2{Constrained Polymorphisms }
+   @h2{Constrained Polymorphism}
   }
   @div[class: "row"]{
    @p{During an internship at Microsoft Research in Cambridge, I got to apply some Scala techniques to C#.
