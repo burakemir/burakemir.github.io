@@ -61,6 +61,7 @@ protobuf:packages/protobuf/
 pub_semver:packages/pub_semver/
 pubspec_parse:packages/pubspec_parse/
 quiver:packages/quiver/
+sanitize_html:packages/sanitize_html/
 scratch_space:packages/scratch_space/
 shelf:packages/shelf/
 shelf_packages_handler:packages/shelf_packages_handler/
