@@ -4,5 +4,9 @@
 location_arrow_logo = ~/projects/arrow-logo
 
 # Location of the burakemir.github.io repository
-location_deploy = /tmp/burakemir.github.io
+location_deploy_prefix = /tmp
+location_deploy = ${location_deploy_prefix}/burakemir.github.io
+
+# Repository
+repo = burakemir/burakemir.github.io.git
 

@@ -8,22 +8,29 @@ TARGETS=index.html blog.html about.html research.html
 #     location of the burakemir.github.io repository
 include Makefile.parameters
 
-all: $(TARGETS) arrowlogo
+resources=homepage.css hilbert.js
 
-arrowlogo:
+all : $(TARGETS) arrowlogo
+
+arrowlogo :
 	make -C $(location_arrow_logo)
 	rsync -av $(location_arrow_logo)/build/ arrowlogo
 
-deploy:
+deploy : $(location_deploy)
+	cd $(location_deploy); git pull
 	cp -f $(TARGETS) $(location_deploy)/
+	cp -f $(resources) $(location_deploy)/
 	cp -f static/* $(location_deploy)/
 	rsync -av $(location_arrow_logo)/build/ $(location_deploy)/arrowlogo
 
-%.html: %.rkt
+$(location_deploy):
+	cd $(location_deploy_prefix); git clone git@github.com:$(repo)
+
+%.html : %.html.pm template.html
 	if [ -f $@ ]; then chmod +w $@; fi
-	racket -t $< > $@
+	raco pollen render $@
 	chmod -w $@
 
-clean:
+clean :
 	rm -f $(TARGETS)
 	rm -Rf arrowlogo
