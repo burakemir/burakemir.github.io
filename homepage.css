@@ -1,0 +1,52 @@
+body {
+  font-family: "Roboto", "Helvetica";
+  line-height: 1.5;
+  font-weight: 400;
+  color: #212529;
+  margin: 2em;
+  font-size: 2.5vw;
+}
+
+@media screen and (min-width: 568px) {
+  body {
+    font-size: 1.5vw;
+  }
+}
+
+canvas#hilbert {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  filter: brightness(120%);
+}
+
+.h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6 {
+  font-weight: 500;
+}
+
+a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+ul.menu li {
+  display: inline;
+  padding-right: 1em;
+}
+
+
+ul.menu li a {
+  color: rgba(0,0,0,.5);
+}
+
+ul.menu li.active {
+  display: inline;
+  padding-right: 1em;
+}
+
+ul.menu li.active a {
+  color: rgba(0,0,0,.9);
+}
