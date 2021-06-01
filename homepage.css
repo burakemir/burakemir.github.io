@@ -4,13 +4,6 @@ body {
   font-weight: 400;
   color: #212529;
   margin: 2em;
-  font-size: 2.5vw;
-}
-
-@media screen and (min-width: 568px) {
-  body {
-    font-size: 1.5vw;
-  }
 }
 
 canvas#hilbert {
