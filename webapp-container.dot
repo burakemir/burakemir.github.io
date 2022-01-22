@@ -1,0 +1,19 @@
+digraph {
+	rankdir = "LR";
+	splines = ortho;
+	overlap = scale;
+	fixedsize = true;
+	forcelabels = true;
+	node [ shape="box", height = 1, width = 1.5 ]
+	ranksep = "1.2 equally";
+	browser
+	something [label="...", shape="plaintext"]
+	subgraph cluster_instance {
+		label="instance"
+	  proxy
+	  app
+	}
+	browser -> something
+	something -> proxy
+	proxy -> app
+}
