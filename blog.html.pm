@@ -17,7 +17,11 @@
    ◊p{Here is an index to some of those posts.
            ◊ul{
                ◊li{
-                   ◊a[#:href "https://blog.burakemir.ch/2021/01/what-are-commuting-conversions.html"]{What are Commuting Conversions}}
+                   ◊a[#:href "https://blog.burakemir.ch/2021/12/worked-example-of-automata-runs-as.html"]{
+                     (2021) Worked example of automata runs as sheaves}}
+               ◊li{
+                   ◊a[#:href "https://blog.burakemir.ch/2021/01/what-are-commuting-conversions.html"]{
+                     (2021) What are Commuting Conversions}}
                ◊li{
                    ◊a[#:href "https://blog.burakemir.ch/2020/07/relating-partial-evaluation-multi-stage.html"]{
                            Relating partial evaluation, multi-stage programming and macros}}
@@ -36,6 +40,6 @@
                    ("Intuitionistic Higher-Order Logic and Equality"
                     "https://blog.burakemir.ch/2020/09/intuitionistic-higher-order-logic-and.html")))}
                ◊li{
-                   ◊a[#:href "https://blog.burakemir.ch/2010/12/yacc-is-of-living-dead.html"]{"(2010) Yacc is of the Living Dead"}
+                   ◊a[#:href "https://blog.burakemir.ch/2010/12/yacc-is-of-living-dead.html"]{(2010) Yacc is of the Living Dead}
                    }
 }}
