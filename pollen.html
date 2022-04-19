@@ -6,7 +6,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pollen for the homepage</title>
 
-  <link rel="stylesheet" href="/article.css">
+      <link rel="stylesheet" href="/article.css">
+      <script>
+        MathJax = {
+    loader: {load: ['[tex]/bussproofs']},
+    tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        packages: {'[+]': ['bussproofs']}
+    },
+    svg: {
+      fontCache: 'global'
+    }
+  };
+  </script>
+  <script type="text/javascript" id="MathJax-script" async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+  </script>
 </head>
 
   <article>
@@ -58,7 +73,24 @@
 
   <p>Currently, I am using good old GNU Make for generating everything, before pushing manually.</p>
 
-  <p>When authoring, I use <code>raco pollen start</code> and manual reload.</p>
-  </root>
+  <p>When authoring, I use <code>raco pollen start</code> which renders each changed file automatically,
+  and do a manual reload in the browser.</p>
+
+  <p>Rendering a file individually is done with <code>raco pollen render &lt;file&gt;.html.pm</code></p>
+
+  <h2>Inline math with MathJax3</h2>
+
+  <p>Typesetting math like $\pi \nabla \longrightarrow \lambda x. \Omega$ is not handled by Pollen, but by MathJax3.</p>
+
+  <p>With the bussproofs package, we can do proof trees:
+
+  $$
+  \begin{prooftree}
+  \AxiomC{$P$}
+  \AxiomC{$P\to Q$}
+  \RightLabel{$\to_E$}
+  \BinaryInfC{$Q$}
+  \end{prooftree}
+  $$</p></root>
   </article>
 </html>
