@@ -67,4 +67,22 @@ will produce ◊code{<span class="my-emphasis">procedure-calls</span>}.
 
 ◊p{Currently, I am using good old GNU Make for generating everything, before pushing manually.}
 
-◊p{When authoring, I use ◊code{raco pollen start} and manual reload.}
+◊p{When authoring, I use ◊code{raco pollen start} which renders each changed file automatically,
+and do a manual reload in the browser.}
+
+◊p{Rendering a file individually is done with ◊code{raco pollen render <file>.html.pm}}
+
+◊h2{Inline math with MathJax3}
+
+◊p{Typesetting math like $\pi \nabla \longrightarrow \lambda x. \Omega$ is not handled by Pollen, but by MathJax3.}
+
+◊p{With the bussproofs package, we can do proof trees:
+
+$$
+\begin{prooftree}
+\AxiomC{$P$}
+\AxiomC{$P\to Q$}
+\RightLabel{$\to_E$}
+\BinaryInfC{$Q$}
+\end{prooftree}
+$$}

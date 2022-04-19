@@ -14,6 +14,21 @@
   }
   ◊when/splice[(eq? page-kind 'article)]{
     <link rel="stylesheet" href="/article.css">
+    <script>
+      MathJax = {
+  loader: {load: ['[tex]/bussproofs']},
+  tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      packages: {'[+]': ['bussproofs']}
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+</script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
   }     
 </head>
   ◊when/splice[(eq? page-kind 'homepage)]{
