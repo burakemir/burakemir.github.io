@@ -8,7 +8,7 @@ TARGETS=index.html blog.html about.html research.html pollen.html webapp-contain
 #     location of the burakemir.github.io repository
 include Makefile.parameters
 
-resources=homepage.css hilbert.js
+resources=article.css homepage.css hilbert.js
 
 all : $(TARGETS) arrowlogo
 

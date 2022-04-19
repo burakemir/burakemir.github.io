@@ -9,18 +9,27 @@
 ◊p{
   This is short article on the use of ◊a[#:href "https://racket-lang.org/"]{Racket programming language} and
   ◊a[#:href "https://docs.racket-lang.org/pollen/"]{Pollen} for these pages. I am a programmer and this is
-  a setup that works for me. It is a bit peculiar so I explain. 
+  a setup that works for me. 
 }
 
-◊p{
-  Why all this technology? Publishing anything on the web involves combining text and layout using
-  ◊a[#:href "https://en.wikipedia.org/wiki/Markup_language"]{markup language}. Nobody likes to
-  write HTML directly. However, absolutely all ways distracting. markup and "templating" languages are
-  terrible and distracting in their own special way. What makes Pollen bearable for me is that it is
-  "programmable:" I can use expressions in a programming language and they get evaluated.
+◊p{You can check out the
+◊a[#:href "https://github.com/burakemir/burakemir.github.io/blob/source/pollen.html.pm"]{source}
+for this article. It may seem like a peculiar choice so here are a few words of explanation.
 }
 
 ◊h2{Markup, Variables and Functions}
+
+◊p{
+  Publishing anything on the web involves combining text and layout using
+  ◊a[#:href "https://en.wikipedia.org/wiki/Markup_language"]{markup language}. Nobody likes to
+  write HTML directly. However, as a programmer, absolutely all pre-fabricated ways of producing markup
+  feel roundabout and distracting.
+}
+
+◊p{What makes Pollen bearable are two things: ◊ul{
+◊li{it is "programmable:" one can use programming constructs to control the process.}
+◊li{it supports authoring well enough so one I am not tempted to roll my own}
+}}
 
 Pollen supports several modes. I am using the markup dialect (◊code{.pm} extension) which offers a
 concise way to specify tags. The heading of this section is written like this:
@@ -29,25 +38,33 @@ concise way to specify tags. The heading of this section is written like this:
 ◊"◊h2{Markup, Variables and Functions}"
 }
 
-In the end, a conversion procedure called ◊code{->html} turns every page into an HTML file. The ◊code{h2}
-is an HTML tag. 
+In the end, a conversion procedure called ◊code{->html} turns everything into proper HTML. 
 
 ◊p{
 That is not all, though. I can bind an identifier to a value and refer to it like a constant or variable symbol:
 ◊pre{
     ◊"◊(define x 42)"
-  The answer to the ultimate question of life, the universe and everything is ◊"◊|x|"
+  The answer to the ultimate question of life,
+  the universe and everything is ◊"◊|x|"
   }
 }
 
-We can also bind identifiers to procedures that we can call:
-
-◊(define (emphasis x) ◊@{◊span[#:class "my-emphasis"]{◊|x|}})
+I can also bind identifiers to procedures:
 
 ◊p{
 ◊pre{
-    ◊"◊(define (my-emphasis x) ◊span[#:class \"my-emphasis\"]{◊|x|}}"
-  Markup is code, and I prefer code with ◊"◊my-emphasis{procedure-calls}".
+    ◊"◊(define (my-emphasis x)
+      ◊span[#:class \"my-emphasis\"]{◊|x|}}"
+  Markup is code, and I prefer code
+    with ◊"◊my-emphasis{procedure-calls}".
   }
 }
 will produce ◊code{<span class="my-emphasis">procedure-calls</span>}.
+
+◊p{This alone is already a vast improvement over HTML syntax and authoring via copy-and-paste.}
+
+◊h2{Build and Push}
+
+◊p{Currently, I am using good old GNU Make for generating everything, before pushing manually.}
+
+◊p{When authoring, I use ◊code{raco pollen start} and manual reload.}
