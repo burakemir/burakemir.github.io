@@ -1,8 +1,4 @@
-arrowlogo
-index.html
-blog.html
-about.html
-research.html
+*.html
 *~
 compiled/*
 webapp-container.png

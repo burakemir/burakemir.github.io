@@ -2,7 +2,10 @@
 ◊(require txexpr)
 ◊(require pollen/decode)
 ◊(require "menu.pm")
-◊(define-meta title "Burak Emir's homepage")
+
+◊(define-meta page-title "Burak Emir's homepage")
+◊(define-meta page-kind homepage)
+
 ◊(define (root . xs)
   xs)
   

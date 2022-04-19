@@ -4,6 +4,7 @@
 ◊(require "menu.pm")
 
 ◊(define-meta title "Burak Emir's homepage : Research")
+◊(define-meta page-kind homepage)
 
 ◊(menu "Research")
 

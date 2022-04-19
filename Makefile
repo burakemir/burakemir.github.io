@@ -1,5 +1,5 @@
 # Makefile for web content and apps.
-TARGETS=index.html blog.html about.html research.html webapp-container.png 
+TARGETS=index.html blog.html about.html research.html pollen.html webapp-container.png
 
 # The file below defines variables:
 #   location_arrow_logo:
@@ -26,7 +26,7 @@ deploy : $(location_deploy)
 $(location_deploy):
 	cd $(location_deploy_prefix); git clone git@github.com:$(repo)
 
-%.html : %.html.pm template.html
+%.html : %.html.pm template.html.p
 	if [ -f $@ ]; then chmod +w $@; fi
 	raco pollen render $@
 	chmod -w $@

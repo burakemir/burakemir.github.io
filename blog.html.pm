@@ -4,7 +4,7 @@
 ◊(require "menu.pm")
 
 ◊(define-meta title "Burak Emir's homepage : Blog")
-
+◊(define-meta page-kind homepage)
 
 ◊(define (linked-posts u+href*)
   `(ul 

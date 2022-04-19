@@ -3,13 +3,16 @@
 ◊(require pollen/decode)
 ◊(require "menu.pm")
 
-◊(define-meta title "Burak Emir's homepage : About")
+◊(define-meta page-title "Burak Emir's homepage : About")
+◊(define-meta page-kind homepage)
 
 ◊(menu "About")
 
 ◊h1{About}
 
-◊p{I use ◊a[#:href="https://racket.org"]{racket} and ◊a[#:href "https://docs.racket-lang.org/pollen/"]{pollen} for this homepage.}
+◊p{I use the ◊a[#:href "https://racket-lang.org"]{Racket programming language} and
+◊a[#:href "https://docs.racket-lang.org/pollen/"]{Pollen} for this homepage.} There is a
+short ◊a[#:href "pollen.html"]{article} that describes the setup.
 
 ◊h1{Contact}
 
