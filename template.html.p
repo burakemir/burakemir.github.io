@@ -39,5 +39,6 @@
     <article>
     ◊(->html doc)
     </article>
-  }     
+    <img src="https://puzzle.burakemir.ch/track/1x1.png"></img>
+    }     
 </html>
