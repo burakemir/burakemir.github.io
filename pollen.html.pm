@@ -28,7 +28,7 @@ for this article. It may seem like a peculiar choice so here are a few words of 
 
 ◊p{What makes Pollen bearable are two things: ◊ul{
 ◊li{it is "programmable:" one can use programming constructs to control the process.}
-◊li{it supports authoring well enough so one I am not tempted to roll my own}
+◊li{it supports authoring well enough so I am not tempted to roll my own}
 }}
 
 Pollen supports several modes. I am using the markup dialect (◊code{.pm} extension) which offers a
