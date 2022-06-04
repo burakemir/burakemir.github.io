@@ -1,5 +1,5 @@
 # Makefile for web content and apps.
-TARGETS=index.html blog.html about.html research.html pollen.html webapp-container.png
+TARGETS=index.html blog.html about.html research.html pollen.html webapp-container.png relational-query.png description_logics.html
 
 # The file below defines variables:
 #   location_arrow_logo:
@@ -31,7 +31,7 @@ $(location_deploy):
 	raco pollen render $@
 	chmod -w $@
 
-webapp-container.png: webapp-container.dot
+%.png: %.dot
 	dot -o $@ -T png $<
 
 clean :

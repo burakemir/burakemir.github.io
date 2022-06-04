@@ -121,6 +121,7 @@ A role is always a binary relation, which makes a role assertion into a triple (
 great because it enables uniform representation in triple stores, however
 there are real-life concepts where the limitation to binary relations
 is artifical. While there are ways to encode using artifical concepts (RDF blank nodes) Entity-relationship model
+}
 
 ◊h2{Further reading}
 ◊p{
