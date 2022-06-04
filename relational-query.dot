@@ -1,7 +1,6 @@
 digraph {
 	rankdir = "TB";
-	node [ shape="box" ]//, height = 0.7, width = 1.0 ]
-	ranksep = "1.2 equally";
+	node [ shape="box" ]
 	"π(name, building-code)"
 	"σ(department = Engineering)"
 	"⨝"
