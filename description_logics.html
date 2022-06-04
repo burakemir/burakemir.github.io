@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pollen for the homepage</title>
+
+      <link rel="stylesheet" href="/article.css">
+      <script>
+        MathJax = {
+    loader: {load: ['[tex]/bussproofs']},
+    tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        packages: {'[+]': ['bussproofs']}
+    },
+    svg: {
+      fontCache: 'global'
+    }
+  };
+  </script>
+  <script type="text/javascript" id="MathJax-script" async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+  </script>
+</head>
+
+  <article>
+  <root><h1>Description Logics</h1>
+
+  <p>Description logics (DLs) are a family of formal languages used for
+  knowledge representation, a subfield of artificial intelligence that
+  deals with capturing a domain of interest in machine-readable form,
+  for purposes of automated reasoning.</p>
+
+  <p>Formal logic is one of the origins of programming and appears in
+  multiple ways in academic discussions of programming languages. For
+  instance, the specification of programming language involves defining
+  syntax and semantics. These can be seen as defining an intended <em>model</em>
+  and a program written in such a language corresponds to a <em>theory</em>.</p>
+
+  <p>DLs as a logic-based approach to knowledge representation are different:
+  here, we set out to describe concepts of a domain and how they relate to
+  each other using formal statements. The emphasis is on formalisms where
+  common reasoning tasks are <em>decidable</em>.</p>
+
+  <p>In a given DL setup, we distinguish between a <em>terminological</em>
+  part (TBox) and an <em>assertional</em> part (ABox). The TBox an ABox
+  together are called ae <em>knowledge base</em> (KB). The TBox represents static
+  knowledge about the conceptual structure of the domain, similar to
+  a database schema, while the ABox represents information about concrete
+  real-world entities, like the rows in a database instance.</p>
+
+  <h2>An Example</h2>
+
+  Suppose we want to define a university domain. The TBox should capture this:
+  <ul><li>a teacher is a person who teaches a course</li>
+  <li>a student is a person who attends a course</li>
+  <li>students cannot teach courses</li></ul>
+
+  Then the following first-order logic statements capture these definitions:
+
+  <ul>
+  <li> $\forall x. \mathsf{Teacher}(x) \Leftrightarrow
+  \mathsf{Person}(x) \wedge \exists y( \mathit{teaches(x,y) \wedge
+  \mathsf{Course}(y)})$ </li>
+
+  <li> $\forall x. \mathsf{Student}(x) \Leftrightarrow
+  \mathsf{Person}(x) \wedge \exists y( \mathit{attends(x,y) \wedge
+  \mathsf{Course}(y)})$ </li>
+
+  <li> $\forall x. \exists y. \mathit{teaches}(x,y) \Rightarrow \neg
+  \mathsf{Student}(x) $</li>
+  </ul>
+
+  <p>An ABox may then be a set of assertions that uses the concepts and roles
+  from the TBox. For example "Salima is a teaching course CS600" becomes
+  <ul><li>$\mathsf{Person}(\mathsf{Salima})$</li>
+  <li>$\mathsf{Course}(\mathsf{CS600})$</li>
+  <li>$\mathit{teaches}(\mathsf{Salima}, \mathsf{CS600})$</li></ul>
+
+  The DL community uses a different syntax, where these would be written as follows:
+
+  <ul><li>$\mathsf{Teacher} \equiv \mathsf{Person} \cap \exists \mathit{teaches}. \mathsf{Course}$</li>
+  <li>$\mathsf{Student} \equiv \mathsf{Person} \cap \exists \mathit{attends}. \mathsf{Course}$</li>
+  <li>$\exists \mathit{attends}. \top \sqsubseteq \neg \mathsf{Student}$</li>
+  <li>$\mathsf{Salima}:\mathsf{Person}$</li>
+  <li>$\mathsf{CS600}:\mathsf{Course}$</li>
+  <li>$(\mathsf{Salima}, \mathsf{CS600}) : \mathit{teaches}$</li></ul>
+  </p>
+
+  <p>The KB can infer that $\mathsf{Salima}:\mathsf{Teacher}$, and DL can
+  help establish relationship between concepts, e.g. whether a concept
+  is more specific than another (subsumption).</p>
+
+  <h1>An Application: Ontology Engineering</h1>
+
+  <p>If we have a fixed, well-known set of concepts, why would we go through
+  these lengths of capturing things in a research-y formalism? There are
+  a few scenarios.</p>
+
+  <p>For example, you don't actually have an established set of concepts, but there is no
+  actual agreement on details (software development everyday situation, most
+  often in aggravated form where stakeholders have a conceptualization
+  but cannot produce necessary detail, or different stakeholders have
+  different details and disagree. )</p>
+
+  <p>Or you had an established set of concepts, but the environment changes.
+  The applications of two different databases need to be reconciled, in
+  a way that lets the applications still work.</p>
+
+  <p>The bottom line is that one needs to capture the actual terminology. One
+  well-known example of DL is the Web Ontology Language (OWL) which is
+  used in the context of semantic web.</p>
+
+  <h2>Some Limitations: Triples all the way down</h2>
+
+  <p>A role is always a binary relation, which makes a role assertion into a triple (e.g. subject-predicate-object, or entity-attribute-value). This is
+  great because it enables uniform representation in triple stores, however
+  there are real-life concepts where the limitation to binary relations
+  is artifical. While there are ways to encode using artifical concepts (RDF blank nodes) Entity-relationship model</p>
+
+  <h2>Further reading</h2>
+  <p><a href="https://en.wikipedia.org/wiki/Description_logic">Description logics on wikipedia</a></p>
+  <p>Baader, F., Horrocks, I., Lutz, C., Sattler, U.. An Introduction to Description Logic. 2017 Cambridge University Press.</p>
+
+  <p>Baader, F., Calvanese, D., McGuinness, D., Nardi, D., &amp; Patel-Schneider, P. (Eds.). (2007). The Description Logic Handbook: Theory, Implementation and Applications (2nd ed.). Cambridge: Cambridge University Press. doi:10.1017/CBO9780511711787</p></root>
+  </article>
+<img src="https://puzzle.burakemir.ch/track/description_logics.html/1x1.png"></img>
+</html>
