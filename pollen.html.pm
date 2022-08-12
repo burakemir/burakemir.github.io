@@ -8,13 +8,13 @@
 
 ◊p{
   This is short article on the use of ◊a[#:href "https://racket-lang.org/"]{Racket programming language} and
-  ◊a[#:href "https://docs.racket-lang.org/pollen/"]{Pollen} for these pages. I am a programmer and this is
-  a setup that works for me. 
+  ◊a[#:href "https://docs.racket-lang.org/pollen/"]{Pollen} for these pages. I am used to write code and this is
+  a setup that works for me; it may not work for everyone. 
 }
 
 ◊p{You can check out the
 ◊a[#:href "https://github.com/burakemir/burakemir.github.io/blob/source/pollen.html.pm"]{source}
-for this article. It may seem like a peculiar choice so here are a few words of explanation.
+for this article. Here are a few words of explanation to give a taste (and remind myself).
 }
 
 ◊h2{Markup, Variables and Functions}
@@ -22,7 +22,7 @@ for this article. It may seem like a peculiar choice so here are a few words of 
 ◊p{
   Publishing anything on the web involves combining text and layout using
   ◊a[#:href "https://en.wikipedia.org/wiki/Markup_language"]{markup language}. Nobody likes to
-  write HTML directly. However, as a programmer, absolutely all pre-fabricated ways of producing markup
+  write HTML directly. However, since I am used to write code, all pre-fabricated ways of producing markup
   feel roundabout and distracting.
 }
 
@@ -49,19 +49,19 @@ That is not all, though. I can bind an identifier to a value and refer to it lik
   }
 }
 
-I can also bind identifiers to procedures:
+I can also bind identifiers to procedures and comment my code:
 
 ◊p{
-◊pre{
-    ◊"◊(define (my-emphasis x)
-      ◊span[#:class \"my-emphasis\"]{◊|x|}}"
-  Markup is code, and I prefer code
-    with ◊"◊my-emphasis{procedure-calls}".
-  }
-}
+◊pre{◊"
+◊; Let's define our own emphasis procedure.
+◊(define (my-emphasis x) ◊span[#:class \"my-emphasis\"]{◊|x|}}
+
+◊; We can call this procedure and get what we want.
+Markup is code, and I prefer code with ◊my-emphasis{procedure-calls}. 
+"}}
 will produce ◊code{<span class="my-emphasis">procedure-calls</span>}.
 
-◊p{This alone is already a vast improvement over HTML syntax and authoring via copy-and-paste.}
+◊p{The syntax takes some time to get used to but is an improvement over HTML syntax and copying-and-pasting tags.}
 
 ◊h2{Build and Push}
 
