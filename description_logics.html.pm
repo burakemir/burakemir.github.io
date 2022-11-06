@@ -6,32 +6,38 @@
 
 ◊p{
 Description logics (DLs) are a family of formal languages used for
-knowledge representation, a subfield of artificial intelligence that
+knowledge representation. Knowledge representation (a subfield of artificial intelligence)
 deals with capturing a domain of interest in machine-readable form,
 for purposes of automated reasoning.
 }
 
-◊p{
-Formal logic is one of the origins of programming and appears in
-multiple ways in academic discussions of programming languages. For
-instance, the specification of programming language involves defining
-syntax and semantics. These can be seen as defining an intended ◊em{model}
-and a program written in such a language corresponds to a ◊em{theory}.
+◊;◊p{
+◊;Formal logic is one of the origins of programming and appears in
+◊;multiple ways in academic discussions of programming languages. For
+◊;instance, the specification of programming language involves defining
+◊;syntax and semantics. These can be seen as defining an intended ◊em{model}
+◊;and a program written in such a language corresponds to a ◊em{theory}.
+◊;}
+
+◊;◊p{
+◊;DLs as a logic-based approach to knowledge representation are different:
+◊;here, we set out to describe concepts of a domain and how they relate to
+◊;each other using formal statements. The emphasis is on formalisms where
+◊;common reasoning tasks are ◊em{decidable}.
+◊;}
+
+◊h2{DL Knowledge Base}
+
+◊p{In a given DL setup, a ◊em{knowledge base} (KB) is split into a ◊em{terminological}
+part (TBox) and an ◊em{assertional} part (ABox).
 }
 
-◊p{
-DLs as a logic-based approach to knowledge representation are different:
-here, we set out to describe concepts of a domain and how they relate to
-each other using formal statements. The emphasis is on formalisms where
-common reasoning tasks are ◊em{decidable}.
-}
-
-◊p{In a given DL setup, we distinguish between a ◊em{terminological}
-part (TBox) and an ◊em{assertional} part (ABox). The TBox an ABox
-together are called ae ◊em{knowledge base} (KB). The TBox represents static
+◊ul{
+   ◊li{the TBox represents static
 knowledge about the conceptual structure of the domain, similar to
-a database schema, while the ABox represents information about concrete
-real-world entities, like the rows in a database instance.
+a database schema,} 
+   ◊li{the ABox represents information about concrete
+real-world entities, like the rows in a database instance.}
 }
 
 ◊h2{An Example}
@@ -89,28 +95,30 @@ help establish relationship between concepts, e.g. whether a concept
 is more specific than another (subsumption).
 }
 
-◊h1{An Application: Ontology Engineering}
+◊h1{Ontology Engineering}
 
 ◊p{
-If we have a fixed, well-known set of concepts, why would we go through
-these lengths of capturing things in a research-y formalism? There are
-a few scenarios.
-}
+Suppose we want to capture a domain through a concept definitions;
+why would we go through the effort of formalizing logical? In order
+to see the advantages of formalism, we have to look at this scenario
+more closely.}
 
-◊p{
-For example, you don't actually have an established set of concepts, but there is no
-actual agreement on details (software development everyday situation, most
-often in aggravated form where stakeholders have a conceptualization
-but cannot produce necessary detail, or different stakeholders have
-different details and disagree. )
+◊ul{
+◊li{
+It may be the case that people only shared understanding at an abstract level,
+but do not agree on details that matter. The clients interested in the
+shared knowledge base may not even be in a position to produce necessary detail, or 
+there stakeholders differ on details in ways that matter to them. )
 }
-
-◊p{Or you had an established set of concepts, but the environment changes.
-The applications of two different databases need to be reconciled, in
+◊li{or there is an established set of concepts, which stems from a time where the
+environment was different. The environment, and therefore the relevant concepts in
+the domain and how they interact, can change due to scale, additional requirements or
+other external factors, e.g. ehe applications of two different databases need to be reconciled, in
 a way that lets the applications still work.
 }
+}
 
-◊p{The bottom line is that one needs to capture the actual terminology. One
+◊p{The bottom line is that one needs to capture an actual, up-to-date terminology. One
 well-known example of DL is the Web Ontology Language (OWL) which is
 used in the context of semantic web.}
 

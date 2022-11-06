@@ -21,6 +21,7 @@ deploy : $(location_deploy)
 	cp -f $(TARGETS) $(location_deploy)/
 	cp -f $(resources) $(location_deploy)/
 	cp -f static/* $(location_deploy)/
+	cp -R .well-known $(location_deploy)/
 	rsync -av $(location_arrow_logo)/build/ $(location_deploy)/arrowlogo
 
 $(location_deploy):
