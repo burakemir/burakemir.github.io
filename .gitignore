@@ -1,4 +1,5 @@
 *.html
+!scalaxbook.docbk.html
 *~
 compiled/*
 webapp-container.png

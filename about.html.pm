@@ -20,8 +20,8 @@ short ◊a[#:href "pollen.html"]{article} that describes the setup.
   ◊b{email: } ◊a[#:href  "mailto:{first}.{last}@gmail.com"]{first.last@gmail.com}}
 ◊div{
   ◊br{}
-  ◊b{mastodon} ◊a[#:href  "https://types.pl/@burakemir" #:rel "me]{@burakemir}}
+  ◊b{mastodon} ◊a[#:href "https://types.pl/@burakemir" #:rel "me"]{@burakemir}}
 ◊div{
   ◊br{}
-  ◊b{twitter: } ◊a[#:href  "https://twitter.com/burakemir"]{@burakemir} (dormant)}
+  ◊b{twitter: } ◊a[#:href "https://twitter.com/burakemir"]{@burakemir} (dormant)}
 
