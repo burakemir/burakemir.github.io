@@ -1,5 +1,6 @@
 *.html
 !scalaxbook.docbk.html
+!static/docu_badges.html
 *~
 compiled/*
 webapp-container.png
