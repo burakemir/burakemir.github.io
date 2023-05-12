@@ -1,0 +1,318 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Type System - Mangle Point-in-Time 01</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="about.html">About</a></li><li class="chapter-item expanded "><a href="00_data_information_knowledge.html"><strong aria-hidden="true">1.</strong> Data Information Knowledge</a></li><li class="chapter-item expanded "><a href="01_mangle_what.html"><strong aria-hidden="true">2.</strong> What is Mangle</a></li><li class="chapter-item expanded "><a href="02_simple_cyber_example.html"><strong aria-hidden="true">3.</strong> Simple Cyber Example</a></li><li class="chapter-item expanded "><a href="03_type_system.html" class="active"><strong aria-hidden="true">4.</strong> Type System</a></li><li class="chapter-item expanded "><a href="04_where_is_ai.html"><strong aria-hidden="true">5.</strong> Where is the AI?</a></li><li class="chapter-item expanded "><a href="05_truth_through_proof.html"><strong aria-hidden="true">6.</strong> Truth through proof</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Mangle Point-in-Time 01</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <style>.presentation-only.not-presenting {
+  display: none;
+}
+
+.article-content.presenting {
+  display: none;
+}
+
+.notes-only {
+  display: none;
+}
+</style>
+<h1 id="type-system"><a class="header" href="#type-system">Type system</a></h1>
+<p>The type system is a work-in-progress.</p>
+<p>I would have liked to present one, alas there are only fragments for now.</p>
+<h2 id="what-is-a-type-system-good-for"><a class="header" href="#what-is-a-type-system-good-for">What is a type system good for?</a></h2>
+<p>&quot;Well-typed programs cannot go wrong&quot; (Milner)</p>
+<p>A type system serves two purposes:</p>
+<ul>
+<li>prevents a class of programmer mistakes</li>
+<li>makes parts of the semantic structure explicit</li>
+</ul>
+<p>The first point is what is taught to students. The second point is discourse among researchers, with a heavy bias towards formalizing mathematics.</p>
+<h2 id="the-necessary-jargon"><a class="header" href="#the-necessary-jargon">The necessary jargon</a></h2>
+<p>Mathematics is not the only domain that has semantic structures worthy of making explicit.
+But mathematics provides us with the ways of talking about these objects.</p>
+<p>Concretely, we have a type expression \( T \) that stand in for an object \( [\![T]\!] \).
+Type expressions are formal objects or &quot;linguistic signs&quot;. They are enumerable.</p>
+<p>If an expression \( e \) &quot;can be assigned the type \( T \)&quot; then</p>
+<ul>
+<li>we can talk about a &quot;meaning&quot; \( [\![e]\!] \)</li>
+<li>(soundness) \( [\![e]\!] \) is conforming to \( [\![T]\!] \) </li>
+</ul>
+<p>Some remarks:</p>
+<ul>
+<li>Using the same symbols \( [\![\ ]\!] \) for taking expressions and type expressions to the &quot;meaning&quot; is a case of &quot;overloading.&quot; Mathematicians love overloading as a means to conversation focused on what is essential. This is a form of abstraction.</li>
+<li>This is Church-style. We do not bother to give meanings to expressions that cannot be assigned a type. The alternative is Curry-style, define a &quot;meaning&quot; for all expressions, independent of whether they can assigned a type or not.</li>
+</ul>
+<p>A simple way (not the only way) to make all this work is to say that:</p>
+<ul>
+<li>\( [\![T]\!] \) is a <em>set</em>.</li>
+<li>&quot;conforming&quot; is membership: \( [\![e]\!] \in [\![T]\!] \)</li>
+</ul>
+<p>Simplicity is good, but we should not forget where we came from: a desire to prevent programmer mistakes and making part of the semantic structure explicit.</p>
+<h2 id="elements-of-mangle-type-system"><a class="header" href="#elements-of-mangle-type-system">Elements of Mangle type system</a></h2>
+<p>Expressions</p>
+<ul>
+<li>base constants \( c \) like names, numbers, strings, ...</li>
+<li>structured constants 
+<ul>
+<li>lists \( [e_1, \ldots, e_n] \),</li>
+<li>pairs \( \mathtt{fn:pair}(e_1, e_2) \) </li>
+<li>maps \( [ e_1 : v_1, \ldots, e_n : v_n ] \) </li>
+<li>structs \( \{ l_1 : v_1, \ldots, l_n : v_n \} \)</li>
+</ul>
+</li>
+</ul>
+<p>Type expressions (meta variables \( S, T \))</p>
+<ul>
+<li>\( \mathtt{/any} \)</li>
+<li>base type expressions \( \mathtt{/name}, \mathtt{/number}, \mathtt{/float64}, \mathtt{/bool} \)</li>
+<li>stuctured types
+<ul>
+<li>list type \( \mathtt{fn:List}(T) \)</li>
+<li>pair type \( \mathtt{fn:Pair}(S, T) \),</li>
+<li>map type  \( \mathtt{fn:Map}(S, T), \),</li>
+<li>struct type \( \mathtt{fn:Struct}(k_1,T_1,...,k_n,T_n) \)</li>
+</ul>
+</li>
+</ul>
+<p>For example \( \mathtt{/bool} \) is a type expression, with \( [\![\mathtt{/bool}]\!] = \{\mathtt{/true}, \mathtt{/false}\} \) .</p>
+<h2 id="finite-models-and-finite-theories"><a class="header" href="#finite-models-and-finite-theories">Finite models and finite theories</a></h2>
+<p>The history of programming <em>languages</em> starts with formal mathematical logic, types and metamathematics (Frege, Russell, Hilbert.) This is when we started
+subjecting the symbols used in mathematics to rigid, explicit, precise rules of formation and vocabulary. It is the beginning of metalanguage and object language.</p>
+<p>When we talk about the linguistic domain of mathematics, restricting to anything finite means we will lose the mathematicians' interest.</p>
+<p>Finite domains are practical value and therefore a simple starting point when programming system that serve practical purposes.</p>
+<p>It is therefore good and useful to start with a domain of discourse assuming that deals with a finite amount of objects.</p>
+<p>We can now define <em>predicates</em> which express how objects in the domain of discource are <em>related</em>.</p>
+<p>In the language of set theory, the meaning of predicates is a <em>relation</em> (subset of cartesian product). A predicate can either be defined by <em>enumerating</em> (extensional predicate) or by <em>describing</em> rules (intensional predicate) and so on.</p>
+<p>More generally, a <em>theory</em> is a set of propositions that are true. A finite model comes with a finite theory.</p>
+<h2 id="declarations-and-types"><a class="header" href="#declarations-and-types">Declarations and Types</a></h2>
+<p>We can describe predicates further by being more specific on what types the arguments have.</p>
+<pre><code>Decl foo_pattern_first_A_then_B(Host, T1, T2) 
+  descr [
+    doc(&quot;A detection rule expressing the foo pattern (a sequence of A and B)&quot; ),
+    arg(Host,   &quot;name constant /host/fqdn prefix, with fully-qualified domain name&quot;),
+    arg(T1,     &quot;a timestamp, seconds since epoch UTC&quot;),
+    arg(Source, &quot;the external source that ingests events&quot;)
+  ]
+  bound [ /host/fqdn, /number, /number ].
+
+# Let's query the data
+? foo_pattern_first_A_then_B(/host/fqdn/burakemir.ch, X, Y)
+</code></pre>
+<h2 id="modularity-and-extensibility"><a class="header" href="#modularity-and-extensibility">Modularity and extensibility</a></h2>
+<p>From a programmer's point of view, it is desirable to split large programs into <em>modules</em>,</p>
+<p>Mangle offers modules through the <em>package</em> mechanism:</p>
+<ul>
+<li>one can refer to <em>public</em> predicates in a package.</li>
+<li>(in the future) type declarations could be used to type-check module separately.</li>
+</ul>
+<p>Currently, Mangle is interpreted and semantic analysis operates on a whole program.</p>
+<p>Something akin to the &quot;Rust orphan rule&quot; which restricts trait implementations:</p>
+<ul>
+<li>One cannot add facts through unit clauses for predicates that live in separate modules</li>
+<li>An exception: for extensional predicates, it is allowed (path dependence)
+<ul>
+<li>Esp. for <em>testing</em>, we'd like to set up facts for predicates in other modules...</li>
+</ul>
+</li>
+</ul>
+<!-- However, int
+
+For the result of applying a predicate, we use \\( \Omega \\).
+
+<br>The meaning \\( [\\![S]\\!] \\) of a type expression is a set.
+
+\\[ \frac{\vec{X}:\vec{S} \in \Gamma \quad \vec{S} <: \vec{T} \quad q : \mathbf{Rel}(\vec{T})}{\Gamma \vdash q(\vec{X}): \Omega} \\]
+
+-->
+<script>var PresentationMode;!function(t){t[t.Slides=0]="Slides",t[t.Web=1]="Web"}(PresentationMode=PresentationMode||{});var PresentationModeHider=function(){function t(){var e=this;this.queryKey="presentation_mode",this.webClass="article-content",this.preClass="presentation-only",this.mode=this.getMode(),this.setMode(),this.assignClassesViaComments(),this.tryMoveToFirstChapter(),window.addEventListener("keyup",function(t){t.altKey&&("p"!=t.key&&"P"!=t.key&&"KeyP"!=t.code||e.toggle())})}return t.prototype.tryMoveToFirstChapter=function(){if(this.mode===PresentationMode.Slides&&(""===location.pathname||"/"===location.pathname)){var t=document.querySelector(".sidebar .chapter");if(!t)return console.error("unable to find chapter 1 link for paging. Please manually click into chapter 1");t.firstChild.firstChild.click()}},t.prototype.assignClassesViaComments=function(){for(var t,e=document.createNodeIterator(document.body,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_COMMENT,null),n=this.mode===PresentationMode.Web?"not-presenting":"presenting",o=null;t=e.nextNode();)if(8===t.nodeType){var i=t.nodeValue.trim();"web-only"===i?o=this.webClass:"slides-only"===i?o=this.preClass:i.startsWith("notes")?this.processNotes(i):"web-only-end"!==i&&"slides-only-end"!==i&&"notes-end"!==i||(o=null)}else 1===t.nodeType&&null!==o&&t.classList.add(o,n)},t.prototype.getMode=function(){var e=localStorage.getItem(this.queryKey);if(null===e)return PresentationMode.Web;try{var t=parseInt(e);return 1<t||t<0?(console.error("presentation_mode was out of range",t),PresentationMode.Web):t}catch(t){return console.error("presentation_mode present in localStorage but value is not an integer",e,t),PresentationMode.Web}},t.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},t.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},t.prototype.updateElements=function(t){for(var e=0;e<t.length;e++){var n=t[e];this.mode===PresentationMode.Slides?n.classList.replace("not-presenting","presenting"):n.classList.replace("presenting","not-presenting")}},t.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},t.prototype.processNotes=function(t){var e=t.indexOf("\n");console.log("%c"+t.substr(e+1),"font-size: 14pt;")},t}(),___presentationModeHider=new PresentationModeHider,END_KEY="end-date",MIN_KEY="total-minutes",PresentationTimer=function(){function t(){var e=this;window.addEventListener("keyup",function(t){if(t.altKey)switch(t.key){case"g":return e.start();case"ArrowUp":return e.updateEnd(1);case"ArrowDown":return e.updateEnd(-1);case"m":return e.promptForMinutes();case".":return e.stop()}});var t=this.getEnd();t&&(this.end=new Date(t),this.tick())}return t.prototype.tick=function(){this.timeout=null;var t=new Date;if(t>=this.end)return this.update(0,0);var e=+this.end-+t,n=Math.floor(e/1e3),o=Math.floor(n/60);this.update(o,n-60*o),this.timeout=window.setTimeout(this.tick.bind(this),1e3)},t.prototype.getEnd=function(){var t=localStorage.getItem(END_KEY);this.minutes=+localStorage.getItem(MIN_KEY)||45;var e=new Date;if(e.setHours(e.getHours()+1),t&&!(+t<+e))return t;localStorage.removeItem(END_KEY)},t.prototype.start=function(){var t=new Date,e=t.getMinutes();t.setMinutes(e+this.minutes),this.end=t,this.saveGlobals(),this.tick()},t.prototype.stop=function(){this.timeout&&clearTimeout(this.timeout),localStorage.removeItem(END_KEY);var t=document.getElementById("counter");t&&t.parentElement.removeChild(t)},t.prototype.update=function(t,e){var n=this.getCounterEl();n.innerHTML=this.formatTime(t,e),n.style.borderColor=this.getColor(60*t+e)},t.prototype.formatTime=function(t,e){if(60<=t){var n=Math.floor(t/60);return t-=60*n,n+":"+this.twoDigits(t)+":"+this.twoDigits(e)}return this.twoDigits(t)+":"+this.twoDigits(e)},t.prototype.twoDigits=function(t){return("0"+t).substr(-2)},t.prototype.getCounterEl=function(){var t=document.getElementById("counter");return t||((t=document.createElement("div")).style.position="fixed",t.style.left="calc(100% - 10px)",t.style.top="55px",t.style.width="70px",t.style.textAlign="right",t.style.border="2px solid var(--quote-border)",t.style.color="var(--fg)",t.style.borderRadius="5px",t.style.paddingLeft="5px",t.style.backgroundColor="var(--bg)",t.setAttribute("id","counter"),t.addEventListener("mouseenter",function(t){t.currentTarget.style.left="calc(100% - 70px)",t.currentTarget.style.textAlign="left"}),t.addEventListener("mouseleave",function(t){t.currentTarget.style.left="calc(100% - 10px)",t.currentTarget.style.textAlign="right"}),document.body.appendChild(t),t)},t.prototype.getColor=function(t){var e=t/(60*this.minutes),n=1-e,o=0,i=0;return n<.5?o=i=255*n*2:i=2*e*(o=255),"rgb("+o.toFixed(2)+", "+i.toFixed(2)+", 0)"},t.prototype.updateEnd=function(t){this.timeout&&(clearTimeout(this.timeout),this.timeout=null);var e=this.end.getMinutes();e+=t,this.minutes+=t,this.end.setMinutes(e),this.saveGlobals(),this.tick()},t.prototype.saveGlobals=function(){localStorage.setItem(END_KEY,this.end.toString()),this.saveMinutes()},t.prototype.saveMinutes=function(){localStorage.setItem(MIN_KEY,this.minutes.toString())},t.prototype.promptForMinutes=function(){if(!document.getElementById("minutes-prompt")){var t=document.createElement("div");t.setAttribute("id","minutes-prompt"),t.style.position="absolute",t.style.left="calc(50% - 50px)",t.style.top="calc(50% - 25px)",t.style.display="flex",t.style.flexFlow="column",t.style.justifyContent="space-between",t.style.alignItems="center",t.style.boxShadow="1px 1px 1px 1px var(--quote-border)",t.style.backgroundColor="var(--bg)",t.style.padding="5px";var e=document.createElement("label");e.setAttribute("for","minutes-inputs"),e.appendChild(document.createTextNode("Presentation Length"));var n=document.createElement("input");n.setAttribute("type","number"),n.setAttribute("min","1"),n.setAttribute("name","minutes-input"),n.setAttribute("id","minutes-input"),n.value=(this.minutes||0).toString();var o=document.createElement("button");o.setAttribute("type","button"),o.addEventListener("click",this.promptOk.bind(this)),o.appendChild(document.createTextNode("OK")),t.appendChild(e),t.appendChild(n),t.appendChild(o),document.body.appendChild(t),n.focus()}},t.prototype.promptOk=function(){var t=document.getElementById("minutes-input");if(t){var e=+t.value;this.end?this.updateEnd(e-this.minutes):(this.minutes=e,this.saveMinutes())}t.parentElement.parentElement.removeChild(t.parentElement)},t}(),___presentationTimer=new PresentationTimer;</script>
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="02_simple_cyber_example.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="04_where_is_ai.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="02_simple_cyber_example.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="04_where_is_ai.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
