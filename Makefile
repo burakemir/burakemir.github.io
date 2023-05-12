@@ -16,6 +16,9 @@ arrowlogo :
 	make -C $(location_arrow_logo)
 	rsync -av $(location_arrow_logo)/build/ arrowlogo
 
+book:
+	cd mangle-point-in-time-01/ && mdbook build
+
 deploy : $(location_deploy)
 	cd $(location_deploy); git pull
 	cp -f $(TARGETS) $(location_deploy)/

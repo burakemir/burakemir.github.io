@@ -1,0 +1,10 @@
+[book]
+authors = ["Burak Emir"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Mangle Point-in-Time 01"
+[preprocessor.presentation-preprocessor]
+
+[output.html]
+mathjax-support = true
