@@ -23,3 +23,12 @@ trait Foo {
   fn foo(&Self) -> Bar
 }
 ```
+
+$$
+\begin{prooftree}
+\AxiomC{$P$}
+\AxiomC{$P\to Q$}
+\RightLabel{$(\to_E)$}
+\BinaryInfC{$Q$}
+\end{prooftree}
+$$
