@@ -1,0 +1,31 @@
+# The URL the site will be built for
+base_url = "https://burakemir.ch"
+
+# Whether to automatically compile all Sass files in the sass directory
+compile_sass = true
+
+# Whether to build a search index to be used later on by a JavaScript library
+build_search_index = false
+
+# The site theme to use.
+theme = "emily_zola_theme"
+
+# For overriding the default output directory `public`, set it to another value (e.g.: "docs")
+output_dir = "deploy"
+
+taxonomies = [
+       {name = "tags", feed = true}, # each tag will have its own feed
+       {name = "tags"}, # you can have taxonomies with the same name in multiple languages
+       {name = "categories", paginate_by = 5},  # 5 items per page for a term
+]
+
+[markdown]
+# Whether to do syntax highlighting
+# Theme can be customised by setting the `highlight_theme` variable to a theme supported by Zola
+highlight_code = true
+
+[extra]
+# Author name, appears in footer.
+emily_author = "Burak Emir"
+emily_icon = "/images/totoro.jpg"
+emily_favicon = "/images/favicon-32x32.png"

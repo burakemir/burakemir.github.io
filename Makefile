@@ -1,5 +1,5 @@
 # Makefile for web content and apps.
-TARGETS=index.html blog.html about.html research.html pollen.html webapp-container.png relational-query.png description_logics.html
+TARGETS=webapp-container.png relational-query.png
 
 # The file below defines variables:
 #   location_arrow_logo:
@@ -20,19 +20,17 @@ book:
 	cd mangle-point-in-time-01/ && mdbook build
 
 deploy : $(location_deploy)
+	cd src && zola build
 	cd $(location_deploy); git pull
-	cp -f $(TARGETS) $(location_deploy)/
+	cp -f -r src/deploy/* $(location_deploy)/
 	cp -f $(resources) $(location_deploy)/
 	cp -f static/* $(location_deploy)/
+	mdbook build mangle-point-in-time-01
+	cp -R mangle-point-in-time-01/book $(location_deploy)/mangle-point-in-time-01
 	rsync -av $(location_arrow_logo)/build/ $(location_deploy)/arrowlogo
 
 $(location_deploy):
 	cd $(location_deploy_prefix); git clone git@github.com:$(repo)
-
-%.html : %.html.pm template.html.p
-	if [ -f $@ ]; then chmod +w $@; fi
-	raco pollen render $@
-	chmod -w $@
 
 %.png: %.dot
 	dot -o $@ -T png $<
