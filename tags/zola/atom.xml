@@ -25,6 +25,14 @@
 &lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;foo&lt;&#x2F;span&gt;&lt;span&gt;(&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Self&lt;&#x2F;span&gt;&lt;span&gt;) -&amp;gt; Bar
 &lt;&#x2F;span&gt;&lt;span&gt;}
 &lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;$$
+\begin{prooftree}
+\AxiomC{$P$}
+\AxiomC{$P\to Q$}
+\RightLabel{$(\to_E)$}
+\BinaryInfC{$Q$}
+\end{prooftree}
+$$&lt;&#x2F;p&gt;
 </content>
         
     </entry>
