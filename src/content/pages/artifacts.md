@@ -20,10 +20,13 @@ Here are some snapshots from the journey [(dblp)](https://dblp.uni-trier.de/pers
 
  * *arrow-logo*
     * I did a few programming courses for kids using LOGO and wrote an interpreter [arrow-logo](https://github.com/google/arrow-logo) that runs in the browser. Some thoughts on [educational programming environments for kids](https://blog.burakemir.ch/2015/03/educational-programming-environments.html) on my old blog.
+    * Play with it here: [https://burakemir.ch/arrowlogo/ArrowLogo.html](https://burakemir.ch/arrowlogo/ArrowLogo.html)
 
  * *Datalog and Logic Programming*.
 
-    * I develope and maintain a language called [Mangle](https://github.com/google/mangle) and its implementation, open-sourced it (Nov 2022). More people need to know datalog.
+    * I develop and maintain a language called [Mangle](https://github.com/google/mangle) and its implementation, open-sourced it (Nov 2022). More people need to know datalog.
+
+    * Or do we need to write [SQL interpreters?](https://gist.github.com/burakemir/541c709e570ea770bf21f855034c1dba)?
 
 ### posts on the old blog
 
