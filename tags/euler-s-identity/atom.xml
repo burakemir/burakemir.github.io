@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title> - Euler&#x27;s identity</title>
+    <link href="https://burakemir.ch/tags/euler-s-identity/atom.xml" rel="self" type="application/atom+xml"/>
+    <link href="https://burakemir.ch"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2021-01-03T00:00:00+00:00</updated>
+    <id>https://burakemir.ch/tags/euler-s-identity/atom.xml</id>
+    <entry xml:lang="en">
+        <title>MathJax Support</title>
+        <published>2021-01-03T00:00:00+00:00</published>
+        <updated>2021-01-03T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://burakemir.ch/post/mathjax-support/" type="text/html"/>
+        <id>https://burakemir.ch/post/mathjax-support/</id>
+        
+        <content type="html">&lt;p&gt;&lt;strong&gt;Please add the following lines in the front matter when using MathJax.&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;color:#c0c5ce;&quot;&gt;&lt;code&gt;&lt;span&gt;[extra]
+&lt;&#x2F;span&gt;&lt;span&gt;math = true
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;hr &#x2F;&gt;
+&lt;h4 id=&quot;euler-s-identity&quot;&gt;Euler&#x27;s identity&lt;&#x2F;h4&gt;
+&lt;p&gt;$e^{i\pi }+1=0$&lt;&#x2F;p&gt;
+&lt;h4 id=&quot;geometric-interpretation&quot;&gt;Geometric interpretation&lt;&#x2F;h4&gt;
+&lt;p&gt;Any complex number $z=x+iy$ can be represented by the point $(x,y)$ on the complex plane. This point can also be represented in polar coordinates as $(r,\theta )$, where $r$ is the absolute value of $z$ (distance from the origin), and $\theta$  is the argument of $z$ (angle counterclockwise from the positive x-axis). By the definitions of sine and cosine, this point has cartesian coordinates of $(r\cos \theta ,r\sin \theta )$, implying that $z=r(\cos \theta +i\sin \theta )$. According to Euler&#x27;s formula, this is equivalent to saying $z=re^{i\theta}$.&lt;&#x2F;p&gt;
+&lt;p&gt;Euler&#x27;s identity says that $-1=e^{i\pi }$. Since $e^{i\pi }$ is $re^{i\theta }$ for $r$ = 1 and $\theta =\pi$ , this can be interpreted as a fact about the number −1 on the complex plane: its distance from the origin is 1, and its angle from the positive x-axis is $\pi$ radians.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Euler%27s_identity&quot;&gt;Euler&#x27;s identity - Wikipedia&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+</feed>
