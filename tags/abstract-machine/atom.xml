@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title> - abstract machine</title>
+    <link href="https://burakemir.ch/tags/abstract-machine/atom.xml" rel="self" type="application/atom+xml"/>
+    <link href="https://burakemir.ch"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2023-07-22T00:00:00+00:00</updated>
+    <id>https://burakemir.ch/tags/abstract-machine/atom.xml</id>
+    <entry xml:lang="en">
+        <title>CBPV and Natural Deduction - Part 1. Small steps</title>
+        <published>2023-07-22T00:00:00+00:00</published>
+        <updated>2023-07-22T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://burakemir.ch/post/cbpv-pt1-small-steps/" type="text/html"/>
+        <id>https://burakemir.ch/post/cbpv-pt1-small-steps/</id>
+        
+        <content type="html">&lt;p&gt;I have been reading up on call-by-push-value (CBPV),
+a variation of $\lambda$-calculus that is more
+fine-grained in its treatment of argument-passing.
+I then came across a chapter
+from Frank Pfenning&#x27;s 2016 &lt;a href=&quot;https:&#x2F;&#x2F;www.cs.cmu.edu&#x2F;~fp&#x2F;courses&#x2F;15816-f16&#x2F;schedule.html&quot;&gt;lecture notes on substructual logic&lt;&#x2F;a&gt; that 
+characterizes CBPV as &lt;em&gt;polarized natural deduction.&lt;&#x2F;em&gt; In a small series
+of posts, I am exploring what this means and how this relates to
+compilers.&lt;&#x2F;p&gt;
+&lt;p&gt;The Curry-Howard-Lambek correspondence is a nice way to connect logic and computation. 
+I have written about this in previous posts on my old blog, see
+&lt;a href=&quot;https:&#x2F;&#x2F;bq9.blogspot.com&#x2F;2020&#x2F;04&#x2F;higher-order-logic-and-equality.html&quot;&gt;Higher-order logic and equality&lt;&#x2F;a&gt;
+and
+&lt;a href=&quot;https:&#x2F;&#x2F;bq9.blogspot.com&#x2F;2020&#x2F;05&#x2F;intuitionistic-propositional-logic-and.html&quot;&gt;Intuitionistic Propositional Logic and Natural Deduction&lt;&#x2F;a&gt;.
+For the first part, those posts should be enough to tag along.
+In the next parts, we may look at some fine points of natural deduction.&lt;&#x2F;p&gt;
+&lt;!--
+we sequential composition
+Now CBPV raises a question:
+A few reasons: 
+* What does this &quot;finer-grained treatment of passing arguments&quot; correspond to
+in this logical perspective? 
+* if we instead regard $\lambda$-calculus as a model of computation, there are
+also *abstract machines* which would be more fine-grained models of computation.
+Does CBPV yield insights that we can put to good use when passing from
+the $\lambda$-calculus to the lower-level machine formalisms? Could these
+insights help us with the design of intermediate representations (IR) for
+compilers that would support reasoning about correctness of program
+transformations and optimizations?
+--&gt;
+&lt;!--
+For the second perspective, there will be a follow up at some point. For
+a sneak preview, consider the a paper [Structural Operational Semantics for Control Flow Graph Machines](https:&#x2F;&#x2F;arxiv.org&#x2F;abs&#x2F;1805.05400&#x27;) by Dmitri Garbuzov, William Mansky, Christine Rizkallah, Steve Zdancewic.
+--&gt;
+&lt;h1 id=&quot;reduction-and-strategy&quot;&gt;Reduction and strategy&lt;&#x2F;h1&gt;
+&lt;p&gt;In $\lambda$-calculus, our elementary computation step is a $\beta$-reduction. 
+Taking the perspective of the Curry-Howard-Lambek correspondence, we can regard 
+a type as a logical proposition and a term of typed $\lambda$-calculus as a proof 
+of this proposition. Here, $\beta$-reduction is a rewriting
+of the proof, which removes a &#x27;detour&#x27; in the proof. In other words, computation is proof normalization.&lt;&#x2F;p&gt;
+&lt;p&gt;$$
+( \lambda x : A .  t)\ s \longrightarrow_β t [ x := s ]
+$$&lt;&#x2F;p&gt;
+&lt;p&gt;Here, $[ x := s ]$ is our way of writing substitution. The full definition requires 
+the usual careful treatment of bound names. The rewriting can take place anywhere in
+the term.&lt;&#x2F;p&gt;
+&lt;!--
+Resource-efficient programming language implementations require
+*lowering* substitution and symbolic representation, i.e. find lower-level representations 
+that have same meaning (operational semantics). But let&#x27;s not get ahead of ourselves:
+we should first have an operational semantics.
+--&gt;
+&lt;p&gt;Suppose we wanted to specify the &lt;em&gt;order&lt;&#x2F;em&gt; of computation steps. When there are not one, but several reducible expressions,
+which reduction should happen first?&lt;&#x2F;p&gt;
+&lt;p&gt;A small-step semantics would specify not only reduction, but also where exactly evaluation takes place.
+To this end, one defines &lt;em&gt;evaluation context&lt;&#x2F;em&gt;, a term with a hole that specifies exactly
+where in the term reduction is permitted to happen. Here is a sample definition, where we consider
+$\lambda$-abstractions as values (we do not reduce under a $\lambda$.)&lt;&#x2F;p&gt;
+&lt;p&gt;$$
+\begin{array}{lll}
+E &amp;amp;::= &amp;amp;x\ |\ \lambda x. E\ |\ E\ E \\
+C &amp;amp;::= &amp;amp;[~]\ |\ E\ C\ |\ C\ V \\
+V &amp;amp;::= &amp;amp;\lambda x. E
+\end{array}
+$$&lt;&#x2F;p&gt;
+&lt;p&gt;When we have a context, we can fill its hole with a $\lambda$-expression and now exactly
+where evaluation takes place. The hole of a context could also be filled with another
+context.&lt;&#x2F;p&gt;
+&lt;p&gt;The definition of evaluation contexts forces the argument (operand) in
+an application to be evaluated before the operator. The example above is thus a form
+of call-by-value. Note that the definition of $C$ comes with a somewhat arbitrary decision to evaluate the operand
+before the operator. For call-by-name, passing a term that is not value would
+require a context like $[~]\ E$. &lt;&#x2F;p&gt;
+&lt;p&gt;Our specification of evaluation contexts seems to impose order by
+defining what form of argument-passing is possible; in other
+words, constraining (or leaving unconstrained) what can be bound to an identifier.&lt;&#x2F;p&gt;
+&lt;!--
+This brings us to a fundamental question: what can we bind to a variable? We
+may want to require that an argument of a $\lambda$-expression
+has to be reduced as much as possible before it is being bound to a
+variable. Or we may say, let any term be bound, and let the reduction 
+happen later when we cannot delay it further.
+This is, very roughly, the difference of call-by-value vs call-by-name.
+
+Another fundamental question is: how much do we reduce? Specifically,
+if we have a $\lambda$ expression, do we keep looking for reducible
+expressions? In many applications it is fine to stop reducing when
+a term has become a $\lambda$-expression, but when we talk about
+normal form of a proof, we want to reach a form where all reductions
+have been carried out and no more are possible.
+--&gt;
+&lt;h1 id=&quot;values-and-computations&quot;&gt;Values and computations&lt;&#x2F;h1&gt;
+&lt;p&gt;Instead of defining evaluation contexts separately, we now
+look at a different way of impose order on evaluation. 
+In doing so, we start treating contexts as computation (filling the hole
+with a value is something that can produce a new value). We will see that 
+what we are about to do is not very different from specifying an
+intermediate representation (IR) of a compiler.&lt;&#x2F;p&gt;
+&lt;p&gt;CBPV is a calculus that encompasses both call-by-value and call-by-name.
+It achieves this through a fine-grained distinction between terms that are
+&lt;em&gt;values&lt;&#x2F;em&gt; vs terms that are &lt;em&gt;computations&lt;&#x2F;em&gt; which is enfored by a
+type disciple. Therefore we will have value types 
+$A^+$ and computation types $A^-$:&lt;&#x2F;p&gt;
+&lt;p&gt;$$
+\begin{array}{lll}
+A^- &amp;amp;::= &amp;amp; A^+ \rightarrow B^-\ |\ \uparrow{A^+} \\
+A^+ &amp;amp;::= &amp;amp;\mathbf{1}\ |\ \downarrow{A^-}
+\end{array}
+$$&lt;&#x2F;p&gt;
+&lt;p&gt;The type operators $\uparrow{}$ and $\downarrow{}$ are described
+below. We add $\mathbf{1}$ (the &amp;quot;unit type&amp;quot;) as a base type, with 
+only inhabitant $\mathtt{()}$
+that we pronounce as &amp;quot;unit&amp;quot;.
+Base types like $\mathtt{Int}$
+or $\mathtt{String}$ would also be value types. The arrow type
+forces arguments to be of value type and the result to be of
+computation type. What matters most is the interplay
+of $\lambda$-abstraction and application. 
+Here are the typing rules for these:&lt;&#x2F;p&gt;
+&lt;p&gt;$$
+\begin{prooftree}
+\AxiomC{$\Gamma, x: A^+ \vdash s: B^-$}
+\RightLabel{$(\to_I)$}
+\UnaryInfC{$\Gamma \vdash (\lambda x: A^+. s):\, A^+ \rightarrow B^-$}
+\end{prooftree}
+\quad
+\quad
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash s:\, A^+ \rightarrow B^-$}
+\AxiomC{$\Gamma \vdash t:\, A^+$}
+\RightLabel{$(\to_E)$}
+\BinaryInfC{$\Gamma \vdash (s\ t):\, B^-$}
+\end{prooftree}
+$$&lt;&#x2F;p&gt;
+&lt;p&gt;In words, a $\lambda$-expression has an arrow type which is a computation (negative) type.
+We can chain abstractions like $\lambda x:X^+. \lambda y:Y^+. s$ for some
+term $s$ of computation type, but the argument types $X^+, Y^+$ are forced
+to be be value (positive) types. Application yields a computation type.
+This is where it may be useful to remember that filling the hole of a context
+yields something that we can turn into a value (but it is not a value yet).&lt;&#x2F;p&gt;
+&lt;p&gt;You may have noticed the $I$ and $E$ letters in the rule names.
+In natural deduction, every logical connective comes
+with an introduction and elimination rule. Even though we write
+these like sequents of sequent calculus, there are a few differences.
+In sequent calculus, there are left- and
+right-(introduction)-rules, and a computation step corresponds to 
+the removal of detours (lemmas) via cut-elimination. &lt;&#x2F;p&gt;
+&lt;h3 id=&quot;shifts&quot;&gt;Shifts&lt;&#x2F;h3&gt;
+&lt;p&gt;As any type discipline, the above rules make sure that certain programs
+cannot be written anymore. 
+How can we return a value, though? Or write an identity computation? Or 
+pass a function as an argument to another function? Our calculus is
+not yet complete.&lt;&#x2F;p&gt;
+&lt;p&gt;First, we need a way to turn a value into a computation. More precisely,
+we want to turn a term $p: A^+$ of value (positive) type into a term
+of computation (negative) type.&lt;&#x2F;p&gt;
+&lt;p&gt;Let us call this operation $\mathtt{return}\ p$. This is a &amp;quot;shift&amp;quot; between
+value types and computation types and is made
+explicit using a type operator $\uparrow\!{}A^+$. The notation requires
+some decoding work since $\uparrow\!{}A^+$ is a computation (negative) type.&lt;&#x2F;p&gt;
+&lt;p&gt;$$
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash s: A^+$}
+\RightLabel{$(\uparrow_I)$}
+\UnaryInfC{$\Gamma \vdash \mathtt{return}\ s:\, \uparrow\!{}A^+$}
+\end{prooftree}
+\quad
+\quad
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash s:\, \uparrow\!{}A^+$}
+\AxiomC{$\Gamma, x: A^+ \vdash t:\, C^-$}
+\RightLabel{$(\uparrow_E)$}
+\BinaryInfC{$\Gamma \vdash \mathtt{let\ val}\ x = s\ \mathtt{in}\ t:\, C^-$}
+\end{prooftree}
+$$&lt;&#x2F;p&gt;
+&lt;p&gt;The corresponding elimination operation takes a suspended computation and yields 
+a value. We use a &amp;quot;$\mathtt{let\ val}$&amp;quot; declaration as source syntax. Note how the type 
+discipline forces the righthand-side to be a suspended computation and how this
+imposes an order - we need to have the value before continuing. In turning the
+the right-hand side into a value, we not only know where the actual computation
+happens; we also bind the result to a local name.&lt;&#x2F;p&gt;
+&lt;p&gt;This amounts (almost) to all intermediary results being named.&lt;&#x2F;p&gt;
+&lt;p&gt;Next, we want to &amp;quot;package&amp;quot; a computation
+into a value (&lt;em&gt;suspend&lt;&#x2F;em&gt; the computation). This will let us pass a $\lambda$-abstraction
+as an argument to another $\lambda$-abstraction. We introduce an operator 
+$\mathtt{thunk}\ t$ that suspends a computation and an operator 
+$\mathtt{force}\ s$ that resumes a suspended computation.&lt;&#x2F;p&gt;
+&lt;p&gt;$$
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash k: A^-$}
+\RightLabel{$(\downarrow_I)$}
+\UnaryInfC{$\Gamma \vdash \mathtt{thunk}\ k:\, \downarrow\!{}A^-$}
+\end{prooftree}
+\quad
+\quad
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash t:\, \downarrow\!{}A^-$}
+\RightLabel{$(\downarrow_E)$}
+\UnaryInfC{$\Gamma \vdash \mathtt{force}\ t:\, A^-$}
+\end{prooftree}
+$$&lt;&#x2F;p&gt;
+&lt;p&gt;Again, the shift operator indicates in the type that we 
+have a suspended computation which is a value. Thus,
+$\downarrow$ shifts a negative to a positive type, and
+$\downarrow\!A^-$ can be used in all places that
+require a value type.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;example-programs&quot;&gt;Example programs&lt;&#x2F;h3&gt;
+&lt;p&gt;Let&#x27;s look at examples, starting with the identity combinator
+of plain $\lambda$-calculus. We want one of these at every type $I_A := \lambda x: A. x$ of type
+$A \rightarrow A$. In the above polarized $\lambda$-calculus,
+we get something close enough:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;for value types, there is: $\mathit{idval}_{A^+} := \lambda x: A^+. \mathtt{return}\,x$&lt;&#x2F;li&gt;
+&lt;li&gt;for computation types, we have: $\mathit{idcmp}_{A^-} := \lambda x:\,\downarrow{A^-}. \mathtt{force}\ x$&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;(Exercise: what are the types of these? What kind of &amp;quot;optimization&amp;quot; would remove these?)&lt;&#x2F;p&gt;
+&lt;!-- By looking at the rules, we can verify that this has type $A^+ \rightarrow\\,\uparrow\\!{}A^+$. --&gt;
+&lt;!--
+If we want to pass a computation requires suspending it via $\mathtt{thunk}\ \mathit{id}$. This
+is the only way to turn it into a value type  $\downarrow(A^+ \rightarrow\\,\uparrow\\!{}A^+)$.
+--&gt;
+&lt;p&gt;Next, let us try a combinator $\mathit{twice}_A$ of type $(A \rightarrow A) \rightarrow A \rightarrow A$.
+It takes a function $f$ and and argument $x$ and applies $f$ to $x$ twice.
+In our polarized $\lambda$ calculus, we need to use the other shift
+operation and end up with: &lt;&#x2F;p&gt;
+&lt;!-- a term of type $\downarrow(A^+ \rightarrow\\,\uparrow\\!{}A^+) \rightarrow A^+ \rightarrow\\,\uparrow\\!A^-$: --&gt;
+&lt;!--
+$$\lambda f:\\~\\~\downarrow(A^+ \rightarrow\\, \uparrow\\!A^+). \lambda x:A^+.\ \ldots(\mathrm{exercise!})\ldots$$
+--&gt;
+&lt;p&gt;$$
+\begin{array}{l}
+\lambda f:\,\downarrow(A^+ \rightarrow\, \uparrow\!A^+). \lambda x:A^+. \\
+\mathtt{let\ val}\ y\ =\ (\mathtt{force}\ f)\ x\ \mathtt{in} \\ 
+(\mathtt{force}\ f)\ y
+\end{array}
+$$&lt;&#x2F;p&gt;
+&lt;p&gt;Note how the intermediary result has a name $y$. (Exercise: what is the type
+of this program? If we used an alternative term which didn&#x27;t use $\mathbf{return}$, what
+changes?)&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;an-interpreter&quot;&gt;An interpreter&lt;&#x2F;h1&gt;
+&lt;!--
+The let declaration in rule $(\uparrow_E)$ is not merely a convenience for 
+local declarations, it is a load-bearing construct of the calculus. In the CBPV book,
+it is written $e_1\ \mathtt{to}\ x.\ e_2$. It is very clear that
+$e_1$ has to be evaluated and bound to $x$ before any evaluation work
+on $e_2$ can begin.
+
+What is maybe less obvious is that instead of the high-level
+substitution operation, we only bind and lookup variables. In
+particular, there are never any name clashes.
+--&gt;
+&lt;p&gt;The logical reading of these typing rules is that we have set up a particular kind
+of natural deduction calculus. A term that has a type derivation is a proof, and an
+introduction followed by an elimitation is clearly a &amp;quot;detour&amp;quot;.
+These detours can be removed and these proof normalization steps
+correspond to computation steps.&lt;&#x2F;p&gt;
+&lt;!--
+$$ \mathtt{let\ val}\ x = \mathtt{return}\ s\ \mathtt{in}\ t \longrightarrow_\beta t[x\leftarrow s]$$
+$$ \mathtt{force}\ (\mathtt{thunk}\ t) \longrightarrow_\beta t $$
+--&gt;
+&lt;p&gt;At this point, we can write out local reductions:&lt;&#x2F;p&gt;
+&lt;p&gt;$$\begin{array}{ll}
+\mathtt{let\ val}\ x\ =\ \mathtt{return}\ v\ \mathtt{in} \mathtt{t} &amp;amp;\rightsquigarrow t[x := v] \\
+\mathtt{thunk}\ (\mathtt{force}\ t) &amp;amp;\rightsquigarrow t
+\end{array}
+$$&lt;&#x2F;p&gt;
+&lt;p&gt;This is not what we were after though. Instead, we can define an &lt;em&gt;abstract machine&lt;&#x2F;em&gt;
+that specifies exactly which rewriting steps to take when. What is special about
+an abstract machine is that unlike an interpreter that recursively traverses
+an expression, the machine always operates at a bounded depth from the top.&lt;&#x2F;p&gt;
+&lt;p&gt;What follows are transitions rules of a CK machine. Here C stands for control and K is a stack of
+contexts. 
+The source level $\mathbf{let\ val}\ x\ = \_ \ \mathbf{in}\ t$ expression is shortened to $(\_ \ \mathtt{to}\ x. t)$,
+and an application where we are waiting for the operator to be evaluated is written $(\_\ v)$.
+This gives a simple operational semantics, although a CK machine is still a rather high-level description since
+we need to appeal to substitution in the definition.&lt;&#x2F;p&gt;
+&lt;p&gt;$$
+\begin{array}{llll}
+C                                        &amp;amp; K &amp;amp; \rightsquigarrow &amp;amp; C&#x27; &amp;amp; K&#x27; \\
+\mathtt{let\ val}\ x = s\ \mathtt{in}\ t &amp;amp; k &amp;amp;                 &amp;amp; s  &amp;amp; (\_ \ \mathtt{to}\ x. t) :: k \\
+\mathtt{return}\ v                       &amp;amp; (\_\ \mathtt{to}\ x. t) :: k &amp;amp; &amp;amp; t[x := v] &amp;amp;  k  \\
+\mathtt{force} (\mathtt{thunk}\ t)       &amp;amp; k   &amp;amp;   &amp;amp; t   &amp;amp;  k \\
+s\ v                                     &amp;amp; k   &amp;amp;   &amp;amp; s   &amp;amp; (\_ \ v) :: k \\
+\lambda x. t &amp;amp; (\_ \ v) :: k &amp;amp; &amp;amp; t[x := v] &amp;amp; k
+\end{array}
+$$&lt;&#x2F;p&gt;
+&lt;p&gt;There is a simple idea behind all this which is worth restating: we statically (through the type system) know 
+that every application $(s\ v)$ comes with an operand that is a value. So:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;whenever we evaluate an application we start by pushing a value&lt;&#x2F;li&gt;
+&lt;li&gt;when we are done with evaluating operator and have a $\lambda$-term, we pop the value&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;More precisely, what we push and pop is an application context with a value as operand.
+Even though this looks like call-by-value, this subsumes call-by-name because a suspended computation
+can be treated as a value. The stack is a list of nested contexts. In a sense,
+it is dual to an expression; this can be made precise but we won&#x27;t do this now.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;a-preview-of-the-continuation&quot;&gt;A preview of the continuation&lt;&#x2F;h1&gt;
+&lt;p&gt;We started from a natural deduction calculus, which is used for formal logical reasoning, and ended up with an abstract machine.
+Unlike rewriting, we have made a step towards a more mechanical, low-level way of normalizing expressions. The fact that the
+CK machine is still using substitutions makes it look like we are playing a formal game of symbol manipulation, but if
+we could continue from here towards a CEK machine which replaces substitutions with environments.&lt;&#x2F;p&gt;
+&lt;p&gt;On the logical side, since we did not discuss products and sums, we are missing conjunction and disjunction. We did not
+discuss polarization much. We did not explore classical reasoning, negation, sequent calculus.&lt;&#x2F;p&gt;
+&lt;p&gt;We did not talk about effects yet. CBPV gives us a handle on computational effects, similar to monads but different.
+It should be obvious how a lean way to specifying evaluation order helps with describing effects.&lt;&#x2F;p&gt;
+&lt;p&gt;This is a good time to pause and reflect, before we go to the next round and shed light on some of these topics. In
+the meantime, here are some pointers to learn more:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Frank Pfenning&#x27;s 2016 &lt;a href=&quot;https:&#x2F;&#x2F;www.cs.cmu.edu&#x2F;~fp&#x2F;courses&#x2F;15816-f16&#x2F;schedule.html&quot;&gt;lecture notes on substructual logic&lt;&#x2F;a&gt; has a chapter on CBPV.
+It ends not with a CK machine, but a specification of operational semantics in an ordered logic
+formalism.&lt;&#x2F;li&gt;
+&lt;li&gt;CBPV is described in the book &amp;quot;Call-by-Push-Value: A Functional Imperative Synthesis&amp;quot; by Paul Blain Levy. A minor difference is that
+we spell out the application context with the value here while in Levy&#x27;s stack only the value gets pushed.&lt;&#x2F;li&gt;
+&lt;li&gt;Matthias Felleisen&#x27;s &lt;a href=&quot;https:&#x2F;&#x2F;felleisen.org&#x2F;matthias&#x2F;4400-s20&#x2F;lecture23.html&quot;&gt;lecture notes&lt;&#x2F;a&gt; have a discussion of CK, CEK, CESK machines.
+The introduction of environments lets us get rid of substitutions and replace them with environment lookups. This is not yet an
+efficient language implementation, but it closes the gap. There is discussion about treating the environment more like a call stack, including
+popping unused values. And (for the CESK) there is a discussion on allocating structures.&lt;&#x2F;li&gt;
+&lt;li&gt;Bob Harper&#x27;s post on &lt;a href=&quot;https:&#x2F;&#x2F;existentialtype.wordpress.com&#x2F;2012&#x2F;08&#x2F;25&#x2F;polarity-in-type-theory&#x2F;&quot;&gt;polarity in type theory&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Zena M. Ariola, Aaron Bohannon, Amr Sabry. &lt;a href=&quot;https:&#x2F;&#x2F;legacy.cs.indiana.edu&#x2F;~sabry&#x2F;papers&#x2F;sequent.pdf&quot;&gt;Sequent calculi and abstract machines&lt;&#x2F;a&gt; has a
+thorough discussion of natural deduction.&lt;&#x2F;li&gt;
+&lt;li&gt;Nick Benton, Gavin Bierman, Valeria de Paiva, Martin Hyland. &lt;a href=&quot;https:&#x2F;&#x2F;www.researchgate.net&#x2F;publication&#x2F;2648556_Term_Assignment_for_Intuitionistic_Linear_Logic_Preliminary_Report&quot;&gt;Term Assignment for Intuitionistic Linear Logic&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;!--
+Natural deduction as introduced by Gentzen has a normalization theorem: a proof derivation
+can be rewritten in a way that it contains no detours. This result is analogous to
+cut-elimination result for sequent calculus, but the correspondence is subtle. While
+in sequent calculus, we interpret the cut-rule as computation steps, in natural deduction
+we have local reductions.
+
+We could also have predefined constants like $\mathtt{plus}: Int^+ \rightarrow Int^+ \rightarrow Int^-$.
+
+Since we are talking about programs, we want to compose computations, that is, build larger computations out of smaller ones.
+--&gt;
+</content>
+        
+    </entry>
+</feed>

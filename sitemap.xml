@@ -24,11 +24,24 @@
         <loc>https://burakemir.ch/post/</loc>
     </url>
     <url>
+        <loc>https://burakemir.ch/post/cbpv-pt1-small-steps/</loc>
+        <lastmod>2023-07-22</lastmod>
+    </url>
+    <url>
         <loc>https://burakemir.ch/post/first-post/</loc>
         <lastmod>2023-06-12</lastmod>
     </url>
     <url>
         <loc>https://burakemir.ch/tags/</loc>
+    </url>
+    <url>
+        <loc>https://burakemir.ch/tags/abstract-machine/</loc>
+    </url>
+    <url>
+        <loc>https://burakemir.ch/tags/cbpv/</loc>
+    </url>
+    <url>
+        <loc>https://burakemir.ch/tags/logic/</loc>
     </url>
     <url>
         <loc>https://burakemir.ch/tags/meta/</loc>
