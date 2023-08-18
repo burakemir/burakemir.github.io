@@ -196,7 +196,7 @@ discipline forces the righthand-side to be a suspended computation and how this
 imposes an order - we need to have the value before continuing. In turning the
 the right-hand side into a value, we not only know where the actual computation
 happens; we also bind the result to a local name.&lt;&#x2F;p&gt;
-&lt;p&gt;This amounts (almost) to all intermediary results being named.&lt;&#x2F;p&gt;
+&lt;p&gt;This amounts to all intermediary results being named.&lt;&#x2F;p&gt;
 &lt;p&gt;Next, we want to &amp;quot;package&amp;quot; a computation
 into a value (&lt;em&gt;suspend&lt;&#x2F;em&gt; the computation). This will let us pass a $\lambda$-abstraction
 as an argument to another $\lambda$-abstraction. We introduce an operator 
