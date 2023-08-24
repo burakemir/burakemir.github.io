@@ -215,7 +215,7 @@ imposes an order - we need to have the value before continuing. In turning the
 the right-hand side into a value, we not only know where the actual computation
 happens; we also bind the result to a local name.
 
-This amounts (almost) to all intermediary results being named.
+This amounts to all intermediary results being named.
 
 Next, we want to "package" a computation
 into a value (*suspend* the computation). This will let us pass a $\lambda$-abstraction
