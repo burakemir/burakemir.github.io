@@ -68,12 +68,21 @@ variable $y$ introduced to the context that is not used at all.
 These examples show that we use $\Gamma$ as a set of assumptions. We can freely
 use anything that is in the set.&lt;&#x2F;p&gt;
 &lt;p&gt;&lt;em&gt;Linearity&lt;&#x2F;em&gt; use a variable exactly once. Just as in mathematics, a linear equation has 
-the shape $a * x + b = 0$ where $x$ is used once (with exponent 1), in &lt;em&gt;linear logic&lt;&#x2F;em&gt;,
+the shape $a * x + b = 0$ where $x$ is used once (with $a \neq 0$, thus polynomial degree 1), in &lt;em&gt;linear logic&lt;&#x2F;em&gt;,
 we are interested in the case that an assumption is used exactly once. 
 Why would we do this? There are many concrete applications to linearity
 in programming languages. The one we will be most interested in is the 
 inherent notion of &lt;em&gt;exclusive ownership&lt;&#x2F;em&gt; that comes from treating types
 as resources.&lt;&#x2F;p&gt;
+&lt;p&gt;A close friend of linearity is &lt;em&gt;affinity&lt;&#x2F;em&gt; where polynomial degree may
+be either 1 or 0. We can ignore variables. This is pretty interesting as
+you can see from the examples: with an affine type system, we can still
+assign a type to terms like $K$ combinator that ignore variables.
+The more practical example is code like this:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;color:#c0c5ce;&quot;&gt;&lt;code&gt;&lt;span&gt;fn (x: &amp;amp;mut u32) {
+&lt;&#x2F;span&gt;&lt;span&gt;  if (some_condition()) { *x = 1; }
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
 &lt;!--
 There is more to say about linear logic than these applications, but for 
 our purposes, understanding CBPV as polarized natural deduction (with an
@@ -98,10 +107,13 @@ derivations, we make explicit that they do not share any assumptions.
 Let&#x27;s jump right in.
 --&gt;
 &lt;h2 id=&quot;linear-cbpv&quot;&gt;Linear CBPV&lt;&#x2F;h2&gt;
-&lt;p&gt;We can now give a linear deduction calculus, using the standard notation for
+&lt;p&gt;We can now define a linear natural deduction calculus, using the standard notation for
 linear logic connectives. We will do this by simply repeating all the rules
 we had previously for call-by-push-value, but now with the added constraint
-that variables (assumptions) are used exactly once.&lt;&#x2F;p&gt;
+that variables (assumptions) are used exactly once. For the judgment
+$\Gamma \vdash e: T$ we require that exactly the free variables in $e$ appear in $\Gamma$.
+If we want an affine type discipline instead, we require that $\Gamma$ be a superset
+of all the variables in $e$.&lt;&#x2F;p&gt;
 &lt;p&gt;$$
 \begin{prooftree}
 \AxiomC{$x : A^+ \in \Gamma$}
@@ -148,7 +160,8 @@ is that there is a separate, disjoint context named $\Delta$.&lt;&#x2F;p&gt;
 \end{prooftree}
 $$&lt;&#x2F;p&gt;
 &lt;p&gt;This is easy! The rules for introducing $(\downarrow_I)$ and eliminating
-$(\downarrow_E)$ the shift from computation to values do not actually change.
+$(\downarrow_E)$ the shift from computation to values do not actually change so
+we don&#x27;t repeat them here (consult &lt;a href=&quot;https:&#x2F;&#x2F;burakemir.ch&#x2F;post&#x2F;cbpv-pt1-small-steps&#x2F;&quot;&gt;part 1&lt;&#x2F;a&gt;).
 We have defined a core linear CBPV calculus with abstraction and application.&lt;&#x2F;p&gt;
 &lt;h2 id=&quot;sums-and-products&quot;&gt;Sums and Products&lt;&#x2F;h2&gt;
 &lt;p&gt;We move on to sum and product types discussed in &lt;a href=&quot;https:&#x2F;&#x2F;burakemir.ch&#x2F;post&#x2F;cbpv-pt2-sum-product&#x2F;&quot;&gt;part 2&lt;&#x2F;a&gt;. There,
