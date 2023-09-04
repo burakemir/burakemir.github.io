@@ -1,20 +1,27 @@
 +++
-title = "Flow and more"
-weight = 8
+title = "Linear but how"
+weight = 7
 sort_by = "weight"
 insert_anchor_links = "right"
 +++
 
-More general question:
-   * other areas where splitting value vs computations (CBPV) may helps?
-   * can we cover user-definable actions (RAII, implement Drop)?
-   * e.g. do abstract interpretation on abstract machine traces
+Literature approaches to bring linear logic into programming
 
-What we know:
-  * CBPV is closer to compiler IR (naming intermediate results, evaluation order)
-  * easy to define abstract machine, also for open terms
+Includes memory safety, eg. uniqueness types. Reynolds "syntactic control of inference" 1978.
+
+Relevant to the problem of shared references:
+
+   * Phil Wadler "Is there a use for linear types?" ACM SIGPLAN Notices 26 (9) '91
+   * Odersky "Observer types for linear logic" ESOP'92
+
+Key points:
+   * local/short-lived read-only aliasing is ok for a linear type!
+      * **Key ingredient of Rust type discipline.**
+   * need rules to combine linear and non-linear types in compound data types.
+      * practical application: [splitting borrows](https://doc.rust-lang.org/nomicon/borrow-splitting.html)
 
 Questions:
-  * If we go further (ANF), do we close the gap towards SSA (used in LLVM-based Rust backend)?
-  * can a model of Rust type-discipline also be to improve C++ programs?
-    * dataflow analysis, instead of type-discipline, check through static analysis
+   * can we do without exponentials?
+      * In Rust, a type (atom) either "is Copy" or not. Auto-derivation (e.g. Send)
+   * dealing with context when linear / non-linear types are combined. bunched implications
+   * can the simple model be extended with "par" and "fearless concurrency" properties

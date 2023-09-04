@@ -14,4 +14,4 @@ Goal:
   * choose subset of Rust that is easily recognized 
   * canonical way to "translate away" flow (CPS)
 
-
+What follows are early ideas how this might look.
