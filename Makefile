@@ -17,16 +17,17 @@ arrowlogo :
 	rsync -av $(location_arrow_logo)/build/ arrowlogo
 
 book:
-	cd mangle-point-in-time-01/ && mdbook build
+	$(MAKE) -C mangle-point-in-time-01
+	$(MAKE) -C odersky-fest-23 
 
-deploy : $(location_deploy)
+deploy : $(location_deploy) book
 	cd src && zola build
 	cd $(location_deploy); git pull
 	cp -f -r src/deploy/* $(location_deploy)/
 	cp -f $(resources) $(location_deploy)/
 	cp -f static/* $(location_deploy)/
-	mdbook build mangle-point-in-time-01
-	cp -R mangle-point-in-time-01/book $(location_deploy)/mangle-point-in-time-01
+	mkdir $(location_deploy)/mangle-point-in-time-01
+	cp -R mangle-point-in-time-01/book/* $(location_deploy)/mangle-point-in-time-01
 	rsync -av $(location_arrow_logo)/build/ $(location_deploy)/arrowlogo
 
 $(location_deploy):

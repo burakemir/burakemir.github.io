@@ -71,13 +71,25 @@ These examples show that we use $\Gamma$ as a set of assumptions. We can freely
 use anything that is in the set.
 
 *Linearity* use a variable exactly once. Just as in mathematics, a linear equation has 
-the shape $a * x + b = 0$ where $x$ is used once (with exponent 1), in *linear logic*,
+the shape $a * x + b = 0$ where $x$ is used once (with $a \neq 0$, thus polynomial degree 1), in *linear logic*,
 we are interested in the case that an assumption is used exactly once. 
 Why would we do this? There are many concrete applications to linearity
 in programming languages. The one we will be most interested in is the 
 inherent notion of *exclusive ownership* that comes from treating types
 as resources.
  
+A close friend of linearity is *affinity* where polynomial degree may
+be either 1 or 0. We can ignore variables. This is pretty interesting as
+you can see from the examples: with an affine type system, we can still
+assign a type to terms like $K$ combinator that ignore variables.
+The more practical example is code like this:
+
+```
+fn (x: &mut u32) {
+  if (some_condition()) { *x = 1; }
+}
+```
+
 <!--
 There is more to say about linear logic than these applications, but for 
 our purposes, understanding CBPV as polarized natural deduction (with an
@@ -106,10 +118,13 @@ Let's jump right in.
 
 ## Linear CBPV
 
-We can now give a linear deduction calculus, using the standard notation for
+We can now define a linear natural deduction calculus, using the standard notation for
 linear logic connectives. We will do this by simply repeating all the rules
 we had previously for call-by-push-value, but now with the added constraint
-that variables (assumptions) are used exactly once.
+that variables (assumptions) are used exactly once. For the judgment
+$\Gamma \vdash e: T$ we require that exactly the free variables in $e$ appear in $\Gamma$.
+If we want an affine type discipline instead, we require that $\Gamma$ be a superset
+of all the variables in $e$.
 
 $$
 \begin{prooftree}
@@ -163,7 +178,8 @@ $$
 $$
 
 This is easy! The rules for introducing $(\downarrow_I)$ and eliminating
- $(\downarrow_E)$ the shift from computation to values do not actually change.
+ $(\downarrow_E)$ the shift from computation to values do not actually change so
+we don't repeat them here (consult [part 1](@/post/cbpv_pt1_small_steps.md)).
 We have defined a core linear CBPV calculus with abstraction and application.
 
 ## Sums and Products

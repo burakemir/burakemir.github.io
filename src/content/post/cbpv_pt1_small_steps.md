@@ -52,10 +52,10 @@ of this proposition. Here, $\beta$-reduction is a rewriting
 of the proof, which removes a 'detour' in the proof. In other words, computation is proof normalization.
 
 $$
-( \lambda x : A .  t)\ s \longrightarrow_β t [ x := s ]
+( \lambda x : A .  M)\ N \longrightarrow_β M [ x := N ]
 $$
 
-Here, $[ x := s ]$ is our way of writing substitution. The full definition requires 
+Here, $[ x := N ]$ is our way of writing substitution. The full definition requires
 the usual careful treatment of bound names. The rewriting can take place anywhere in
 the term.
 <!--
@@ -124,12 +124,12 @@ CBPV is a calculus that encompasses both call-by-value and call-by-name.
 It achieves this through a fine-grained distinction between terms that are
 *values* vs terms that are *computations* which is enfored by a
 type disciple. Therefore we will have value types 
-$A^+$ and computation types $A^-$:
+$A^+$ and computation types $B^-$:
 
 $$
 \begin{array}{lll}
-A^- &::= & A^+ \rightarrow B^-\ |\ \uparrow{A^+} \\\\
-A^+ &::= &\mathbf{1}\ |\ \downarrow{A^-}
+B^- &::= & A^+ \rightarrow B^-\ |\ \uparrow{A^+} \\\\
+A^+ &::= &\mathbf{1}\ |\ \downarrow{B^-}
 \end{array}
 $$
 
@@ -138,7 +138,25 @@ below. We add $\mathbf{1}$ (the "unit type") as a base type, with
 only inhabitant $\mathtt{()}$
 that we pronounce as "unit".
 Base types like $\mathtt{Int}$
-or $\mathtt{String}$ would also be value types. The arrow type
+or $\mathtt{String}$ would also be value types. All variables
+have value type.
+
+$$
+\begin{prooftree}
+\AxiomC{}
+\RightLabel{$(1_I)$}
+\UnaryInfC{$\cdot \vdash (): \mathbf{1}$}
+\end{prooftree}
+\quad
+\quad
+\begin{prooftree}
+\AxiomC{$x : A^+ \in \Gamma$}
+\RightLabel{(hyp)}
+\UnaryInfC{$\Gamma \vdash x: A^+$}
+\end{prooftree}
+$$
+
+The arrow type
 forces arguments to be of value type and the result to be of
 computation type. What matters most is the interplay
 of $\lambda$-abstraction and application. 
@@ -146,23 +164,23 @@ Here are the typing rules for these:
 
 $$
 \begin{prooftree}
-\AxiomC{$\Gamma, x: A^+ \vdash s: B^-$}
+\AxiomC{$\Gamma, x: A^+ \vdash M: B^-$}
 \RightLabel{$(\to_I)$}
-\UnaryInfC{$\Gamma \vdash (\lambda x: A^+. s):\\, A^+ \rightarrow B^-$}
+\UnaryInfC{$\Gamma \vdash (\lambda x: A^+. M):\\, A^+ \rightarrow B^-$}
 \end{prooftree}
 \quad
 \quad
 \begin{prooftree}
-\AxiomC{$\Gamma \vdash s:\\, A^+ \rightarrow B^-$}
-\AxiomC{$\Gamma \vdash t:\\, A^+$}
+\AxiomC{$\Gamma \vdash M:\\, A^+ \rightarrow B^-$}
+\AxiomC{$\Gamma \vdash V:\\, A^+$}
 \RightLabel{$(\to_E)$}
-\BinaryInfC{$\Gamma \vdash (s\ t):\\, B^-$}
+\BinaryInfC{$\Gamma \vdash (M\ V):\\, B^-$}
 \end{prooftree}
 $$
 
 In words, a $\lambda$-expression has an arrow type which is a computation (negative) type.
-We can chain abstractions like $\lambda x:X^+. \lambda y:Y^+. s$ for some
-term $s$ of computation type, but the argument types $X^+, Y^+$ are forced
+We can chain abstractions like $\lambda x:X^+. \lambda y:Y^+. M$ for some
+term $M$ of computation type, but the argument types $X^+, Y^+$ are forced
 to be be value (positive) types. Application yields a computation type.
 This is where it may be useful to remember that filling the hole of a context
 yields something that we can turn into a value (but it is not a value yet).
@@ -184,7 +202,7 @@ pass a function as an argument to another function? Our calculus is
 not yet complete.
 
 First, we need a way to turn a value into a computation. More precisely,
-we want to turn a term $p: A^+$ of value (positive) type into a term
+we want to turn a term $V: A^+$ of value (positive) type into a term
 of computation (negative) type.
 
 Let us call this operation $\mathtt{return}\ p$. This is a "shift" between
@@ -194,17 +212,17 @@ some decoding work since $\uparrow\\!{}A^+$ is a computation (negative) type.
 
 $$
 \begin{prooftree}
-\AxiomC{$\Gamma \vdash s: A^+$}
+\AxiomC{$\Gamma \vdash V: A^+$}
 \RightLabel{$(\uparrow_I)$}
-\UnaryInfC{$\Gamma \vdash \mathtt{return}\ s:\\, \uparrow\\!{}A^+$}
+\UnaryInfC{$\Gamma \vdash \mathtt{return}\ V:\\, \uparrow\\!{}A^+$}
 \end{prooftree}
 \quad
 \quad
 \begin{prooftree}
 \AxiomC{$\Gamma \vdash s:\\, \uparrow\\!{}A^+$}
-\AxiomC{$\Gamma, x: A^+ \vdash t:\\, C^-$}
+\AxiomC{$\Gamma, x: A^+ \vdash M:\\, B^-$}
 \RightLabel{$(\uparrow_E)$}
-\BinaryInfC{$\Gamma \vdash \mathtt{let\ val}\ x = s\ \mathtt{in}\ t:\\, C^-$}
+\BinaryInfC{$\Gamma \vdash \mathtt{let\ val}\ x = M\ \mathtt{in}\ N:\\, B^-$}
 \end{prooftree}
 $$
 
@@ -225,16 +243,16 @@ $\mathtt{force}\ s$ that resumes a suspended computation.
 
 $$
 \begin{prooftree}
-\AxiomC{$\Gamma \vdash k: A^-$}
+\AxiomC{$\Gamma \vdash M: B^-$}
 \RightLabel{$(\downarrow_I)$}
-\UnaryInfC{$\Gamma \vdash \mathtt{thunk}\ k:\\, \downarrow\\!{}A^-$}
+\UnaryInfC{$\Gamma \vdash \mathtt{thunk}\ M:\\, \downarrow\\!{}B^-$}
 \end{prooftree}
 \quad
 \quad
 \begin{prooftree}
-\AxiomC{$\Gamma \vdash t:\\, \downarrow\\!{}A^-$}
+\AxiomC{$\Gamma \vdash V:\\, \downarrow\\!{}B^-$}
 \RightLabel{$(\downarrow_E)$}
-\UnaryInfC{$\Gamma \vdash \mathtt{force}\ t:\\, A^-$}
+\UnaryInfC{$\Gamma \vdash \mathtt{force}\ V:\\, B^-$}
 \end{prooftree}
 $$
 
@@ -252,7 +270,7 @@ $A \rightarrow A$. In the above polarized $\lambda$-calculus,
 we get something close enough:
 
 * for value types, there is: $\mathit{idval}_{A^+} := \lambda x: A^+. \mathtt{return}\\,x$
-* for computation types, we have: $\mathit{idcmp}_{A^-} := \lambda x:\\,\downarrow{A^-}. \mathtt{force}\ x$
+* for computation types, we have: $\mathit{idcmp}_{B^-} := \lambda x:\\,\downarrow{B^-}. \mathtt{force}\ x$
 
 (Exercise: what are the types of these? What kind of "optimization" would remove these?)
 
@@ -277,7 +295,7 @@ $$
 \begin{array}{l}
 \lambda f:\\,\downarrow(A^+ \rightarrow\\, \uparrow\\!A^+). \lambda x:A^+. \\\\
 \mathtt{let\ val}\ y\ =\ (\mathtt{force}\ f)\ x\ \mathtt{in} \\\\ 
-(\mathtt{force}\ f)\ y
+\mathtt{return}\ (\mathtt{force}\ f)\ y
 \end{array}
 $$
 
@@ -314,8 +332,8 @@ $$ \mathtt{force}\ (\mathtt{thunk}\ t) \longrightarrow_\beta t $$
 At this point, we can write out local reductions:
 
 $$\begin{array}{ll}
-\mathtt{let\ val}\ x\ =\ \mathtt{return}\ v\ \mathtt{in} \mathtt{t} &\rightsquigarrow t[x := v] \\\\
-\mathtt{thunk}\ (\mathtt{force}\ t) &\rightsquigarrow t
+\mathtt{let\ val}\ x\ =\ \mathtt{return}\ V\ \mathtt{in} \mathtt{M} &\rightsquigarrow M[x := V] \\\\
+\mathtt{thunk}\ (\mathtt{force}\ M) &\rightsquigarrow M
 \end{array}
 $$
 
@@ -326,28 +344,29 @@ an expression, the machine always operates at a bounded depth from the top.
 
 What follows are transitions rules of a CK machine. Here C stands for control and K is a stack of
 contexts. 
-The source level $\mathbf{let\ val}\ x\ = \\_ \ \mathbf{in}\ t$ expression is shortened to $(\\_ \ \mathtt{to}\ x. t)$,
-and an application where we are waiting for the operator to be evaluated is written $(\\\_\ v)$.
+The source level $\mathbf{let\ val}\ x\ = \\_ \ \mathbf{in}\ M$ expression is shortened to $(\\_ \ \mathtt{to}\ x. M)$,
+and an application where we are waiting for the operator to be evaluated is written $(\\\_\ V)$.
 This gives a simple operational semantics, although a CK machine is still a rather high-level description since
 we need to appeal to substitution in the definition.
 
 $$
 \begin{array}{llll}
 C                                        & K & \rightsquigarrow & C' & K' \\\\
-\mathtt{let\ val}\ x = s\ \mathtt{in}\ t & k &                 & s  & (\\\_ \ \mathtt{to}\ x. t) :: k \\\\
-\mathtt{return}\ v                       & (\\_\ \mathtt{to}\ x. t) :: k & & t[x := v] &  k  \\\\
-\mathtt{force} (\mathtt{thunk}\ t)       & k   &   & t   &  k \\\\
-s\ v                                     & k   &   & s   & (\\\_ \ v) :: k \\\\
-\lambda x. t & (\\\_ \ v) :: k & & t[x := v] & k
+\mathtt{let\ val}\ x = M\ \mathtt{in}\ N & k &                 & M  & (\\\_ \ \mathtt{to}\ x. N) :: k \\\\
+\mathtt{return}\ V                       & (\\_\ \mathtt{to}\ x. M) :: k & & M[x := V] &  k  \\\\
+\mathtt{force} (\mathtt{thunk}\ M)       & k   &   & M   &  k \\\\
+M\ V                                     & k   &   & M   & (\\\_ \ V) :: k \\\\
+\lambda x. M & (\\\_ \ V) :: k & & M[x := V] & k
 \end{array}
 $$
 
 There is a simple idea behind all this which is worth restating: we statically (through the type system) know 
-that every application $(s\ v)$ comes with an operand that is a value. So:
-- whenever we evaluate an application we start by pushing a value
-- when we are done with evaluating operator and have a $\lambda$-term, we pop the value
+that every application $(M\ V)$ comes with an operand that is a value. So:
+- whenever we evaluate an application we start by pushing a value (the operand)
+- when we are done with evaluating the operator and obtain a $\lambda$-term, we can pop a value and continue
 
-More precisely, what we push and pop is an application context with a value as operand.
+More precisely, what we push and pop is an application (evaluation context) with
+hole in the operator place and an value as operand.
 Even though this looks like call-by-value, this subsumes call-by-name because a suspended computation
 can be treated as a value. The stack is a list of nested contexts. In a sense,
 it is dual to an expression; this can be made precise but we won't do this now.
