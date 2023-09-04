@@ -21,8 +21,8 @@
 &lt;p&gt;I wanted to like racket and pollen, but kept on forgetting everything absolutely everything.&lt;&#x2F;p&gt;
 &lt;p&gt;All I want is to keep some standalone note pages, and some posts, with math and code. Goodness.&lt;&#x2F;p&gt;
 &lt;p&gt;$e^{i\pi }+1=0$&lt;&#x2F;p&gt;
-&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;trait &lt;&#x2F;span&gt;&lt;span&gt;Foo {
-&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;foo&lt;&#x2F;span&gt;&lt;span&gt;(&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Self&lt;&#x2F;span&gt;&lt;span&gt;) -&amp;gt; Bar
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#383838;color:#e6e1dc;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;trait &lt;&#x2F;span&gt;&lt;span&gt;Foo {
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffc66d;&quot;&gt;foo&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;Self&lt;&#x2F;span&gt;&lt;span&gt;) -&amp;gt; Bar
 &lt;&#x2F;span&gt;&lt;span&gt;}
 &lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
 &lt;p&gt;$$
