@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+      <!-- Enable responsiveness on mobile devices-->
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+      
+    
+
+      <title></title>
+
+      
+      
+
+      <!-- CSS -->
+      
+      <link rel="stylesheet" href="https://burakemir.ch/book.css">
+      
+
+      
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']]
+    }
+  };
+</script>
+<script type="text/javascript" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
+
+
+    </head>
+
+    <body>
+        <div class="menu">
+            
+            
+            <nav role="navigation">
+                <ul>
+                    
+                        
+                        
+                            
+                            <li >
+                                
+                                <a href="https://burakemir.ch/1_intro/">
+                                    <strong>1.</strong>
+                                    Call-by-push-value and Ownership
+                                </a>
+                                
+                            </li>
+                        
+                            
+                            <li >
+                                
+                                <a href="https://burakemir.ch/2_order/">
+                                    <strong>2.</strong>
+                                    Evaluation Order
+                                </a>
+                                
+                            </li>
+                        
+                            
+                            <li >
+                                
+                                <a href="https://burakemir.ch/3_cbpv/">
+                                    <strong>3.</strong>
+                                    Call by Push Value (CBPV)
+                                </a>
+                                
+                                    <ul>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/3_cbpv/page1/">
+                                                    <strong>3.1.</strong>
+                                                    CBPV Rules
+                                                </a>
+                                            </li>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/3_cbpv/page2/">
+                                                    <strong>3.2.</strong>
+                                                    CBPV Examples
+                                                </a>
+                                            </li>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/3_cbpv/page3/">
+                                                    <strong>3.3.</strong>
+                                                    Sums and products
+                                                </a>
+                                            </li>
+                                        
+                                    </ul>
+                                
+                            </li>
+                        
+                            
+                            <li >
+                                
+                                <a href="https://burakemir.ch/4_linear/">
+                                    <strong>4.</strong>
+                                    Linear Logic and CBPV
+                                </a>
+                                
+                                    <ul>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/4_linear/page1/">
+                                                    <strong>4.1.</strong>
+                                                    Linear (affine) CBPV
+                                                </a>
+                                            </li>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/4_linear/page2/">
+                                                    <strong>4.2.</strong>
+                                                    Sums and products
+                                                </a>
+                                            </li>
+                                        
+                                    </ul>
+                                
+                            </li>
+                        
+                            
+                            <li >
+                                
+                                <a href="https://burakemir.ch/5_resources/">
+                                    <strong>5.</strong>
+                                    Ownership and Resources
+                                </a>
+                                
+                                    <ul>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/5_resources/page1/">
+                                                    <strong>5.1.</strong>
+                                                    Resource and scopes
+                                                </a>
+                                            </li>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/5_resources/page2/">
+                                                    <strong>5.2.</strong>
+                                                    Tracking Ownership
+                                                </a>
+                                            </li>
+                                        
+                                            <li class="active">
+                                                <a href="https://burakemir.ch/5_resources/page3/">
+                                                    <strong>5.3.</strong>
+                                                    References and Flow
+                                                </a>
+                                            </li>
+                                        
+                                    </ul>
+                                
+                            </li>
+                        
+                            
+                            <li >
+                                
+                                <a href="https://burakemir.ch/6_synthesis/">
+                                    <strong>6.</strong>
+                                    Towards a Synthesis
+                                </a>
+                                
+                                    <ul>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/6_synthesis/page1/">
+                                                    <strong>6.1.</strong>
+                                                    Linear but how
+                                                </a>
+                                            </li>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/6_synthesis/page2/">
+                                                    <strong>6.2.</strong>
+                                                    Flow and more
+                                                </a>
+                                            </li>
+                                        
+                                    </ul>
+                                
+                            </li>
+                        
+                    
+                </ul>
+            </nav>
+            
+            
+        </div>
+
+        <div class="page">
+            <div class="page__header">
+                <div class="menu-icon">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                
+            </div>
+
+            <div class="page__content">
+                
+                <div class="book-content">
+                    
+    <h1>References and Flow</h1>
+    <p>Martin Odersky described in &quot;Observers for linear types&quot; ESOP'92</p>
+<blockquote>
+<p>Linear types provide the framework for a safe embedding of mutable state in
+functional languages by enforcing the principle that variables of linear type must
+bc used exactly once. A potential disadvantage of this approach is that it places
+read accesses to such variables under the same restriction as write accesses [...]</p>
+</blockquote>
+<p>Through <strong><a href="https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html">references and borrowing</a></strong>,
+we can grant ownership for duration of a function call.</p>
+<ul>
+<li>mutable references <code>&amp;mut T</code>  - temporary ownership</li>
+<li>shared, immutable references <code>&amp;T</code> (~ &quot;observers&quot;)</li>
+</ul>
+<pre data-lang="rs" style="background-color:#383838;color:#e6e1dc;" class="language-rs "><code class="language-rs" data-lang="rs"><span style="font-style:italic;color:#6e9cbe;">fn </span><span style="color:#ffc66d;">main</span><span>() {
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> s1 </span><span style="color:#cc7833;">= </span><span style="font-style:italic;color:#6e9cbe;">String</span><span>::from(</span><span style="color:#c1be91;">&quot;hello&quot;</span><span>);
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> len </span><span style="color:#cc7833;">= </span><span style="color:#da4939;">calculate_length</span><span>(</span><span style="color:#cc7833;">&amp;</span><span>s1);
+</span><span>    println!(</span><span style="color:#c1be91;">&quot;The length of &#39;</span><span style="color:#6d9cbe;">{}</span><span style="color:#c1be91;">&#39; is </span><span style="color:#6d9cbe;">{}</span><span style="color:#c1be91;">.&quot;</span><span>, s1, len);
+</span><span>}
+</span><span>
+</span><span style="font-style:italic;color:#6e9cbe;">fn </span><span style="color:#ffc66d;">calculate_length</span><span>(</span><span style="font-style:italic;color:#fd971f;">s</span><span>: </span><span style="color:#cc7833;">&amp;</span><span>String) -&gt; </span><span style="font-style:italic;color:#6e9cbe;">usize </span><span>{
+</span><span>    s.</span><span style="color:#da4939;">len</span><span>()
+</span><span>}
+</span></code></pre>
+<p>Borrowing is best understood as <strong>flow-sensitive type discipline.</strong></p>
+<ul>
+<li>only a single mutable reference can exist in a scope</li>
+<li>many immutable references can be created</li>
+<li>a mutable reference can be reborrowed as immutable</li>
+<li>however, the mutable reference cannot be used as long as immutable
+references exist &quot;No Mutable Reference with Live Immutable Reference&quot;</li>
+</ul>
+<pre data-lang="rs" style="background-color:#383838;color:#e6e1dc;" class="language-rs "><code class="language-rs" data-lang="rs"><span>  </span><span style="font-style:italic;color:#6e9cbe;">let </span><span style="color:#cc7833;">mut</span><span> s </span><span style="color:#cc7833;">= </span><span style="font-style:italic;color:#6e9cbe;">String</span><span>::from(</span><span style="color:#c1be91;">&quot;hello&quot;</span><span>);
+</span><span>  </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> r1 </span><span style="color:#cc7833;">= &amp;</span><span>s;     </span><span style="color:#95815e;">// no problem
+</span><span>  </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> r2 </span><span style="color:#cc7833;">= &amp;mut</span><span> s; </span><span style="color:#95815e;">// error &quot;cannot borrow `s` as mutable because it is also borrowed as immutable&quot;
+</span></code></pre>
+<p>Duration of temporary access: tracked through <strong>lifetime parameters.</strong></p>
+
+
+                </div>
+            </div>
+
+            <div class="prev-link">
+                
+    
+        
+        
+        <a class="previous" href="https://burakemir.ch/5_resources/"><</a>
+    
+
+            </div>
+
+            <div class="next-link">
+                
+    
+        
+        
+        
+        
+            
+            
+            
+        
+            
+            
+            
+        
+            
+            
+            
+                
+            
+                
+            
+                
+            
+        
+            
+            
+            
+                
+            
+                
+            
+        
+            
+            
+            
+                
+            
+                
+            
+                
+                    
+                
+            
+        
+            
+            
+                <a class="next" href="https://burakemir.ch/6_synthesis/">></a>
+                
+                
+            
+            
+                
+            
+                
+            
+        
+    
+
+            </div>
+        </div>
+
+        
+            
+            <script type="text/javascript" src="https://burakemir.ch/book.js"></script>
+        
+    </body>
+
+</html>

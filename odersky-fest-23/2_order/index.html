@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+      <!-- Enable responsiveness on mobile devices-->
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+
+      <title></title>
+
+      
+      
+
+      <!-- CSS -->
+      
+      <link rel="stylesheet" href="https://burakemir.ch/book.css">
+      
+
+      
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']]
+    }
+  };
+</script>
+<script type="text/javascript" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
+
+
+    </head>
+
+    <body>
+        <div class="menu">
+            
+            
+            <nav role="navigation">
+                <ul>
+                    
+                        
+                        
+                            
+                            <li >
+                                
+                                <a href="https://burakemir.ch/1_intro/">
+                                    <strong>1.</strong>
+                                    Call-by-push-value and Ownership
+                                </a>
+                                
+                            </li>
+                        
+                            
+                            <li class="active">
+                                
+                                <a href="https://burakemir.ch/2_order/">
+                                    <strong>2.</strong>
+                                    Evaluation Order
+                                </a>
+                                
+                            </li>
+                        
+                            
+                            <li >
+                                
+                                <a href="https://burakemir.ch/3_cbpv/">
+                                    <strong>3.</strong>
+                                    Call by Push Value (CBPV)
+                                </a>
+                                
+                                    <ul>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/3_cbpv/page1/">
+                                                    <strong>3.1.</strong>
+                                                    CBPV Rules
+                                                </a>
+                                            </li>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/3_cbpv/page2/">
+                                                    <strong>3.2.</strong>
+                                                    CBPV Examples
+                                                </a>
+                                            </li>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/3_cbpv/page3/">
+                                                    <strong>3.3.</strong>
+                                                    Sums and products
+                                                </a>
+                                            </li>
+                                        
+                                    </ul>
+                                
+                            </li>
+                        
+                            
+                            <li >
+                                
+                                <a href="https://burakemir.ch/4_linear/">
+                                    <strong>4.</strong>
+                                    Linear Logic and CBPV
+                                </a>
+                                
+                                    <ul>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/4_linear/page1/">
+                                                    <strong>4.1.</strong>
+                                                    Linear (affine) CBPV
+                                                </a>
+                                            </li>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/4_linear/page2/">
+                                                    <strong>4.2.</strong>
+                                                    Sums and products
+                                                </a>
+                                            </li>
+                                        
+                                    </ul>
+                                
+                            </li>
+                        
+                            
+                            <li >
+                                
+                                <a href="https://burakemir.ch/5_resources/">
+                                    <strong>5.</strong>
+                                    Ownership and Resources
+                                </a>
+                                
+                                    <ul>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/5_resources/page1/">
+                                                    <strong>5.1.</strong>
+                                                    Resource and scopes
+                                                </a>
+                                            </li>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/5_resources/page2/">
+                                                    <strong>5.2.</strong>
+                                                    Tracking Ownership
+                                                </a>
+                                            </li>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/5_resources/page3/">
+                                                    <strong>5.3.</strong>
+                                                    References and Flow
+                                                </a>
+                                            </li>
+                                        
+                                    </ul>
+                                
+                            </li>
+                        
+                            
+                            <li >
+                                
+                                <a href="https://burakemir.ch/6_synthesis/">
+                                    <strong>6.</strong>
+                                    Towards a Synthesis
+                                </a>
+                                
+                                    <ul>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/6_synthesis/page1/">
+                                                    <strong>6.1.</strong>
+                                                    Linear but how
+                                                </a>
+                                            </li>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/6_synthesis/page2/">
+                                                    <strong>6.2.</strong>
+                                                    Flow and more
+                                                </a>
+                                            </li>
+                                        
+                                    </ul>
+                                
+                            </li>
+                        
+                    
+                </ul>
+            </nav>
+            
+            
+        </div>
+
+        <div class="page">
+            <div class="page__header">
+                <div class="menu-icon">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                
+            </div>
+
+            <div class="page__content">
+                
+                <div class="book-content">
+                    
+    <h1>Evaluation Order</h1>
+    <p>In school, we learn to &quot;look past&quot; order of evaluation $(a + b) + (c + d)$</p>
+<p>In programming, we learn not to:</p>
+<pre data-lang="rust" style="background-color:#383838;color:#e6e1dc;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="font-style:italic;color:#6e9cbe;">fn </span><span style="color:#ffc66d;">add</span><span>(</span><span style="font-style:italic;color:#fd971f;">a</span><span>: </span><span style="font-style:italic;color:#6e9cbe;">u8</span><span>, </span><span style="font-style:italic;color:#fd971f;">b</span><span>: </span><span style="font-style:italic;color:#6e9cbe;">u8</span><span>, </span><span style="font-style:italic;color:#fd971f;">c</span><span>: </span><span style="font-style:italic;color:#6e9cbe;">u8</span><span>, </span><span style="font-style:italic;color:#fd971f;">d</span><span>: </span><span style="font-style:italic;color:#6e9cbe;">u8</span><span>) -&gt; </span><span style="font-style:italic;color:#6e9cbe;">u8 </span><span>{
+</span><span>  </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> x </span><span style="color:#cc7833;">=</span><span> a </span><span style="color:#cc7833;">+</span><span> b; 
+</span><span>  </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> y </span><span style="color:#cc7833;">=</span><span> c </span><span style="color:#cc7833;">+</span><span> d;
+</span><span>  x </span><span style="color:#cc7833;">+</span><span> y
+</span><span>}
+</span></code></pre>
+<p>Reviewer comment: <code>please check overflow?</code></p>
+<pre data-lang="rust" style="background-color:#383838;color:#e6e1dc;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="font-style:italic;color:#6e9cbe;">fn </span><span style="color:#ffc66d;">add</span><span>(</span><span style="font-style:italic;color:#fd971f;">a</span><span>: </span><span style="font-style:italic;color:#6e9cbe;">u8</span><span>, </span><span style="font-style:italic;color:#fd971f;">b</span><span>: </span><span style="font-style:italic;color:#6e9cbe;">u8</span><span>, </span><span style="font-style:italic;color:#fd971f;">c</span><span>: </span><span style="font-style:italic;color:#6e9cbe;">u8</span><span>, </span><span style="font-style:italic;color:#fd971f;">d</span><span>: </span><span style="font-style:italic;color:#6e9cbe;">u8</span><span>) -&gt; </span><span style="font-style:italic;color:#6e9cbe;">Option</span><span>&lt;</span><span style="font-style:italic;color:#6e9cbe;">u8</span><span>&gt; {
+</span><span>  </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> x </span><span style="color:#cc7833;">=</span><span> a.</span><span style="color:#da4939;">checked_add</span><span>(b)</span><span style="color:#cc7833;">?</span><span>;
+</span><span>  </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> y </span><span style="color:#cc7833;">=</span><span> c.</span><span style="color:#da4939;">checked_add</span><span>(d)</span><span style="color:#cc7833;">?</span><span>;
+</span><span>  x.</span><span style="color:#da4939;">checked_add</span><span>(y)
+</span><span>}
+</span></code></pre>
+<p>(The ? operator works for <code>Result&lt;T,E&gt;</code> and for <code>Option&lt;T&gt;</code>)</p>
+<p>Fixing evaluation order helps reason about <em>effects</em> (side-effects, failure, non-termination...)</p>
+
+
+                </div>
+            </div>
+
+            <div class="prev-link">
+                
+    
+    
+    
+    
+        
+        
+            
+        
+    
+        
+        
+            
+        
+    
+        
+        
+            
+        
+    
+        
+        
+            
+        
+    
+        
+        
+            
+        
+    
+        
+        
+            
+                
+                    <a class="previous" href="https://burakemir.ch/1_intro/"><</a>
+                
+                
+                
+            
+        
+    
+
+            </div>
+
+            <div class="next-link">
+                
+    
+        
+        
+        
+        
+            
+            
+            
+        
+            
+            
+            
+                
+            
+        
+            
+            
+                <a class="next" href="https://burakemir.ch/3_cbpv/">></a>
+                
+                
+            
+            
+        
+            
+            
+            
+        
+            
+            
+            
+        
+            
+            
+            
+        
+    
+
+            </div>
+        </div>
+
+        
+            
+            <script type="text/javascript" src="https://burakemir.ch/book.js"></script>
+        
+    </body>
+
+</html>

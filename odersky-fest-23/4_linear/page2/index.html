@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+      <!-- Enable responsiveness on mobile devices-->
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+      
+    
+
+      <title></title>
+
+      
+      
+
+      <!-- CSS -->
+      
+      <link rel="stylesheet" href="https://burakemir.ch/book.css">
+      
+
+      
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']]
+    }
+  };
+</script>
+<script type="text/javascript" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
+
+
+    </head>
+
+    <body>
+        <div class="menu">
+            
+            
+            <nav role="navigation">
+                <ul>
+                    
+                        
+                        
+                            
+                            <li >
+                                
+                                <a href="https://burakemir.ch/1_intro/">
+                                    <strong>1.</strong>
+                                    Call-by-push-value and Ownership
+                                </a>
+                                
+                            </li>
+                        
+                            
+                            <li >
+                                
+                                <a href="https://burakemir.ch/2_order/">
+                                    <strong>2.</strong>
+                                    Evaluation Order
+                                </a>
+                                
+                            </li>
+                        
+                            
+                            <li >
+                                
+                                <a href="https://burakemir.ch/3_cbpv/">
+                                    <strong>3.</strong>
+                                    Call by Push Value (CBPV)
+                                </a>
+                                
+                                    <ul>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/3_cbpv/page1/">
+                                                    <strong>3.1.</strong>
+                                                    CBPV Rules
+                                                </a>
+                                            </li>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/3_cbpv/page2/">
+                                                    <strong>3.2.</strong>
+                                                    CBPV Examples
+                                                </a>
+                                            </li>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/3_cbpv/page3/">
+                                                    <strong>3.3.</strong>
+                                                    Sums and products
+                                                </a>
+                                            </li>
+                                        
+                                    </ul>
+                                
+                            </li>
+                        
+                            
+                            <li >
+                                
+                                <a href="https://burakemir.ch/4_linear/">
+                                    <strong>4.</strong>
+                                    Linear Logic and CBPV
+                                </a>
+                                
+                                    <ul>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/4_linear/page1/">
+                                                    <strong>4.1.</strong>
+                                                    Linear (affine) CBPV
+                                                </a>
+                                            </li>
+                                        
+                                            <li class="active">
+                                                <a href="https://burakemir.ch/4_linear/page2/">
+                                                    <strong>4.2.</strong>
+                                                    Sums and products
+                                                </a>
+                                            </li>
+                                        
+                                    </ul>
+                                
+                            </li>
+                        
+                            
+                            <li >
+                                
+                                <a href="https://burakemir.ch/5_resources/">
+                                    <strong>5.</strong>
+                                    Ownership and Resources
+                                </a>
+                                
+                                    <ul>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/5_resources/page1/">
+                                                    <strong>5.1.</strong>
+                                                    Resource and scopes
+                                                </a>
+                                            </li>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/5_resources/page2/">
+                                                    <strong>5.2.</strong>
+                                                    Tracking Ownership
+                                                </a>
+                                            </li>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/5_resources/page3/">
+                                                    <strong>5.3.</strong>
+                                                    References and Flow
+                                                </a>
+                                            </li>
+                                        
+                                    </ul>
+                                
+                            </li>
+                        
+                            
+                            <li >
+                                
+                                <a href="https://burakemir.ch/6_synthesis/">
+                                    <strong>6.</strong>
+                                    Towards a Synthesis
+                                </a>
+                                
+                                    <ul>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/6_synthesis/page1/">
+                                                    <strong>6.1.</strong>
+                                                    Linear but how
+                                                </a>
+                                            </li>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/6_synthesis/page2/">
+                                                    <strong>6.2.</strong>
+                                                    Flow and more
+                                                </a>
+                                            </li>
+                                        
+                                    </ul>
+                                
+                            </li>
+                        
+                    
+                </ul>
+            </nav>
+            
+            
+        </div>
+
+        <div class="page">
+            <div class="page__header">
+                <div class="menu-icon">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                
+            </div>
+
+            <div class="page__content">
+                
+                <div class="book-content">
+                    
+    <h1>Sums and products</h1>
+    <p>$$
+\begin{array}{lll}
+A^+ &amp;::= &amp; \mathbf{1}\ |\ {\color{green}{\Sigma_{i \in I} A_i}}\ |\ {\color{green}{A_1^+ \times A_2^+}}\ |\ \downarrow{A^-} \\
+B^- &amp;::= &amp; A^+ \rightarrow B^-\ |\ {\color{blue}{\Pi_{i \in I}\ i.B_i^-}}\ |\ \uparrow{A^+} 
+\end{array}
+$$</p>
+<p>becomes
+$$
+\begin{array}{lll}
+A^+ &amp;::= &amp; \mathbf{1}\ |\ {\color{green}{\oplus_{i \in I} A_i}}\ |\ {\color{green}{A_1^+ \otimes A_2^+}}\ |\ \downarrow{A^-} \\
+B^- &amp;::= &amp; A^+ \multimap B^-\ |\ {\color{blue}{\&amp;_{i \in I}\ i.B_i^-}}\ |\ \uparrow{A^+} 
+\end{array}
+$$</p>
+<p>$$
+\begin{prooftree}
+\AxiomC{$\Gamma\vdash v: A_j^+$}
+\RightLabel{$(\oplus_I)$}
+\UnaryInfC{$\Gamma \vdash \mathtt{inj}_i\ v : {\color{green}{{\large \oplus}_I A^+_i}}$}
+\end{prooftree}
+$$</p>
+<p>$$
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash v : {\color{\green}{{\large \oplus}_I A^+_i}}$}
+\AxiomC{$\ldots \Delta_i, x: A_i^+ \vdash M_i : B^- \ldots$}
+\RightLabel{$(\oplus_E)$}
+\BinaryInfC{$\Gamma \ldots \Delta_i \ldots \vdash \mathtt{match}\ V\ \{\ldots, \mathtt{case}\ i: x.M_i \ldots\}: B^-$}
+\end{prooftree}
+$$</p>
+<p>$$
+\begin{prooftree}
+\AxiomC{$\Gamma\vdash v_1: A_1^+$}
+\AxiomC{$\Delta\vdash v_2: A_2^+$}
+\RightLabel{$(\otimes_I)$}
+\BinaryInfC{$\Gamma, \Delta \vdash (v_1, v_2) :\, {\color{green}{A_1^+ \otimes A_2^+}}$}
+\end{prooftree}
+$$</p>
+<p>$$
+\begin{prooftree}
+\AxiomC{$\Gamma\vdash v: {\color{\green}{A_1^+ \otimes A_2^+}}$}
+\AxiomC{$\Delta, x: A_1^+, y: A_2^+ \vdash M: B^-$}
+\RightLabel{$(\otimes_E)$}
+\BinaryInfC{$\Gamma, \Delta \vdash \mathtt{match}\ V\ \mathtt{as}\ (x, y).M : B^-$}
+\end{prooftree}
+$$</p>
+<p>$$
+\begin{prooftree}
+\AxiomC{$\ldots \Gamma_i \vdash s_i: B_i^- \ldots$}
+\RightLabel{$({\large \&amp;}_I)$}
+\UnaryInfC{$\ldots \Gamma_i \ldots \vdash \lambda\{\ldots i.s_i\ldots \}: {\color{blue}{{\large \&amp;}_I\ i.B_i^-}}$}
+\end{prooftree}
+$$</p>
+<p>$$
+\begin{prooftree}
+\AxiomC{$\Gamma\vdash s : {\color{blue}{{\large \&amp;}_{i \in I}\ i.B_i^-}}$}
+\RightLabel{$({\large \&amp;}_E)$}
+\UnaryInfC{$\Gamma \vdash s\ \mathtt{get}\ i: B_i^-$}
+\end{prooftree}
+$$</p>
+<p>$$
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash s: A^+$}
+\RightLabel{$(\uparrow_I)$}
+\UnaryInfC{$\Gamma \vdash \mathtt{return}\ s:\, \uparrow\!{}A^+$}
+\end{prooftree}
+\quad
+\quad
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash s:\, \uparrow\!{}A^+$}
+\AxiomC{$\Gamma, x: A^+ \vdash t:\, C^-$}
+\RightLabel{$(\uparrow_E)$}
+\BinaryInfC{$\Gamma \vdash \mathtt{let\ val}\ x = s\ \mathtt{in}\ t:\, C^-$}
+\end{prooftree}
+$$</p>
+<p>$$
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash k: A^-$}
+\RightLabel{$(\downarrow_I)$}
+\UnaryInfC{$\Gamma \vdash \mathtt{thunk}\ k:\, \downarrow\!{}A^-$}
+\end{prooftree}
+\quad
+\quad
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash t:\, \downarrow\!{}A^-$}
+\RightLabel{$(\downarrow_E)$}
+\UnaryInfC{$\Gamma \vdash \mathtt{force}\ t:\, A^-$}
+\end{prooftree}
+$$</p>
+
+
+                </div>
+            </div>
+
+            <div class="prev-link">
+                
+    
+        
+        
+        <a class="previous" href="https://burakemir.ch/4_linear/"><</a>
+    
+
+            </div>
+
+            <div class="next-link">
+                
+    
+        
+        
+        
+        
+            
+            
+            
+        
+            
+            
+            
+        
+            
+            
+            
+                
+            
+                
+            
+                
+            
+        
+            
+            
+            
+                
+            
+                
+                    
+                
+            
+        
+            
+            
+                <a class="next" href="https://burakemir.ch/5_resources/">></a>
+                
+                
+            
+            
+                
+            
+                
+            
+                
+            
+        
+            
+            
+            
+                
+            
+                
+            
+        
+    
+
+            </div>
+        </div>
+
+        
+            
+            <script type="text/javascript" src="https://burakemir.ch/book.js"></script>
+        
+    </body>
+
+</html>
