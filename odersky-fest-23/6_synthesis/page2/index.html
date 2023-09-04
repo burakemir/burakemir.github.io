@@ -176,13 +176,20 @@
                                             <li >
                                                 <a href="https://burakemir.ch/odersky-fest-23/6_synthesis/page1/">
                                                     <strong>6.1.</strong>
-                                                    Linear but how
+                                                    Monadic intermediate form
                                                 </a>
                                             </li>
                                         
                                             <li class="active">
                                                 <a href="https://burakemir.ch/odersky-fest-23/6_synthesis/page2/">
                                                     <strong>6.2.</strong>
+                                                    Linear but how
+                                                </a>
+                                            </li>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/odersky-fest-23/6_synthesis/page3/">
+                                                    <strong>6.3.</strong>
                                                     Flow and more
                                                 </a>
                                             </li>
@@ -212,26 +219,36 @@
                 
                 <div class="book-content">
                     
-    <h1>Flow and more</h1>
-    <p>More general question:</p>
+    <h1>Linear but how</h1>
+    <p>Literature approaches to bring linear logic into programming</p>
+<p>Includes memory safety, eg. uniqueness types. Reynolds &quot;syntactic control of inference&quot; 1978.</p>
+<p>Relevant to the problem of shared references:</p>
 <ul>
-<li>other areas where splitting value vs computations (CBPV) may helps?</li>
-<li>can we cover user-definable actions (RAII, implement Drop)?</li>
-<li>e.g. do abstract interpretation on abstract machine traces</li>
+<li>Phil Wadler &quot;Is there a use for linear types?&quot; ACM SIGPLAN Notices 26 (9) '91</li>
+<li>Odersky &quot;Observer types for linear logic&quot; ESOP'92</li>
 </ul>
-<p>What we know:</p>
+<p>Key points:</p>
 <ul>
-<li>CBPV is closer to compiler IR (naming intermediate results, evaluation order)</li>
-<li>easy to define abstract machine, also for open terms</li>
+<li>local/short-lived read-only aliasing is ok for a linear type!
+<ul>
+<li><strong>Key ingredient of Rust type discipline.</strong></li>
+</ul>
+</li>
+<li>need rules to combine linear and non-linear types in compound data types.
+<ul>
+<li>practical application: <a href="https://doc.rust-lang.org/nomicon/borrow-splitting.html">splitting borrows</a></li>
+</ul>
+</li>
 </ul>
 <p>Questions:</p>
 <ul>
-<li>If we go further (ANF), do we close the gap towards SSA (used in LLVM-based Rust backend)?</li>
-<li>can a model of Rust type-discipline also be to improve C++ programs?
+<li>can we do without exponentials?
 <ul>
-<li>dataflow analysis, instead of type-discipline, check through static analysis</li>
+<li>In Rust, a type (atom) either &quot;is Copy&quot; or not. Auto-derivation (e.g. Send)</li>
 </ul>
 </li>
+<li>dealing with context when linear / non-linear types are combined. bunched implications</li>
+<li>can the simple model be extended with &quot;par&quot; and &quot;fearless concurrency&quot; properties</li>
 </ul>
 
 
@@ -251,56 +268,7 @@
             <div class="next-link">
                 
     
-        
-        
-        
-        
-            
-            
-            
-        
-            
-            
-            
-        
-            
-            
-            
-                
-            
-                
-            
-                
-            
-        
-            
-            
-            
-                
-            
-                
-            
-        
-            
-            
-            
-                
-            
-                
-            
-                
-            
-        
-            
-            
-            
-                
-            
-                
-                    
-                
-            
-        
+        <a class="next" href="https://burakemir.ch/odersky-fest-23/6_synthesis/page3/">></a>
     
 
             </div>

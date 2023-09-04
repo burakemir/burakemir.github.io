@@ -176,13 +176,20 @@
                                             <li class="active">
                                                 <a href="https://burakemir.ch/odersky-fest-23/6_synthesis/page1/">
                                                     <strong>6.1.</strong>
-                                                    Linear but how
+                                                    Monadic intermediate form
                                                 </a>
                                             </li>
                                         
                                             <li >
                                                 <a href="https://burakemir.ch/odersky-fest-23/6_synthesis/page2/">
                                                     <strong>6.2.</strong>
+                                                    Linear but how
+                                                </a>
+                                            </li>
+                                        
+                                            <li >
+                                                <a href="https://burakemir.ch/odersky-fest-23/6_synthesis/page3/">
+                                                    <strong>6.3.</strong>
                                                     Flow and more
                                                 </a>
                                             </li>
@@ -212,37 +219,28 @@
                 
                 <div class="book-content">
                     
-    <h1>Linear but how</h1>
-    <p>Literature approaches to bring linear logic into programming</p>
-<p>Includes memory safety, eg. uniqueness types. Reynolds &quot;syntactic control of inference&quot; 1978.</p>
-<p>Relevant to the problem of shared references:</p>
-<ul>
-<li>Phil Wadler &quot;Is there a use for linear types?&quot; ACM SIGPLAN Notices 26 (9) '91</li>
-<li>Odersky &quot;Observer types for linear logic&quot; ESOP'92</li>
-</ul>
-<p>Key points:</p>
-<ul>
-<li>local/short-lived read-only aliasing is ok for a linear type!
-<ul>
-<li><strong>Key ingredient of Rust type discipline.</strong></li>
-</ul>
-</li>
-<li>need rules to combine linear and non-linear types in compound data types.
-<ul>
-<li>practical application: <a href="https://doc.rust-lang.org/nomicon/borrow-splitting.html">splitting borrows</a></li>
-</ul>
-</li>
-</ul>
-<p>Questions:</p>
-<ul>
-<li>can we do without exponentials?
-<ul>
-<li>In Rust, a type (atom) either &quot;is Copy&quot; or not. Auto-derivation (e.g. Send)</li>
-</ul>
-</li>
-<li>dealing with context when linear / non-linear types are combined. bunched implications</li>
-<li>can the simple model be extended with &quot;par&quot; and &quot;fearless concurrency&quot; properties</li>
-</ul>
+    <h1>Monadic intermediate form</h1>
+    <p>Simple Rust program</p>
+<pre data-lang="rs" style="background-color:#383838;color:#e6e1dc;" class="language-rs "><code class="language-rs" data-lang="rs"><span style="font-style:italic;color:#6e9cbe;">let </span><span style="color:#cc7833;">mut</span><span> x </span><span style="color:#cc7833;">= </span><span style="color:#a5c261;">0</span><span>;
+</span><span style="color:#cc7833;">for</span><span> i </span><span style="color:#cc7833;">in </span><span style="color:#a5c261;">2</span><span style="color:#cc7833;">..</span><span>n {
+</span><span>  x </span><span style="color:#cc7833;">=</span><span> x </span><span style="color:#cc7833;">*</span><span> i;
+</span><span>}
+</span><span style="color:#cc7833;">return</span><span> x
+</span></code></pre>
+<p>can be translated to monadic intermediate form (~CBPV + sugar)</p>
+<pre data-lang="rs" style="background-color:#383838;color:#e6e1dc;" class="language-rs "><code class="language-rs" data-lang="rs"><span style="font-style:italic;color:#6e9cbe;">let</span><span> x </span><span style="color:#cc7833;">=</span><span> mkref </span><span style="color:#a5c261;">0 </span><span style="color:#cc7833;">in
+</span><span style="font-style:italic;color:#6e9cbe;">let</span><span> _loop </span><span style="color:#cc7833;">=</span><span> thunk λ_. 
+</span><span>  </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> i </span><span style="color:#cc7833;">=</span><span> mkref </span><span style="color:#a5c261;">2 </span><span style="color:#cc7833;">in
+</span><span>  </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> _body </span><span style="color:#cc7833;">=</span><span> thunk λ_. </span><span style="color:#cc7833;">return</span><span> x :</span><span style="color:#cc7833;">=</span><span> x </span><span style="color:#cc7833;">*</span><span> i; () </span><span style="color:#cc7833;">in
+</span><span>  </span><span style="color:#cc7833;">return if</span><span> i </span><span style="color:#cc7833;">&lt;</span><span> n {
+</span><span>    (force _body) (); i :</span><span style="color:#cc7833;">=</span><span> i </span><span style="color:#cc7833;">+ </span><span style="color:#a5c261;">1</span><span>; (force _loop) (); ()
+</span><span>  } </span><span style="color:#cc7833;">else </span><span>{ () } </span><span style="color:#cc7833;">in
+</span><span>(force _loop) ();
+</span><span style="color:#cc7833;">return</span><span> x
+</span></code></pre>
+<p>Identifiers <code>_foo</code> are like labels.</p>
+<p>&quot;Local&quot; alias = local to a &quot;block&quot;</p>
+<p>Check linearity, references by looking at context</p>
 
 
                 </div>

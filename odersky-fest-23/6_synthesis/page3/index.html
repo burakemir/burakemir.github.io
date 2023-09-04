@@ -7,6 +7,8 @@
       <!-- Enable responsiveness on mobile devices-->
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
+      
+    
 
       <title></title>
 
@@ -44,7 +46,7 @@
                         
                         
                             
-                            <li class="active">
+                            <li >
                                 
                                 <a href="https://burakemir.ch/odersky-fest-23/1_intro/">
                                     <strong>1.</strong>
@@ -185,7 +187,7 @@
                                                 </a>
                                             </li>
                                         
-                                            <li >
+                                            <li class="active">
                                                 <a href="https://burakemir.ch/odersky-fest-23/6_synthesis/page3/">
                                                     <strong>6.3.</strong>
                                                     Flow and more
@@ -217,31 +219,27 @@
                 
                 <div class="book-content">
                     
-    <h1>Call-by-push-value and Ownership</h1>
-    <p>Talk at <a href="https://www.cs.cmu.edu/~oderskyfest/">OderskyFest</a> 2023-09-05 EPFL Lausanne</p>
-<p>Who is Burak Emir?</p>
+    <h1>Flow and more</h1>
+    <p>More general question:</p>
 <ul>
-<li>at LAMP 2002-2007, translation of pattern matching in <code>scalac</code> 
+<li>other areas where splitting value vs computations (CBPV) may helps?</li>
+<li>can we cover user-definable actions (RAII, implement Drop)?</li>
+<li>e.g. do abstract interpretation on abstract machine traces</li>
+</ul>
+<p>What we know:</p>
 <ul>
-<li>extractor patterns aka &quot;unapply&quot;</li>
+<li>CBPV is closer to compiler IR (naming intermediate results, evaluation order)</li>
+<li>easy to define abstract machine, also for open terms</li>
+</ul>
+<p>Questions:</p>
+<ul>
+<li>If we go further (ANF), do we gain anything?</li>
+<li>can a model of Rust type-discipline also be to improve C++ programs?
+<ul>
+<li>dataflow analysis, instead of type-discipline, check through static analysis</li>
 </ul>
 </li>
-<li>occasionally applying programming language technology at work
-<ul>
-<li>e.g. <a href="https://github.com/google/mangle">Mangle</a>, an extended datalog with types</li>
-<li>Rust for large-scale distributed systems</li>
 </ul>
-</li>
-</ul>
-<p>&quot;<em>A scientist builds in order to learn; an engineer learns in order to build.</em>&quot; (Fred Brooks)</p>
-<p>This talk: towards simple formalization of Rust's ownership and borrowing</p>
-<ul>
-<li>evaluation order, call-by-push-value (CBPV)</li>
-<li>linear logic: types as resources</li>
-<li>ownership, memory safety (with examples in Rust)</li>
-<li>early ideas on how it could fit together</li>
-</ul>
-<p>Disclaimer: The views expressed here are my own and do not represent my employer.</p>
 
 
                 </div>
@@ -250,38 +248,9 @@
             <div class="prev-link">
                 
     
-    
-    
-    
         
         
-            
-        
-    
-        
-        
-            
-        
-    
-        
-        
-            
-        
-    
-        
-        
-            
-        
-    
-        
-        
-            
-        
-    
-        
-        
-            
-        
+        <a class="previous" href="https://burakemir.ch/odersky-fest-23/6_synthesis/"><</a>
     
 
             </div>
@@ -296,31 +265,49 @@
             
             
             
+        
+            
+            
+            
+        
+            
+            
+            
+                
+            
+                
+            
                 
             
         
             
             
-                <a class="next" href="https://burakemir.ch/odersky-fest-23/2_order/">></a>
+            
                 
+            
                 
             
+        
+            
+            
+            
+                
+            
+                
+            
+                
             
         
             
             
             
-        
+                
             
+                
             
-            
-        
-            
-            
-            
-        
-            
-            
+                
+                    
+                
             
         
     
