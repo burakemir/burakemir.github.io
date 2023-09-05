@@ -89,14 +89,14 @@
                                                 </a>
                                             </li>
                                         
-                                            <li class="active">
+                                            <li >
                                                 <a href="https://burakemir.ch/odersky-fest-23/3_cbpv/page3/">
                                                     <strong>3.3.</strong>
                                                     Sums and products
                                                 </a>
                                             </li>
                                         
-                                            <li >
+                                            <li class="active">
                                                 <a href="https://burakemir.ch/odersky-fest-23/3_cbpv/pag4/">
                                                     <strong>3.4.</strong>
                                                     Effects
@@ -233,56 +233,25 @@
                 
                 <div class="book-content">
                     
-    <h1>Sums and products</h1>
-    <p>$$
-\begin{array}{lll}
-A^+ &amp;::= &amp; \mathbf{1}\ |\ {\color{green}{\Sigma_{i \in I} A_i}}\ |\ {\color{green}{A_1^+ \times A_2^+}}\ |\ \downarrow{A^-} \\
-B^- &amp;::= &amp; A^+ \rightarrow B^-\ |\ {\color{blue}{\Pi_{i \in I}\ i.B_i^-}}\ |\ \uparrow{A^+} 
-\end{array}
-$$</p>
+    <h1>Effects</h1>
+    <p>With evaluation order fixed, it becomes easy to absorb sequences effectful actions into semantics.</p>
+<p>An $\mathcal{A}$-set $(X, \star)$ is:</p>
+<ul>
+<li>set $X$ together with </li>
+<li>a function $\star$ from $\mathcal{A} \times X$ to $X$.</li>
+</ul>
+<p>Key idea: </p>
+<ul>
+<li>a closed term $M$ of computation type $B$ denotes an element $[\![ M ]\!]$ of $X$.</li>
+<li>an effectful operation $ \mathit{op}; M $ where $\mathit{op}$ should produces an action $c$ denotes $c \star [\![ M ]\!]$ </li>
+</ul>
+<p>Simple example: $\mathtt{print!}(s)$ where $c$ is the action of printing $s$.</p>
+<p>The <em>free</em> $\mathcal{A}$-set has carrier $\mathcal{A}^* \times X$.</p>
+<p>Concatenating actions: $c \star (m, X) = (c \star m, X)$.</p>
 <p>$$
 \begin{prooftree}
-\AxiomC{$\Gamma\vdash v: A_j^+$}
-\RightLabel{$(+_I)$}
-\UnaryInfC{$\Gamma \vdash \mathtt{inj}_i\ v : {\color{green}{\Sigma_I A^+_i}}$}
-\end{prooftree}
-$$</p>
-<p>$$
-\begin{prooftree}
-\AxiomC{$\Gamma \vdash v : {\color{\green}{\Sigma_I A^+_i}}$}
-\AxiomC{$\ldots \Gamma, x: A_i^+ \vdash M_i : B^- \ldots$}
-\RightLabel{$(+_E)$}
-\BinaryInfC{$\Gamma \vdash \mathtt{match}\ V\ \{\ldots, \mathtt{case}\ i: x.M_i \ldots\}: B^-$}
-\end{prooftree}
-$$</p>
-<p>$$
-\begin{prooftree}
-\AxiomC{$\Gamma\vdash v_1: A_1^+$}
-\AxiomC{$\Gamma\vdash v_2: A_2^+$}
-\RightLabel{$(\times_I)$}
-\BinaryInfC{$\Gamma \vdash (v_1, v_2) :\, {\color{green}{A_1^+ \times A_2^+}}$}
-\end{prooftree}
-$$</p>
-<p>$$
-\begin{prooftree}
-\AxiomC{$\Gamma\vdash v: {\color{\green}{A_1^+ \times A_2^+}}$}
-\AxiomC{$\Gamma, x: A_1^+, y: A_2^+ \vdash M: B^-$}
-\RightLabel{$(\times_E)$}
-\BinaryInfC{$\Gamma \vdash \mathtt{match}\ V\ \mathtt{as}\ (x, y).M : B^-$}
-\end{prooftree}
-$$</p>
-<p>$$
-\begin{prooftree}
-\AxiomC{$\ldots \Gamma \vdash s_i: B_i^- \ldots$}
-\RightLabel{$(\Pi_I)$}
-\UnaryInfC{$\Gamma \vdash \lambda\{\ldots i.s_i\ldots \}: {\color{blue}{\Pi_I\ i.B_i^-}}$}
-\end{prooftree}
-$$</p>
-<p>$$
-\begin{prooftree}
-\AxiomC{$\Gamma\vdash s : {\color{blue}{\Pi_{i \in I}\ i.B_i^-}}$}
-\RightLabel{$(\Pi_E)$}
-\UnaryInfC{$\Gamma \vdash s\ \mathtt{get}\ i: B_i^-$}
+\AxiomC{$M \Downarrow m, T$}
+\UnaryInfC{$\mathtt{print!}(s). M \Downarrow s \star m, T$}
 \end{prooftree}
 $$</p>
 
@@ -303,7 +272,66 @@ $$</p>
             <div class="next-link">
                 
     
-        <a class="next" href="https://burakemir.ch/odersky-fest-23/3_cbpv/pag4/">></a>
+        
+        
+        
+        
+            
+            
+            
+        
+            
+            
+            
+        
+            
+            
+            
+                
+            
+                
+            
+                
+            
+                
+                    
+                
+            
+        
+            
+            
+                <a class="next" href="https://burakemir.ch/odersky-fest-23/4_linear/">></a>
+                
+                
+            
+            
+                
+            
+                
+            
+        
+            
+            
+            
+                
+            
+                
+            
+                
+            
+        
+            
+            
+            
+                
+            
+                
+            
+                
+            
+                
+            
+        
     
 
             </div>

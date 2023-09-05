@@ -89,7 +89,7 @@
                                                 </a>
                                             </li>
                                         
-                                            <li class="active">
+                                            <li >
                                                 <a href="https://burakemir.ch/odersky-fest-23/3_cbpv/page3/">
                                                     <strong>3.3.</strong>
                                                     Sums and products
@@ -187,7 +187,7 @@
                                                 </a>
                                             </li>
                                         
-                                            <li >
+                                            <li class="active">
                                                 <a href="https://burakemir.ch/odersky-fest-23/6_synthesis/page1-5/">
                                                     <strong>6.2.</strong>
                                                     Memory effects
@@ -233,58 +233,42 @@
                 
                 <div class="book-content">
                     
-    <h1>Sums and products</h1>
-    <p>$$
-\begin{array}{lll}
-A^+ &amp;::= &amp; \mathbf{1}\ |\ {\color{green}{\Sigma_{i \in I} A_i}}\ |\ {\color{green}{A_1^+ \times A_2^+}}\ |\ \downarrow{A^-} \\
-B^- &amp;::= &amp; A^+ \rightarrow B^-\ |\ {\color{blue}{\Pi_{i \in I}\ i.B_i^-}}\ |\ \uparrow{A^+} 
-\end{array}
-$$</p>
+    <h1>Memory effects</h1>
+    <p>Add shared reference types:</p>
+<ul>
+<li>$\mathtt{\&amp;mut} A^+$ and $\mathtt{\&amp;}\ A^+$</li>
+<li>add operation to dereference $*x$.</li>
+<li>reborrow $\mathtt{\&amp;}\!*x$: shared reference, &quot;observe&quot; resource $x$</li>
+</ul>
+<p>Now, these effectful operations will be useful:</p>
+<ul>
+<li>$\mathtt{alloc}_A$: allocates memory for $A^+$, returns location.
+<ul>
+<li>the memory is a resource, follow linear type discipline</li>
+</ul>
+</li>
+<li>$\mathtt{store}_A(x, v)$: stores $v$ in location $x$, given $x: \mathtt{\&amp;mut}\ A^+$ and $v: A^+$</li>
+<li>$\mathtt{drop}_A(x)$: releases memory for T, given $x: T$</li>
+</ul>
 <p>$$
 \begin{prooftree}
-\AxiomC{$\Gamma\vdash v: A_j^+$}
-\RightLabel{$(+_I)$}
-\UnaryInfC{$\Gamma \vdash \mathtt{inj}_i\ v : {\color{green}{\Sigma_I A^+_i}}$}
+\AxiomC{$\Gamma \vdash x: \mathtt{\&amp;}A^+$}
+\UnaryInfC{$\Gamma \vdash *x: A^+$}
 \end{prooftree}
-$$</p>
-<p>$$
+\quad
+\quad
 \begin{prooftree}
-\AxiomC{$\Gamma \vdash v : {\color{\green}{\Sigma_I A^+_i}}$}
-\AxiomC{$\ldots \Gamma, x: A_i^+ \vdash M_i : B^- \ldots$}
-\RightLabel{$(+_E)$}
-\BinaryInfC{$\Gamma \vdash \mathtt{match}\ V\ \{\ldots, \mathtt{case}\ i: x.M_i \ldots\}: B^-$}
+\AxiomC{$\Gamma \vdash x: \mathtt{\&amp;mut}\ A^+ $}
+\UnaryInfC{$\Gamma \vdash *x: A^+$}
 \end{prooftree}
 $$</p>
-<p>$$
-\begin{prooftree}
-\AxiomC{$\Gamma\vdash v_1: A_1^+$}
-\AxiomC{$\Gamma\vdash v_2: A_2^+$}
-\RightLabel{$(\times_I)$}
-\BinaryInfC{$\Gamma \vdash (v_1, v_2) :\, {\color{green}{A_1^+ \times A_2^+}}$}
-\end{prooftree}
-$$</p>
-<p>$$
-\begin{prooftree}
-\AxiomC{$\Gamma\vdash v: {\color{\green}{A_1^+ \times A_2^+}}$}
-\AxiomC{$\Gamma, x: A_1^+, y: A_2^+ \vdash M: B^-$}
-\RightLabel{$(\times_E)$}
-\BinaryInfC{$\Gamma \vdash \mathtt{match}\ V\ \mathtt{as}\ (x, y).M : B^-$}
-\end{prooftree}
-$$</p>
-<p>$$
-\begin{prooftree}
-\AxiomC{$\ldots \Gamma \vdash s_i: B_i^- \ldots$}
-\RightLabel{$(\Pi_I)$}
-\UnaryInfC{$\Gamma \vdash \lambda\{\ldots i.s_i\ldots \}: {\color{blue}{\Pi_I\ i.B_i^-}}$}
-\end{prooftree}
-$$</p>
-<p>$$
-\begin{prooftree}
-\AxiomC{$\Gamma\vdash s : {\color{blue}{\Pi_{i \in I}\ i.B_i^-}}$}
-\RightLabel{$(\Pi_E)$}
-\UnaryInfC{$\Gamma \vdash s\ \mathtt{get}\ i: B_i^-$}
-\end{prooftree}
-$$</p>
+<p>Combining contexts: ensure that for any $x: A^+$ there is either:</p>
+<ul>
+<li>at most one &quot;active&quot; mutable reference $\mathtt{\&amp;mut} A^+$ (keep track of location), or</li>
+<li>arbitrary number of shared references $\mathtt{\&amp;} A^+$ </li>
+</ul>
+<p>&quot;deactivate&quot; mutable reference when reborrow: e.g. add conditions for $\mathtt{store}$.</p>
+<p>(details remain to be worked out)</p>
 
 
                 </div>
@@ -295,7 +279,7 @@ $$</p>
     
         
         
-        <a class="previous" href="https://burakemir.ch/odersky-fest-23/3_cbpv/"><</a>
+        <a class="previous" href="https://burakemir.ch/odersky-fest-23/6_synthesis/"><</a>
     
 
             </div>
@@ -303,7 +287,7 @@ $$</p>
             <div class="next-link">
                 
     
-        <a class="next" href="https://burakemir.ch/odersky-fest-23/3_cbpv/pag4/">></a>
+        <a class="next" href="https://burakemir.ch/odersky-fest-23/6_synthesis/page2/">></a>
     
 
             </div>
