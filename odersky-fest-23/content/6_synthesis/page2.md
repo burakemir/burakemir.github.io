@@ -12,7 +12,7 @@ Includes memory safety, eg. uniqueness types. Reynolds "syntactic control of inf
 Relevant to the problem of shared references:
 
    * Phil Wadler "Is there a use for linear types?" ACM SIGPLAN Notices 26 (9) '91
-   * Odersky "Observer types for linear logic" ESOP'92
+   * Martin Odersky "Observers for linear types" ESOP'92
 
 Key points:
    * local/short-lived read-only aliasing is ok for a linear type!
