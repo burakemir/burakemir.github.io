@@ -198,11 +198,11 @@ also extend the CEK wth storage, which yields the CESK.
 Abstract machines correspond closely to evaluators via transform to continuation passing style. There are many papers about this. 
 Ager, Biernacki, Danvy and Midtgaard [A Functional Correspondence between Evaluators and Abstract Machines](https://www.brics.dk/RS/03/13/BRICS-RS-03-13.pdf)
 
-Abstract machines have been used correct in programming language implementations. The challenge is in
+Abstract machines have been used in correct-by-design programming language implementations. The challenge is in
 representing environments efficiently: a closure may not need to access the *entire* environment.
 There is a nice discussion about the role of abstract machines for PL implementations in Xavier Leroy's talk ["From Krivine's machine to the Caml implementations"](https://xavierleroy.org/talks/zam-kazam05.pdf). A properly efficient 
 implementation would translate to machine code, using registers or generally
-any calling convention, but if one does use an abstract machine, one cab make it better by applying techniques
-such as push arguments on the stack as a way to access them faster.
+any calling convention - but if one does use an abstract machine, one can make it better by applying techniques
+such as keeping some of the environment in the stack and pushing multiple arguments on the stack as a way to access them faster.
 
 
