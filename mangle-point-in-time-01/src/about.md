@@ -22,7 +22,7 @@ As the name suggests, "Point-in-Time" is a snapshot of information. If you are l
 
 Burak Emir [homepage](https://burakemir.ch).
 
-All content, views, opinions are those of the authors and not their employers. 
+All content, views, opinions are those of the author and not his employer.
 
 ## What is in this issue 01
 

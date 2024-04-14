@@ -18,6 +18,7 @@ arrowlogo :
 
 book:
 	$(MAKE) -C mangle-point-in-time-01
+	$(MAKE) -C mangle-point-in-time-02
 
 deploy : $(location_deploy) book
 	cd src && zola build
@@ -30,6 +31,8 @@ deploy : $(location_deploy) book
 	cp -f -r odersky-fest-23/public/* $(location_deploy)/odersky-fest-23
 	mkdir -p $(location_deploy)/mangle-point-in-time-01
 	cp -R mangle-point-in-time-01/book/* $(location_deploy)/mangle-point-in-time-01
+	mkdir -p $(location_deploy)/mangle-point-in-time-02
+	cp -R mangle-point-in-time-02/book/* $(location_deploy)/mangle-point-in-time-02
 	rsync -av $(location_arrow_logo)/build/ $(location_deploy)/arrowlogo
 
 $(location_deploy):
