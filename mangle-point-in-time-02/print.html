@@ -1,0 +1,301 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Mangle Point-in-Time 02</title>
+        <meta name="robots" content="noindex" />
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="about.html">About</a></li><li class="chapter-item expanded "><a href="00_porting_to_rust.html"><strong aria-hidden="true">1.</strong> Porting to Rust</a></li><li class="chapter-item expanded "><a href="01_persistence.html"><strong aria-hidden="true">2.</strong> Persistence</a></li><li class="chapter-item expanded "><a href="02_server.html"><strong aria-hidden="true">3.</strong> Mangle Server</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Mangle Point-in-Time 02</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="about-point-in-time-02"><a class="header" href="#about-point-in-time-02">About Point-in-Time 02</a></h1>
+<p>Mangle &quot;Point-in-Time&quot; is information about Mangle as a language design and development project, organized as an mdbook.</p>
+<p>As the name suggests, &quot;Point-in-Time&quot; is a snapshot of information. If you are looking for more up-to-date information, check out the Mangle docs at the <a href="https://github.com/google/mangle">Mangle GitHub repo</a>.</p>
+<p>&quot;Point-in-Time&quot; is written in markdown format using <code>mdbook</code> and <code>mdbook-presentation-preprocessor</code> and published on the web. Therefore, it is possible to submit pull requests with corrections, comments, links to more updated information.</p>
+<h2 id="author-and-disclaimer"><a class="header" href="#author-and-disclaimer">Author and Disclaimer</a></h2>
+<p>Burak Emir <a href="https://burakemir.ch">homepage</a>.</p>
+<p>All content, views, opinions are those of the author and not his employer.</p>
+<h2 id="what-is-in-this-issue-02"><a class="header" href="#what-is-in-this-issue-02">What is in this issue 02</a></h2>
+<p>Today is 2024-04-12, it has been almost a year since the last issue.
+In this issue, I am gathering my thoughts on Mangle next steps.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="porting-mangle-to-rust"><a class="header" href="#porting-mangle-to-rust">Porting Mangle to Rust</a></h1>
+<p>I have started work on porting Mangle to Rust. The reason is the same
+one why Mangle was started in go in the first place: when pragmatic
+solutions, the environment determines what languages is the best fit.</p>
+<p>Mangle was started in an environment that required go. Now I want to
+access Mangle functionality in places that use C++ and Rust. And
+I want to find out whether a particular approach to manipulating
+symbolic data can be made to work well in Rust (more on this below).</p>
+<h2 id="but--why"><a class="header" href="#but--why">But ... why?</a></h2>
+<p>For pure single-machine usage, it is very feasible to just do Rust go interop using IPC or grpc.
+There is a section &quot;Server&quot; that talks about this, with demo code.</p>
+<p>For a project like this, one can come with a few reasonable questions:</p>
+<ul>
+<li>why port instead of e.g. working on features or documentation</li>
+<li>after the port is done, is it not hard to maintain two versions</li>
+<li>why have another datalog implementation when there are so many good ones?</li>
+</ul>
+<p>These are all good questions, and I pondered them before embarking.
+The tentative answers and mitigations:</p>
+<ul>
+<li>while the surface language is far from perfect, the few additions
+that are necessary for syntax seem doable in two implementations.</li>
+<li>the type-checker is more work and unfinished, but that could be left for later.</li>
+<li>Mangle is supposed to be not just &quot;an implementation&quot; but a specification;
+that is only convincing when there are at least two implementations.</li>
+</ul>
+<h2 id="other-rust-datalog-implementations"><a class="header" href="#other-rust-datalog-implementations">Other Rust datalog implementations</a></h2>
+<p>There are indeed a lot of datalog implementations in Rust. Here are a few:</p>
+<ul>
+<li><a href="https://github.com/rust-lang/datafrog">Datafrog</a> - very limited and hard to read</li>
+<li><a href="https://s-arash.github.io/ascent/">Ascent</a> - embed any type as relation, BYODS</li>
+<li><a href="https://github.com/ekzhang/crepe">Crepe</a> - seminaive and stratified negation, Eric K. Zhang's <a href="https://www.ekzhang.com/assets/pdf/Senior_Thesis.pdf">thesis</a> as accompanying reading material</li>
+<li><a href="https://github.com/vmware/differential-datalog">DDlog</a> - I don't know much about this one</li>
+<li><a href="https://github.com/johnstonskj/rust-asdi">asdi</a> - Another Simplistic Datalog Implementation</li>
+</ul>
+<p>These are all datalog implementations, and, like Mangle, some add extensions to Datalog.
+If we look beyond Rust, there are of course many more implementations.</p>
+<p>As discussed elsewhere (pardon the approximate self-quoting - this is just my opinion): </p>
+<blockquote>
+<p>I think it is helpful to see datalog as a formal, conceptual kernel (or &quot;toy programming language&quot; in the famous Alice Book &quot;Foundations of Databases&quot;). When we look at the functional programming languages, we do not usually see them as a dozen of incompatible implementations of lambda calculus.</p>
+</blockquote>
+<p>The compilation technique of Ascent and Crepe is certainly something that would make sense for Mangle.</p>
+<p>I should study these Rust datalog implementations more, but here is clear difference:
+already today, Mangle has support for deferred computation that adds
+back some of the PROLOG top-down evaluation possibilities, without
+adding the problems like order-sensitivity that come from
+PROLOGs non-declarative execution model. Tomorrow, I may want
+to add equality saturation or convenient syntax to encode
+algebraic datatypes - this could only happen in Mangle.</p>
+<h2 id="compilation-left-for-later"><a class="header" href="#compilation-left-for-later">Compilation left for later</a></h2>
+<p>One issue with Mangle is that datalog evaluation is essentially interpreted. This may
+be helpful for evaluating queries at runtime, and when data fits in memory then the
+lightweight computation does not really matter. However, there are scenarios where
+it is not possible to use Mangle now:</p>
+<ul>
+<li>working with large data sources that does not fit in-memory.</li>
+<li>when there is more computation to do than the immediate-consequence operator</li>
+</ul>
+<p>For now, the Rust port of Mangle will stick as close as possible to the
+golang implementation.</p>
+<p>The challenge is to avoid the creep of features that make compilation impossible.
+This might already have happened, but since Mangle is still far from 1.0, there
+is still room to maneuver.</p>
+<p>Finally, if it turns out that change to Mangle-golang are not possible, then
+it will still be possible to evolve Mangle-rust to the compilation model
+while keeping golang interpreter intact.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="persistence"><a class="header" href="#persistence">Persistence</a></h1>
+<p>An in-memory database is nice, but persistent storage is important for two use cases:</p>
+<ul>
+<li>in order to make updates and keep them</li>
+<li>in order to deal with larger volumes of data</li>
+</ul>
+<p>These can be different strategies for these.</p>
+<h2 id="a-model-for-updates"><a class="header" href="#a-model-for-updates">A model for updates</a></h2>
+<p>Let's start with making updates.</p>
+<ul>
+<li>if the size of that data still comfortably fits in memory, then updates can be made in memory and the data saved.</li>
+<li>write-ahead log: if writing everything is slow, update operations can be logged ahead-of-time before affecting db state,
+and regular checkpointing applying the updates on disk.</li>
+</ul>
+<p>This is all work, but it is predictable work. Instead of adding these to Mangle,
+it makes a lot more sense to connect Mangle to an existing LSM-based DB like RocksDB or Cloud Spanner.</p>
+<h2 id="large-volumes"><a class="header" href="#large-volumes">Large Volumes</a></h2>
+<p>Instead of serving from memory, we can read from persistent storage for every query. This is what most databases do.
+If latency does not play a role, then this persistent storage could be files from block storage.</p>
+<p>Again this is mostly integration work. Connecting Mangle to these systems seems o come with many
+particular things that distract from the goal of having a simple to understand spec and implementation.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="server"><a class="header" href="#server">Server</a></h1>
+<p>I built a small demo server for Mangle how such an integration into a wider system could look.</p>
+<p>The choice of tech is protobuf and grpc. These are straightforward (enough) to use, due to the 
+availability of the protobuf compiler and supporting libraries.</p>
+<p>Find the code here: https://github.com/burakemir/mangle-service</p>
+<p>There are many ways in which this cannot be called a &quot;real&quot; database - but there
+are also many ways in which is beats real database: serving from memory,
+supporting expressive, recursive queries...</p>
+<p>As far as proofs-of-concepts go, this little demo code also shows that the
+interface to the Mangle library are clumsy and worth improving.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+        <script>
+        window.addEventListener('load', function() {
+            MathJax.Hub.Register.StartupHook('End', function() {
+                window.setTimeout(window.print, 100);
+            });
+        });
+        </script>
+
+    </div>
+    </body>
+</html>
