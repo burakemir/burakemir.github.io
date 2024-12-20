@@ -8,4 +8,5 @@ mangle-point-in-time-01/book
 mangle-point-in-time-02/book
 src/deploy
 arrowlogo
-
+*.swp
+*.swo

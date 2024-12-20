@@ -153,7 +153,7 @@ logic, the familiar operators $\vee, \wedge$ separate into additive
 versions $\oplus, \\&$ as well as multiplicate versions  &#x214b; $\otimes$.
 
 Some of these types $\oplus, \otimes$ look like data type constructors,
-and we called these positive or value types. For the others  &#x214b; $\otimes$.
+and we called these positive or value types. For the others  &#x214b; $\\&$.
 evaluation does not proceed until the environment demands it. These are
 negative or computation types.
 
