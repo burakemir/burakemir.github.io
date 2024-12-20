@@ -163,7 +163,7 @@ do not seem very logical. But there are compelling reasons to have them!&lt;&#x2
 logic, the familiar operators $\vee, \wedge$ separate into additive
 versions $\oplus, \&amp;amp;$ as well as multiplicate versions  ⅋ $\otimes$.&lt;&#x2F;p&gt;
 &lt;p&gt;Some of these types $\oplus, \otimes$ look like data type constructors,
-and we called these positive or value types. For the others  ⅋ $\otimes$.
+and we called these positive or value types. For the others  ⅋ $\&amp;amp;$.
 evaluation does not proceed until the environment demands it. These are
 negative or computation types.&lt;&#x2F;p&gt;
 &lt;ul&gt;
