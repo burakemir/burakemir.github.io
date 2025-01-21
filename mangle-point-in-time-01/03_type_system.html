@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html lang="en" class="sidebar-visible no-js light">
+<html lang="en" class="light sidebar-visible" dir="ltr">
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
@@ -7,10 +7,10 @@
 
 
         <!-- Custom HTML head -->
-        
+
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="theme-color" content="#ffffff" />
+        <meta name="theme-color" content="#ffffff">
 
         <link rel="icon" href="favicon.svg">
         <link rel="shortcut icon" href="favicon.png">
@@ -32,15 +32,17 @@
 
         <!-- MathJax -->
         <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    </head>
-    <body>
-    <div id="body-container">
+
         <!-- Provide site root to javascript -->
         <script>
             var path_to_root = "";
             var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
         </script>
-
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
             try {
@@ -62,41 +64,49 @@
             var theme;
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
-            var html = document.querySelector('html');
-            html.classList.remove('no-js')
+            const html = document.documentElement;
             html.classList.remove('light')
             html.classList.add(theme);
-            html.classList.add('js');
+            html.classList.add("js");
         </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
 
         <!-- Hide / unhide sidebar before it is displayed -->
         <script>
-            var html = document.querySelector('html');
-            var sidebar = 'hidden';
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
             if (document.body.clientWidth >= 1080) {
                 try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
                 sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
             }
+            sidebar_toggle.checked = sidebar === 'visible';
             html.classList.remove('sidebar-visible');
             html.classList.add("sidebar-" + sidebar);
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="about.html">About</a></li><li class="chapter-item expanded "><a href="00_data_information_knowledge.html"><strong aria-hidden="true">1.</strong> Data Information Knowledge</a></li><li class="chapter-item expanded "><a href="01_mangle_what.html"><strong aria-hidden="true">2.</strong> What is Mangle</a></li><li class="chapter-item expanded "><a href="02_simple_cyber_example.html"><strong aria-hidden="true">3.</strong> Simple Cyber Example</a></li><li class="chapter-item expanded "><a href="03_type_system.html" class="active"><strong aria-hidden="true">4.</strong> Type System</a></li><li class="chapter-item expanded "><a href="04_where_is_ai.html"><strong aria-hidden="true">5.</strong> Where is the AI?</a></li><li class="chapter-item expanded "><a href="05_truth_through_proof.html"><strong aria-hidden="true">6.</strong> Truth through proof</a></li></ol>
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
             </div>
-            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
 
             <div class="page">
-                                <div id="menu-bar-hover-placeholder"></div>
-                <div id="menu-bar" class="menu-bar sticky bordered">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
-                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
                             <i class="fa fa-bars"></i>
-                        </button>
+                        </label>
                         <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
                             <i class="fa fa-paint-brush"></i>
                         </button>
@@ -160,7 +170,7 @@
 <p>The type system is a work-in-progress.</p>
 <p>I would have liked to present one, alas there are only fragments for now.</p>
 <h2 id="what-is-a-type-system-good-for"><a class="header" href="#what-is-a-type-system-good-for">What is a type system good for?</a></h2>
-<p>&quot;Well-typed programs cannot go wrong&quot; (Milner)</p>
+<p>"Well-typed programs cannot go wrong" (Milner)</p>
 <p>A type system serves two purposes:</p>
 <ul>
 <li>prevents a class of programmer mistakes</li>
@@ -171,32 +181,32 @@
 <p>Mathematics is not the only domain that has semantic structures worthy of making explicit.
 But mathematics provides us with the ways of talking about these objects.</p>
 <p>Concretely, we have a type expression \( T \) that stand in for an object \( [\![T]\!] \).
-Type expressions are formal objects or &quot;linguistic signs&quot;. They are enumerable.</p>
-<p>If an expression \( e \) &quot;can be assigned the type \( T \)&quot; then</p>
+Type expressions are formal objects or "linguistic signs". They are enumerable.</p>
+<p>If an expression \( e \) "can be assigned the type \( T \)" then</p>
 <ul>
-<li>we can talk about a &quot;meaning&quot; \( [\![e]\!] \)</li>
-<li>(soundness) \( [\![e]\!] \) is conforming to \( [\![T]\!] \) </li>
+<li>we can talk about a "meaning" \( [\![e]\!] \)</li>
+<li>(soundness) \( [\![e]\!] \) is conforming to \( [\![T]\!] \)</li>
 </ul>
 <p>Some remarks:</p>
 <ul>
-<li>Using the same symbols \( [\![\ ]\!] \) for taking expressions and type expressions to the &quot;meaning&quot; is a case of &quot;overloading.&quot; Mathematicians love overloading as a means to conversation focused on what is essential. This is a form of abstraction.</li>
-<li>This is Church-style. We do not bother to give meanings to expressions that cannot be assigned a type. The alternative is Curry-style, define a &quot;meaning&quot; for all expressions, independent of whether they can assigned a type or not.</li>
+<li>Using the same symbols \( [\![\ ]\!] \) for taking expressions and type expressions to the "meaning" is a case of "overloading." Mathematicians love overloading as a means to conversation focused on what is essential. This is a form of abstraction.</li>
+<li>This is Church-style. We do not bother to give meanings to expressions that cannot be assigned a type. The alternative is Curry-style, define a "meaning" for all expressions, independent of whether they can assigned a type or not.</li>
 </ul>
 <p>A simple way (not the only way) to make all this work is to say that:</p>
 <ul>
 <li>\( [\![T]\!] \) is a <em>set</em>.</li>
-<li>&quot;conforming&quot; is membership: \( [\![e]\!] \in [\![T]\!] \)</li>
+<li>"conforming" is membership: \( [\![e]\!] \in [\![T]\!] \)</li>
 </ul>
 <p>Simplicity is good, but we should not forget where we came from: a desire to prevent programmer mistakes and making part of the semantic structure explicit.</p>
 <h2 id="elements-of-mangle-type-system"><a class="header" href="#elements-of-mangle-type-system">Elements of Mangle type system</a></h2>
 <p>Expressions</p>
 <ul>
 <li>base constants \( c \) like names, numbers, strings, ...</li>
-<li>structured constants 
+<li>structured constants
 <ul>
 <li>lists \( [e_1, \ldots, e_n] \),</li>
-<li>pairs \( \mathtt{fn:pair}(e_1, e_2) \) </li>
-<li>maps \( [ e_1 : v_1, \ldots, e_n : v_n ] \) </li>
+<li>pairs \( \mathtt{fn:pair}(e_1, e_2) \)</li>
+<li>maps \( [ e_1 : v_1, \ldots, e_n : v_n ] \)</li>
 <li>structs \( \{ l_1 : v_1, \ldots, l_n : v_n \} \)</li>
 </ul>
 </li>
@@ -228,10 +238,10 @@ subjecting the symbols used in mathematics to rigid, explicit, precise rules of 
 <p>We can describe predicates further by being more specific on what types the arguments have.</p>
 <pre><code>Decl foo_pattern_first_A_then_B(Host, T1, T2) 
   descr [
-    doc(&quot;A detection rule expressing the foo pattern (a sequence of A and B)&quot; ),
-    arg(Host,   &quot;name constant /host/fqdn prefix, with fully-qualified domain name&quot;),
-    arg(T1,     &quot;a timestamp, seconds since epoch UTC&quot;),
-    arg(Source, &quot;the external source that ingests events&quot;)
+    doc("A detection rule expressing the foo pattern (a sequence of A and B)" ),
+    arg(Host,   "name constant /host/fqdn prefix, with fully-qualified domain name"),
+    arg(T1,     "a timestamp, seconds since epoch UTC"),
+    arg(Source, "the external source that ingests events")
   ]
   bound [ /host/fqdn, /number, /number ].
 
@@ -246,7 +256,7 @@ subjecting the symbols used in mathematics to rigid, explicit, precise rules of 
 <li>(in the future) type declarations could be used to type-check module separately.</li>
 </ul>
 <p>Currently, Mangle is interpreted and semantic analysis operates on a whole program.</p>
-<p>Something akin to the &quot;Rust orphan rule&quot; which restricts trait implementations:</p>
+<p>Something akin to the "Rust orphan rule" which restricts trait implementations:</p>
 <ul>
 <li>One cannot add facts through unit clauses for predicates that live in separate modules</li>
 <li>An exception: for extensional predicates, it is allowed (path dependence)
@@ -273,7 +283,7 @@ For the result of applying a predicate, we use \\( \Omega \\).
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next" href="04_where_is_ai.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="04_where_is_ai.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -287,7 +297,7 @@ For the result of applying a predicate, we use \\( \Omega \\).
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next" href="04_where_is_ai.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="04_where_is_ai.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

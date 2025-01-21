@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html lang="en" class="sidebar-visible no-js light">
+<html lang="en" class="light sidebar-visible" dir="ltr">
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
@@ -7,10 +7,10 @@
 
 
         <!-- Custom HTML head -->
-        
+
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="theme-color" content="#ffffff" />
+        <meta name="theme-color" content="#ffffff">
 
         <link rel="icon" href="favicon.svg">
         <link rel="shortcut icon" href="favicon.png">
@@ -32,15 +32,17 @@
 
         <!-- MathJax -->
         <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    </head>
-    <body>
-    <div id="body-container">
+
         <!-- Provide site root to javascript -->
         <script>
             var path_to_root = "";
             var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
         </script>
-
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
             try {
@@ -62,41 +64,49 @@
             var theme;
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
-            var html = document.querySelector('html');
-            html.classList.remove('no-js')
+            const html = document.documentElement;
             html.classList.remove('light')
             html.classList.add(theme);
-            html.classList.add('js');
+            html.classList.add("js");
         </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
 
         <!-- Hide / unhide sidebar before it is displayed -->
         <script>
-            var html = document.querySelector('html');
-            var sidebar = 'hidden';
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
             if (document.body.clientWidth >= 1080) {
                 try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
                 sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
             }
+            sidebar_toggle.checked = sidebar === 'visible';
             html.classList.remove('sidebar-visible');
             html.classList.add("sidebar-" + sidebar);
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="about.html">About</a></li><li class="chapter-item expanded "><a href="00_data_information_knowledge.html"><strong aria-hidden="true">1.</strong> Data Information Knowledge</a></li><li class="chapter-item expanded "><a href="01_mangle_what.html"><strong aria-hidden="true">2.</strong> What is Mangle</a></li><li class="chapter-item expanded "><a href="02_simple_cyber_example.html"><strong aria-hidden="true">3.</strong> Simple Cyber Example</a></li><li class="chapter-item expanded "><a href="03_type_system.html"><strong aria-hidden="true">4.</strong> Type System</a></li><li class="chapter-item expanded "><a href="04_where_is_ai.html" class="active"><strong aria-hidden="true">5.</strong> Where is the AI?</a></li><li class="chapter-item expanded "><a href="05_truth_through_proof.html"><strong aria-hidden="true">6.</strong> Truth through proof</a></li></ol>
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
             </div>
-            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
 
             <div class="page">
-                                <div id="menu-bar-hover-placeholder"></div>
-                <div id="menu-bar" class="menu-bar sticky bordered">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
-                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
                             <i class="fa fa-bars"></i>
-                        </button>
+                        </label>
                         <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
                             <i class="fa fa-paint-brush"></i>
                         </button>
@@ -166,8 +176,8 @@
 <h2 id="how-does-this-help-with-my-llm-use-case"><a class="header" href="#how-does-this-help-with-my-llm-use-case">How does this help with my LLM use case?</a></h2>
 <p>The possibility of defining interesting relations in terms of other relations yields opportunities to apply ML:</p>
 <ul>
-<li>first, product the &quot;right&quot; numbers to statistical modeling, regression etc</li>
-<li>graph techniques, where we construct interesting graph elements (nodes, edges, subgraphs) through rules. 
+<li>first, product the "right" numbers to statistical modeling, regression etc</li>
+<li>graph techniques, where we construct interesting graph elements (nodes, edges, subgraphs) through rules.
 <ul>
 <li>graph ML as in link prediction, or prediction of attributes of nodes, edges, whole graph.</li>
 </ul>
@@ -176,9 +186,9 @@
 <p>But you asked about LLMs.</p>
 <ul>
 <li>LLMs are interesting because they promise low-barrier access to AI without feature engineering and researcher etc.</li>
-<li>(things that have to be said) 
+<li>(things that have to be said)
 <ul>
-<li>LLMs are &quot;stochastic parrots&quot; </li>
+<li>LLMs are "stochastic parrots"</li>
 <li>Any ML task cannot succeed without data and being able to evaluate <em>quality</em> of the task</li>
 <li>think about the integration in apps which is hard engineering work</li>
 <li>as all tech, think about the power structures, biases and your responsibility</li>
@@ -195,7 +205,7 @@
 <ul>
 <li>(similarity, embeddings, vector search)</li>
 <li>and/or predicates</li>
-<li>or ask the LLM what is related. </li>
+<li>or ask the LLM what is related.</li>
 </ul>
 </li>
 <li>send the enriched prompt to the LLM</li>
@@ -211,7 +221,7 @@
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next" href="05_truth_through_proof.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="05_truth_through_proof.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -225,7 +235,7 @@
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next" href="05_truth_through_proof.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="05_truth_through_proof.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

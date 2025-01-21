@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html lang="en" class="sidebar-visible no-js light">
+<html lang="en" class="light sidebar-visible" dir="ltr">
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
@@ -7,10 +7,10 @@
 
 
         <!-- Custom HTML head -->
-        
+
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="theme-color" content="#ffffff" />
+        <meta name="theme-color" content="#ffffff">
 
         <link rel="icon" href="favicon.svg">
         <link rel="shortcut icon" href="favicon.png">
@@ -32,15 +32,17 @@
 
         <!-- MathJax -->
         <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    </head>
-    <body>
-    <div id="body-container">
+
         <!-- Provide site root to javascript -->
         <script>
             var path_to_root = "";
             var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
         </script>
-
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
             try {
@@ -62,41 +64,49 @@
             var theme;
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
-            var html = document.querySelector('html');
-            html.classList.remove('no-js')
+            const html = document.documentElement;
             html.classList.remove('light')
             html.classList.add(theme);
-            html.classList.add('js');
+            html.classList.add("js");
         </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
 
         <!-- Hide / unhide sidebar before it is displayed -->
         <script>
-            var html = document.querySelector('html');
-            var sidebar = 'hidden';
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
             if (document.body.clientWidth >= 1080) {
                 try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
                 sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
             }
+            sidebar_toggle.checked = sidebar === 'visible';
             html.classList.remove('sidebar-visible');
             html.classList.add("sidebar-" + sidebar);
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="about.html">About</a></li><li class="chapter-item expanded "><a href="00_porting_to_rust.html" class="active"><strong aria-hidden="true">1.</strong> Porting to Rust</a></li><li class="chapter-item expanded "><a href="01_persistence.html"><strong aria-hidden="true">2.</strong> Persistence</a></li><li class="chapter-item expanded "><a href="02_server.html"><strong aria-hidden="true">3.</strong> Mangle Server</a></li></ol>
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
             </div>
-            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
 
             <div class="page">
-                                <div id="menu-bar-hover-placeholder"></div>
-                <div id="menu-bar" class="menu-bar sticky bordered">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
-                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
                             <i class="fa fa-bars"></i>
-                        </button>
+                        </label>
                         <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
                             <i class="fa fa-paint-brush"></i>
                         </button>
@@ -154,7 +164,7 @@ I want to find out whether a particular approach to manipulating
 symbolic data can be made to work well in Rust (more on this below).</p>
 <h2 id="but--why"><a class="header" href="#but--why">But ... why?</a></h2>
 <p>For pure single-machine usage, it is very feasible to just do Rust go interop using IPC or grpc.
-There is a section &quot;Server&quot; that talks about this, with demo code.</p>
+There is a section "Server" that talks about this, with demo code.</p>
 <p>For a project like this, one can come with a few reasonable questions:</p>
 <ul>
 <li>why port instead of e.g. working on features or documentation</li>
@@ -167,7 +177,7 @@ The tentative answers and mitigations:</p>
 <li>while the surface language is far from perfect, the few additions
 that are necessary for syntax seem doable in two implementations.</li>
 <li>the type-checker is more work and unfinished, but that could be left for later.</li>
-<li>Mangle is supposed to be not just &quot;an implementation&quot; but a specification;
+<li>Mangle is supposed to be not just "an implementation" but a specification;
 that is only convincing when there are at least two implementations.</li>
 </ul>
 <h2 id="other-rust-datalog-implementations"><a class="header" href="#other-rust-datalog-implementations">Other Rust datalog implementations</a></h2>
@@ -181,9 +191,9 @@ that is only convincing when there are at least two implementations.</li>
 </ul>
 <p>These are all datalog implementations, and, like Mangle, some add extensions to Datalog.
 If we look beyond Rust, there are of course many more implementations.</p>
-<p>As discussed elsewhere (pardon the approximate self-quoting - this is just my opinion): </p>
+<p>As discussed elsewhere (pardon the approximate self-quoting - this is just my opinion):</p>
 <blockquote>
-<p>I think it is helpful to see datalog as a formal, conceptual kernel (or &quot;toy programming language&quot; in the famous Alice Book &quot;Foundations of Databases&quot;). When we look at the functional programming languages, we do not usually see them as a dozen of incompatible implementations of lambda calculus.</p>
+<p>I think it is helpful to see datalog as a formal, conceptual kernel (or "toy programming language" in the famous Alice Book "Foundations of Databases"). When we look at the functional programming languages, we do not usually see them as a dozen of incompatible implementations of lambda calculus.</p>
 </blockquote>
 <p>The compilation technique of Ascent and Crepe is certainly something that would make sense for Mangle.</p>
 <p>I should study these Rust datalog implementations more, but here is clear difference:
@@ -219,7 +229,7 @@ while keeping golang interpreter intact.</p>
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next" href="01_persistence.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="01_persistence.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -233,7 +243,7 @@ while keeping golang interpreter intact.</p>
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next" href="01_persistence.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="01_persistence.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html lang="en" class="sidebar-visible no-js light">
+<html lang="en" class="light sidebar-visible" dir="ltr">
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
@@ -7,10 +7,10 @@
 
 
         <!-- Custom HTML head -->
-        
+
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="theme-color" content="#ffffff" />
+        <meta name="theme-color" content="#ffffff">
 
         <link rel="icon" href="favicon.svg">
         <link rel="shortcut icon" href="favicon.png">
@@ -32,15 +32,17 @@
 
         <!-- MathJax -->
         <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    </head>
-    <body>
-    <div id="body-container">
+
         <!-- Provide site root to javascript -->
         <script>
             var path_to_root = "";
             var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
         </script>
-
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
             try {
@@ -62,41 +64,49 @@
             var theme;
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
-            var html = document.querySelector('html');
-            html.classList.remove('no-js')
+            const html = document.documentElement;
             html.classList.remove('light')
             html.classList.add(theme);
-            html.classList.add('js');
+            html.classList.add("js");
         </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
 
         <!-- Hide / unhide sidebar before it is displayed -->
         <script>
-            var html = document.querySelector('html');
-            var sidebar = 'hidden';
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
             if (document.body.clientWidth >= 1080) {
                 try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
                 sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
             }
+            sidebar_toggle.checked = sidebar === 'visible';
             html.classList.remove('sidebar-visible');
             html.classList.add("sidebar-" + sidebar);
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="about.html">About</a></li><li class="chapter-item expanded "><a href="00_data_information_knowledge.html"><strong aria-hidden="true">1.</strong> Data Information Knowledge</a></li><li class="chapter-item expanded "><a href="01_mangle_what.html"><strong aria-hidden="true">2.</strong> What is Mangle</a></li><li class="chapter-item expanded "><a href="02_simple_cyber_example.html"><strong aria-hidden="true">3.</strong> Simple Cyber Example</a></li><li class="chapter-item expanded "><a href="03_type_system.html"><strong aria-hidden="true">4.</strong> Type System</a></li><li class="chapter-item expanded "><a href="04_where_is_ai.html"><strong aria-hidden="true">5.</strong> Where is the AI?</a></li><li class="chapter-item expanded "><a href="05_truth_through_proof.html" class="active"><strong aria-hidden="true">6.</strong> Truth through proof</a></li></ol>
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
             </div>
-            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
 
             <div class="page">
-                                <div id="menu-bar-hover-placeholder"></div>
-                <div id="menu-bar" class="menu-bar sticky bordered">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
-                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
                             <i class="fa fa-bars"></i>
-                        </button>
+                        </label>
                         <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
                             <i class="fa fa-paint-brush"></i>
                         </button>
@@ -158,7 +168,7 @@
 </style>
 <h1 id="truth-through-proof"><a class="header" href="#truth-through-proof">Truth through proof</a></h1>
 <p>(A subtle reference to P. Andrews logic textbook)</p>
-<p>The words &quot;proof&quot; and &quot;evidence&quot; carry importance beyond the realm of formalized mathematics.</p>
+<p>The words "proof" and "evidence" carry importance beyond the realm of formalized mathematics.</p>
 <p>We want to make reasoning explicit - but:</p>
 <ul>
 <li>not all reasoning is certain, deductive.</li>
@@ -175,7 +185,7 @@ This means:</p>
 <p>The more successful applications of AI will there not <em>replace</em> humans, but <em>augment</em> human work and decision making.</p>
 <h2 id="augmenting-the-llm"><a class="header" href="#augmenting-the-llm">Augmenting the LLM</a></h2>
 <p>I believe (but cannot prove) that it will be <em>much</em> easier to enhance prompts with precise, accurate facts obtained from logic programming rather than doing detours through training, fine-tuning.</p>
-<p>Rather than have AI <em>solve</em> Codd's &quot;parts explosion&quot; problem, it seems much easier to compute all the parts from our catalog and feed the result to the model and be done.</p>
+<p>Rather than have AI <em>solve</em> Codd's "parts explosion" problem, it seems much easier to compute all the parts from our catalog and feed the result to the model and be done.</p>
 <p>Mangle and datalog-based languages let us write that logic concisely and in a way that can be tested.</p>
 <p>It will be interesting to see how logical inference and ML model inference can be alternated.</p>
 <pre><code class="language-go">func TestTransformPartsExplosion(t *testing.T) {
@@ -206,21 +216,21 @@ This means:</p>
       |&gt; do fn:group_by(DescPart, Part), let Sum = fn:sum(Quantity).`),
 	}
 	if err := analyzeAndEvalProgram(t, program, store); err != nil {
-		t.Errorf(&quot;Program evaluation failed %v program %v&quot;, err, program)
+		t.Errorf("Program evaluation failed %v program %v", err, program)
 		return
 	}
-	transitiveAtom, err := functional.EvalAtom(atom(&quot;transitive(2,7,12,[6])&quot;), ast.ConstSubstList{})
+	transitiveAtom, err := functional.EvalAtom(atom("transitive(2,7,12,[6])"), ast.ConstSubstList{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	expected := []ast.Atom{
 		transitiveAtom,
-		atom(&quot;full(2,7,12)&quot;),
+		atom("full(2,7,12)"),
 	}
 
 	for _, fact := range expected {
 		if !store.Contains(fact) {
-			t.Errorf(&quot;expected fact %v in store %v&quot;, fact, store)
+			t.Errorf("expected fact %v in store %v", fact, store)
 		}
 	}
 }
