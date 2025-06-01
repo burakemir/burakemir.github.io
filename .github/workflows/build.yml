@@ -18,4 +18,5 @@ jobs:
         env:
           PAGES_BRANCH: main
           BUILD_DIR: src
+          OUT_DIR: deploy
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
