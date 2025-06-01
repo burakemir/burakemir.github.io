@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  
+<title>CBPV and Natural Deduction - Part 4. Polarized Logic | </title>
+
+
+  <link rel="shortcut icon" type="image/png" href="&#x2F;images&#x2F;favicon-32x32.png">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <link id="stylesheet" rel="stylesheet" type="text/css" href="/dark.css">
+
+  <script type="text/javascript" src="/js/theme.js"></script>
+
+</head>
+
+<div class="header">
+  <div class="site_title">
+    <p><a href="/"><img src="https:&#x2F;&#x2F;burakemir.ch&#x2F;images&#x2F;totoro.jpg" alt=""
+          width="70" height=auto></a></p>
+    <p><a href="/">&nbsp;</a></p>
+  </div>
+  <div class="menu">
+    <a href="/post">>archives</a>
+    &nbsp;<a href="/pages/artifacts">>artifacts</a>
+    &nbsp;<a href="/about">>about</a>
+  </div>
+</div>
+
+<body onload="getTheme()">
+  <section class="section">
+    <div class="container">
+      
+<p>
+  <div class="title_postpage">CBPV and Natural Deduction - Part 4. Polarized Logic</div>
+</p>
+<p>
+  <div class="date_postpage">2023-09-16</div>
+  <div class="taxonomies_postpage">
+  
+      
+      <a href="https://burakemir.ch/categories/blog/">/blog</a>
+      
+  
+  
+      
+      &emsp;<a href="https://burakemir.ch/tags/logic/">#logic</a>
+      
+      &emsp;<a href="https://burakemir.ch/tags/abstract-machine/">#abstract machine</a>
+      
+      &emsp;<a href="https://burakemir.ch/tags/cbpv/">#cbpv</a>
+      
+  
+  </div>
+</p>
+
+<p>
+  <p>This is the last and final part of my little study of polarized
+natural deduction by means of CBPV. The previous parts are 
+<a href="https://burakemir.ch/post/cbpv-pt1-small-steps/">&quot;pt1. small steps&quot;</a>, 
+<a href="https://burakemir.ch/post/cbpv-pt2-sum-product/">&quot;pt2. sums and products&quot;</a>, and
+<a href="https://burakemir.ch/post/cbpv-pt3-linear-logic/">&quot;pt3. linear logic&quot;</a>.</p>
+<p>In this part, I will sum up what I find this interesting. This is
+going to be a bit more personal/opinionated/colored than the previous
+parts.</p>
+<h2 id="proof-theoretical-semantics">Proof-theoretical semantics</h2>
+<p>CBPV as polarized natural deduction helps develop an intuition for &quot;proof-theoretical semantics.&quot;</p>
+<p>It may be a subjective preference, but I consider intuition important.
+I believe that in the ideal world, intuition, &quot;explanatory power&quot; and
+teachability would play a role that has weight equal or greater than
+&quot;new results&quot; of research. This is clearly not the world we
+live in, but we can nevertheless asipre.</p>
+<p>So let me draw a rough &quot;baseline&quot; of logic, computation and programming languages.</p>
+<ul>
+<li>
+<p>Natural deduction (not sequent calculus) is the standard notation for
+discussing formal reasoning, proof, structural and substructural proof theory. 
+It goes back to Jaskowski and Gentzen, but today, two people deserve special mention:</p>
+<ul>
+<li>
+<p>Dag Prawitz for picking up proof-theoretic semantics and natural 
+deduction, providing a normalization theorem for natural deduction
+calculi</p>
+</li>
+<li>
+<p>Per Martin-Löf for basing his presentation of <a href="https://archive-pml.github.io/martin-lof/pdfs/Bibliopolis-Book-retypeset-1984.pdf">intuitionistic type
+theory</a> on the natural deduction style and establishing the concept of 
+judgment.</p>
+</li>
+</ul>
+</li>
+<li>
+<p>Type systems are presented as natural deduction calculi (with &quot;localized assumptions&quot;, so a judgment looks like a sequent of sequent calculus). Type systems provide the most effective form of mechanized reasoning and program analysis
+that we have in programming languages. </p>
+</li>
+</ul>
+<!--This is not even
+mentioning the advantages for documentation, IDE support, modularity
+and separate compilation. In the Curry-Howard perspective, type-checking is 
+a strangely backwards operation where we have a proof and are looking
+for the proposition it is proving.
+-->
+<ul>
+<li>
+<p>Sequent calculus is the device used in more formal studies of reasoning, 
+structured and substructual proof. When we use sequent calculus, we
+accept a greater distance to intuition and &quot;informal reasoning&quot; for
+technical reasons. Automated reasoning using &quot;semantic tableaux&quot; is
+essentially the same as working with sequent calculus.</p>
+<ul>
+<li>
+<p>In <a href="https://www.paultaylor.eu/stable/prot.pdf">Proofs and Types</a>, Jean-Yves Girard argues that sequent calculus is &quot;the prettiest illustration of
+the symmetries of Logic&quot;, and that it was &quot;generally ignored by computer scientists.&quot; This may have been true at the time, but it is certainly no longer the case.</p>
+</li>
+<li>
+<p>Samson Abramsky does give the sequent calculus its deserved treatment
+in <a href="https://www.sciencedirect.com/science/article/pii/030439759390181R">Computational interpretations of linear logic</a>, though Girard may not have had an operational reading in mind. Abramsky describes a symmetry between
+constructors (right rules, introduction rules) and destructors (left rules,
+elimination rules) which gives a proof-theoretic explanation on
+insights that go back to the McCarthy and Landin.</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="focusing-and-uniform-proofs">Focusing and uniform proofs</h2>
+<p>Now that we have established a (possibly subjective) baseline, let's talk
+about focusing. Focusing makes it appearance in logic programming: here 
+computation is not proof normalization, but proof <strong>search</strong>.</p>
+<ul>
+<li>Dale Miller, Gopalan Nadathur, Frank Pfenning and Andre Scredrov. &quot;Uniform proofs as the foundation for logic programming&quot;. Annals of Pure and Applied Logic. 51:125-157, 1991</li>
+<li>Around roughly the same time, Jean-Marc Andreoli published &quot;Logic programming with focusing proofs in linear logic.&quot;. Journal of Logic and Computation. 2(3):197-347 </li>
+</ul>
+<p>Focusing is a <strong>structuring principle</strong> for proofs. It is a way to eliminate
+the redundancy that is introduced when passing from natural deduction to
+sequent calculus (Pfennings <a href="https://www.cs.cmu.edu/~fp/courses/oregon-m10/04-focusing.pdf">lectures notes</a>). Girard was aware of
+Andreoli's work and referenced it &quot;On the unity of logic&quot;, introducing
+&quot;positive&quot; and &quot;negative&quot; polarity as concepts.</p>
+<p>The key idea is that if a rule of inference is <strong>invertible</strong>, it makes sense to
+apply it directly and not look for other rules. When invertible rules
+have priority over others, this reduces the large search space of proofs.</p>
+<p><strong>Polarized focusing</strong> goes further: in the context of proof search is about &quot;combining
+runs of connectives that are positive or negative, with explicit coercions
+between runs. These coercions, written $\uparrow$ and $\downarrow$ are
+called <em>shift operators</em>.&quot; (Pfenning, ibid.) This is what we discussed
+in this series.</p>
+<!--
+## Applications of Linear Logic
+* After pt3, I prepared a talk ["Call-by-push-value" and ownership](https://burakemir.ch/odersky-fest-23/) where I shared my intention to apply some of this 
+content to formalize a part of Rust's type system.
+
+  * In short, it has been known for a long time that linear/affine types 
+and substructural logic can be used to model resource management. The
+wikipedia article on 
+[Bunched logic](https://en.wikipedia.org/wiki/Bunched_logic#Applications)
+mentions John C. Reynolds using an affine type theory in 1978. This is
+a whopping 9 years before Girard published "linear logic".
+
+  * This is not the place to discuss details neither the subtleties how the 
+"no duplication" linearity constraints is part of such substructural logics
+nor what part of Rust's types system actually matches the "no duplication"
+of linear logic. However, I found out that (besides Phil Wadler's numerous
+papers on linear logic), Martin Oderky published a little-known paper on 
+"observers for linear logic" which describes read-only access to linear
+types as useful in programming, and which is very close to the short-lived, 
+immutable, shared references we call "borrows" today.
+     * The "lifetime parameters" are what research calls "region variables" and I think Tofte &amp; Talpin's "region-based memory management" may be a good
+best reference (it is at least what I learnt in grad school). Lots of
+people researched regions afterwards.
+
+
+
+https://en.wikipedia.org/wiki/Bunched_logic#Applications
+ in types ing resources like memory. I am talking the 1970s.
+John C. Reynolds in 1978 (via wikipedia)
+There are
+more and related approaches, such as Tofte &amp; Talpin's "region-based memory
+management", uniqueness types and more recent paper by Guillaume
+Munch-Maccagnoni ["Resource Polymorphism"](https://arxiv.org/abs/1803.02796)
+which discusses the use even in a garbage-collected language.
+
+
+ for the [OderskyFest 2023](https://burakemir.ch/odersky-fest-23/)
+
+# Rewind: Logic and Computation
+
+I want to start with a few big picture thoughts what keeps on bringing
+me back to logic.
+
+am gathering some thoughts on why polarity and focusing
+holds promise towards identifying "fundamental" concepts in programming language research.
+Even without the Curry-Howard perspective and logic, distinguishing between
+data and computation makes immediate sense. Can we get our formal systems
+to reflect this intuition?
+-->
+<h2 id="what-just-happened">What just happened?</h2>
+<p>We saw how call-by-push-value (CBPV) &quot;separates&quot; typed $\lambda$-calculus
+into <em>value types</em> and <em>computation types</em>. We obtain a type system which can be
+viewed as a natural deduction calculus. This view may seem slightly forced, since
+operations like $\mathtt{thunk}$ and $\mathtt{force}$ that control evalution
+do not seem very logical. But there are compelling reasons to have them!</p>
+<p>If we consider the treatment of inference and assumptions in linear
+logic, the familiar operators $\vee, \wedge$ separate into additive
+versions $\oplus, \&amp;$ as well as multiplicate versions  ⅋ $\otimes$.</p>
+<p>Some of these types $\oplus, \otimes$ look like data type constructors,
+and we called these positive or value types. For the others  ⅋ $\&amp;$.
+evaluation does not proceed until the environment demands it. These are
+negative or computation types.</p>
+<ul>
+<li>
+<p>Going back to Bob Harper's post <a href="https://existentialtype.wordpress.com/2012/08/25/polarity-in-type-theory/">polarity in type theory</a>: positive types come 
+with a <em>single</em> elimination rules which describe how the proof makes
+sense of the constituent(s) of the proposition. The connective is
+<strong>inductively defined</strong> in the sense that the introduction rule
+completely determines what the elimination rule does. It &quot;writes itself&quot;.</p>
+</li>
+<li>
+<p>On the other hand, negative types come with elimination rules that 
+determine what the proofs are going to look like. They are <strong>coinductively
+defined</strong> in the sense that &quot;there is no commitment to the internal
+structure of a proof&quot;, anything that provides a way to apply
+elimination rules is acceptable. These may be called &quot;lazy types&quot;,
+computation is suspended. </p>
+</li>
+</ul>
+<p>There is more to say here (concurrency and &quot;par&quot;, applications to
+memory management, category theory) but that will have to happen
+some other time.</p>
+<h2 id="putting-it-all-together">Putting it all together</h2>
+<p>Types can be defined by either introduction or elimination rules, and
+the straightforward way to interpret this is to think of negative
+types as suspending evaluation (&quot;lazy&quot;, unevaluated, &quot;objects&quot;) and
+positive types as being fully evaluated (&quot;structured data&quot;).</p>
+<p>Having both of these in a single calculus, that moreover corresponds to
+polarized natural deduction, is simply amazing. Surely, being able to
+encode various formal calculi that are either call-by-name or call-by-value
+is interesting. From a more practical perspective, it is now easy to
+see that when one wants to formalize &quot;object-oriented style,&quot; which will
+decidedly involve something like records on unevaluated functions, this
+will involve negative types.</p>
+<p>To give a vauge, but hopefully illuminating idea: consider how a &quot;vtable&quot; 
+is quite literally a record of function pointers, &quot;waiting&quot; for
+program execution to select one among them before proceeding with
+computation. And how representing an object involves carrying around a
+vtable.</p>
+<p>All this makes me think that when formalizing a programming language, it seems
+very attractive to translate the calculus to CBPV (or something like CBPV).
+Of course, this supposes that formalization is taking place - it looks
+like I will finally have some motivation to learn a proof assistant.</p>
+<p>I hope you found this little series useful in developing intuition for
+linear logic as well as the role of &quot;negative types.&quot;</p>
+
+</p>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']]
+    }
+  };
+</script>
+<script type="text/javascript" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
+
+
+
+    </div>
+  </section>
+</body>
+
+<div class="footer">
+  <a href="/"></a>&emsp;&copy; Burak Emir<br>
+  powered by <a href="https://www.getzola.org/">Zola</a>, theme <a
+    href="https://github.com/kyoheiu/emily_zola_theme">emily</a>.
+  <a rel='me' href='https://discuss.systems/@burakemir'>Mastodon</a>
+</div>
+
+</html>

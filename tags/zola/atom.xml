@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title> - zola</title>
+    <link href="https://burakemir.ch/tags/zola/atom.xml" rel="self" type="application/atom+xml"/>
+    <link href="https://burakemir.ch"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2023-06-12T00:00:00+00:00</updated>
+    <id>https://burakemir.ch/tags/zola/atom.xml</id>
+    <entry xml:lang="en">
+        <title>First post</title>
+        <published>2023-06-12T00:00:00+00:00</published>
+        <updated>2023-06-12T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://burakemir.ch/post/first-post/" type="text/html"/>
+        <id>https://burakemir.ch/post/first-post/</id>
+        <content type="html">&lt;h3 id=&quot;a-fresh-start&quot;&gt;a fresh start&lt;&#x2F;h3&gt;
+&lt;p&gt;I had to redo these pages. Using &lt;a href=&quot;https:&#x2F;&#x2F;getzola.com&quot;&gt;zola&lt;&#x2F;a&gt; now. Rust, lean, a theme I like, mathjax. My old blog posts are still at &lt;a href=&quot;https:&#x2F;&#x2F;bq9.blogspot.com&quot;&gt;bq9.blogspot.com&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;I wanted to like racket and pollen, but kept on forgetting everything absolutely everything.&lt;&#x2F;p&gt;
+&lt;p&gt;All I want is to keep some standalone note pages, and some posts, with math and code. Goodness.&lt;&#x2F;p&gt;
+&lt;p&gt;$e^{i\pi }+1=0$&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#383838;color:#e6e1dc;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;trait &lt;&#x2F;span&gt;&lt;span&gt;Foo {
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffc66d;&quot;&gt;foo&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;Self&lt;&#x2F;span&gt;&lt;span&gt;) -&amp;gt; Bar
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;$$
+\begin{prooftree}
+\AxiomC{$P$}
+\AxiomC{$P\to Q$}
+\RightLabel{$(\to_E)$}
+\BinaryInfC{$Q$}
+\end{prooftree}
+$$&lt;&#x2F;p&gt;
+</content>
+    </entry>
+</feed>
