@@ -16,7 +16,7 @@ jobs:
         # master also worked: shalzz/zola-deploy-action@master
         uses: shalzz/zola-deploy-action@v0.17.1
         env:
-          PAGES_BRANCH: master
+          PAGES_BRANCH: gh-pages
           BUILD_DIR: src
           OUT_DIR: deploy
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
