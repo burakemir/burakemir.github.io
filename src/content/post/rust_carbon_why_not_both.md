@@ -10,7 +10,7 @@ math = true
 
 Today's post is a little different. Instead of delving into discussiong of formal type systems, I'd like to step back and talk generally about some aspects of linear type systems 
 as they show up in real life. That means: programming languages and the memory safety discussion today, C++ and Rust. Disclaimer: while the content of this post is very much 
-related memory safety which is something I work on at Google, this is my personal blog and everything here is my personal opinion.
+related to memory safety which is something I work on at Google, this is my personal blog and everything here is my personal opinion.
 
 In programming, managing memory and resources is one of the most critical and error-prone tasks. Getting it wrong can lead to nasty bugs, from crashes to security vulnerabilities. Two languages that take this challenge seriously, but with vastly different philosophies, are C++ and Rust.
 
