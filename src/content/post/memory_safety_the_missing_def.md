@@ -91,9 +91,14 @@ untrapped L-errors due to an operation involving memory access.
 
 **Brief discussion**
 
-Safety is defined as "absence of unacceptable loss." This requires to what unacceptable loss is. Our
-definitions above are focused on the mechanics of execution and do not talk about logic errors, 
-password-stealing or crashes. So our definition of memory safety is a "technical definition".
+These definitions are directly derived from Luca Cardelli's "Type Systems" article (2004) from the
+CRC Handbook of Computer Science and Engineering, 2nd Edition, Ch. 97. You can find it.
+
+Safety is commonly defined as "absence of unacceptable loss". Turning this into an effective
+definition in the context of programming requires to clarify what unacceptable loss is. Our
+definitions above are focused on the mechanics of execution: we do not talk about logic errors, 
+stealing your private key from the .ssh directory or causing crashes. So our definition of memory safety 
+is a "technical definition".
 
 Nevertheless, it seems useful: it applies to a range of programming languages, and thus over
 a range of possible language designs.
