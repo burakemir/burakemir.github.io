@@ -1,6 +1,6 @@
 +++
 title = "Rust and Carbon, why not both"
-date = 2025-09-27
+date = 2025-08-27
 [taxonomies]
 categories = ["blog"]
 tags = ["rust", "carbon", "c++"]
