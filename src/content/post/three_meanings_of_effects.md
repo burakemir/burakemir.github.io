@@ -97,7 +97,8 @@ information (effect-polymorphism).
 Our mere decision to be tracking effects in the type system leads to more questions: which effects should
 we track? And what should we check? Marino and Millstein write about a type and effect checking
 framework ["A Generic Type-and-Effect System"](https://web.cs.ucla.edu/~todd/research/tldi09.pdf) that
-we are pretty free to choose, as long as rules for checking and adjusting follow certain rules.
+we are pretty free to choose, as long as rules for checking and adjusting satisfy
+certain monotonicity properties.
 
 So it is very easy to state that something is (or should be) an effect. Whether that is valuable
 has to be demonstrated by the rules that make use of the effect information. The proof of the
