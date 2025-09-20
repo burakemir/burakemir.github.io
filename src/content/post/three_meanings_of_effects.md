@@ -111,33 +111,35 @@ particular, *abstraction* depends on the ability to hide information.
 
 ## Notions of Computation
 
-We now shift our perspective completely and embrace functional programming view.
-Away with side effects.
+We now shift our perspective completely and embrace the functional programming view.
+Away with side effects - unless we can capture them in a mathematical framework.
 
 Researchers who study programming languages (PL) have a need to describe 
 PL concepts and semantics formally. Many mathematical and logical 
 characterizations have entered the discourse on programming, for example
-"boolean", "set", "map". 
+"boolean", "set", "map" for data types. The meaning of programs as a whole, and
+programming languages as notation for programs has been approached from a 
+mathematics angle.
 
-A particular mathematical field that stands out is category theory. Don't run away yet!
+A particular mathematical field that stands out in PL semantics is category theory. Don't run away yet!
 It is a language for making precise statements about structure-preserving 
-transformations. The goal is to learn about the structures by studying the transformations.
+transformations. The goal is to learn about the structures by studying these transformations.
 
 In PL theory, one constantly needs to talk about structures (concepts) that exist across 
 different PLs, or can be expressed in many different ways. And thus, product types, 
 sum types (co-product), co- and contravariance and functors found their way into PL discourse. 
+Not only semantics, but also as actual ways to define data structures (algebraic data types).
 The connection to category theory is often lost in the process, but that has not 
 led to significant problems so far.
 
 The $\lambda$-calculus has been used as a vehicle for PL research.  Its basic unit 
-computation step (substitution) lends itself so well for compositionality and formal reasoning,
-giving rise to functional programming.
+computation step (substitution) lends itself so well for compositionality and formal reasoning.
+This has given rise to functional programming.
 
-Taking inspiration from mathematics, researchers have enjoyed giving *meaning* to
-programs by assigning mathematical structures (denotational semantics), the
-idea being that these are widely understood, or understandable. In this
-vein, a $\lambda$-term would ultimately correspond to a mathematical function of some 
-kind.
+When researchers assign *meaning* to programs through mathematical structures (denotational semantics), the
+idea is that these are widely understood, or understandable. In this vein, a $\lambda$-term would ultimately 
+correspond to a mathematical function of some kind. But not always a mathematical function from the
+domain of argument types to the domain of the result type.
 
 In his 1991 article "Computational lambda-calculus and monads", Eugenio Moggi 
 challenged the idea that semantics of $\lambda$-terms should correspond to
@@ -161,10 +163,11 @@ types and $+$ for sum types, and 1 for unit (a type that holds no information), 
 a type that has no members. Types built from $\times$, $+$, 1 and 0 can be called algebraic
 types because they look like terms we use in high school algebra.
 
-Now, we need to make a mental step away from given programming language, into a
+Now, we need to make a mental step away from types in a given programming language, into a
 world where instead of *types* talking about specific values in a given language, 
-we have *types* that talk about all semantics. Semantics go beyond all the values
-that may occur in a given a language, we also have to give meaning to the operations.
+we have *domains of types* that talk about all semantics. We continue to call these types,
+though, because types can be used in the abstract to describe mathematical structures. 
+Semantics go beyond values, we also have to give meaning to the operations.
 
 The insight, then, is this: suppose we have a $T$ that represents all semantic values
 of our programming language, we can think of a "semantic type constructor" $F$ that transform 
@@ -176,6 +179,10 @@ it into a mathematical structure that very accurately describes a notion of comp
 
 One can think of others.  When we see this, we can say $F$ captures the 
 computational effects of the operations given in such a notion of computation.
+Where in a Rust or Haskell program, you return `Some(x)` or `None`, we can lift this
+to whole computational model or partial computations that either return something or
+they don't. Such programs (functions) can be composed in a way that preserves their
+type structure.
 
 The "monad" part comes in when we talk about composing program fragments from building blocks.
 As promised, we will not go into the monad laws and join,unit,bind operations here.
