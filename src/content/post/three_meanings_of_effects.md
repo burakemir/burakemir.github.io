@@ -142,7 +142,7 @@ idea is that these are widely understood, or understandable. In this vein, a $\l
 correspond to a mathematical function of some kind. But not always a mathematical function from the
 domain of argument types to the domain of the result type.
 
-In his 1991 article "Computational lambda-calculus and monads", Eugenio Moggi 
+In his 1989 LICS paper "Computational lambda-calculus and monads", Eugenio Moggi 
 challenged the idea that semantics of $\lambda$-terms should correspond to
 simple mathematical functions. He pointed out the existence of various firmly
 established *notions of computation* which are all better explained by something else,
