@@ -245,8 +245,12 @@ are handled. Here, the multiple meanings hit us with full force, the effects - a
 are being tracked are effects, as in user-defined operations that can be interleave with
 normal control flow.
 
-Effect handlers combine both, the type and effect approach which could be used for tracking
-many things, and the notions-of-computation effects which specifically refer to composition.
+(updated:) In a language that supports definition of effect handlers one sees the type and effect 
+checking used for a user-definable composition mechanism. In Jonathan Brachthäuser's words: 
+
+> monadic effects start with the semantics (like `List[T]`) and then see which operations 
+> can be supported, while algebraic effects start with the operations (the signature) 
+> and then see which domains can support (implement) them.
 
 # The End
 
