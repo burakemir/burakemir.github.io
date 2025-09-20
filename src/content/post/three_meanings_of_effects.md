@@ -43,12 +43,14 @@ This enable us to reason about properties of programs without having to run them
 
 Imperative programs are composed of "functions" (really: procedures). 
 We may assign a type to a function to describe inputs and output. This type does not contain 
-any information about the state manipulation. Picturing a function as a form or
-transformation from input to output, the have been called **side effects**.
+any information about the state manipulation. If we imagine a function as a
+transformation process with a "main" direction going from input to output, the interactions
+that are not part of the output have been called **side effects**.
 
 These functions are not mathematical functions, even if mathematics is what led to computers
-and "computation". It is tempting to go on a philosophical tangent on [epistemology](https://bq9.blogspot.com/2020/07/language-logic-and-modeling.html)
-now, but we will refrain from doing so.
+and "computation". Thinking about this may tempt us to go on a philosophical tangent on [epistemology](https://bq9.blogspot.com/2020/07/language-logic-and-modeling.html)
+and the [Mangle of Practice](https://philpapers.org/rec/PICTMO-8), but this is for another
+time and another post.
 
 One often encounters "pure" as an adjective for functions that do not have side-effects. 
 This is as if side effects taint the purity of mathematics, and indeed formal reasoning
@@ -63,8 +65,22 @@ So why not add effects to type system and track more information that way?
 
 A type and effect system is just that: the enrichment of types with annotations.
 
-The first effect system (Lucassen, Gifford. "Polymorphic Effect Systems") was about memory access. It
-tracked read, write to a region of memory, in 1988.
+The first effect system was about memory access: Lucassen, Gifford ["Integrating Imperative and Functional Programming"](https://dl.acm.org/doi/pdf/10.1145/319838.319848) (1986)
+wrote about tracking reads, writes and allocation of memory:
+> In the language presented in this paper, information about interference and referential
+> transparency is inferred from three orthogonal properties:
+> * the ability to allocate and initialize memory locations whose value may be changed,
+> * the ability to read the contents of memory locations whose value may be changed (i.e. to observe side-effects), and
+> * the ability to unite new values to existing memory locations (i.e. to cause side-effects).
+>
+> In general it is undecidable whether an expression will
+> allocate, read or write memory locations whose value may
+> be changed. Effect checking is *conservative*, and
+> classifies an expression as having each of the three
+> properties unless the opposite can be shown. 
+
+They discuss the role of effect polymorphism in ["Polymorphic Effect Systems"](https://dl.acm.org/doi/pdf/10.1145/73560.73564) (1988)
+(updated: thanks Colin Gordon for pointing me to the earlier paper).
 
 Nielson and Nielson give a wonderful, timeless description in ["Type and Effect Systems"](https://web.cs.ucla.edu/~palsberg/tba/papers/nielson-nielson-csd99.pdf), from 1999.
 The wikipedia page ["Effect system"](https://en.wikipedia.org/wiki/Effect_system) is very congruent with that.
@@ -79,11 +95,13 @@ to print anything. We can immediately see that we then also need to think about 
 information (effect-polymorphism).
 
 Our mere decision to be tracking effects in the type system leads to more questions: which effects should
-we track? And what should we check?
+we track? And what should we check? Marino and Millstein write about a type and effect checking
+framework ["A Generic Type-and-Effect System"](https://web.cs.ucla.edu/~todd/research/tldi09.pdf) that
+we are pretty free to choose, as long as rules for checking and adjusting follow certain rules.
 
 So it is very easy to state that something is (or should be) an effect. Whether that is valuable
 has to be demonstrated by the rules that make use of the effect information. The proof of the
-pudding is in the eating.
+pudding is in the eating!
 
 Modern programming languages give programmers various ways to "extend the language": user-defined data types
 and operations (bundled as classes in OOP), only providing built-in operations (primitives) for
@@ -224,18 +242,18 @@ many things, and the notions-of-computation effects which specifically refer to 
 
 # The End
 
-There are multiple deep connections between category and programming language technology.
-It is absolutely remarkable what monads can do programming language semantics. We
-were able to talk about concepts that appear in so many languages, like professional
-programming language designers. And we did not need all that much jargon.
-
-Monads are the realm of theory, a "meta programming language" concept. This is a 
-completely different game from giving users a way to define their own programming 
-language operations, which is about expressiveness and pragmatics. This level mismatch
-is the source of confusion; sometimes we need our boxes so we are able to think outside of them.
-
 I hope this post helped establish a clearer idea how the venerable idea of type and effect 
 systems, the venerable idea of notions-of-computation and how they get combined in
 the **tr&egrave;s en vogue** algebraic effects trend in research.
 
-May it help us synthesize the good ideas of the past and forge a better future.
+There are multiple deep connections between category and programming language technology.
+We only scratched the surface here. 
+
+Monads are a remarkable method to structure programming language semantics. That seems to indicate that a science 
+of programming languages could benefit from using the meta language of categories, types and logic.
+
+For mere practical uses of a type and effect system, that may not be so relevant. And
+even in practical uses, we may be fine using a "monad abstraction pattern" for
+structure embedded, domain-specific programming languages without really being
+constrained by the "mathematics" that led to the concept.
+
