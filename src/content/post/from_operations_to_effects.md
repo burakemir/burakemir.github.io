@@ -9,7 +9,7 @@ math = true
 +++
 
 This continues a meditation on effects. My last post on the various meanings of effects in the discourse on programming languages (PL)
-did very little to show how type and effect discipline may be relevant to memmory safety in programming languages.
+did very little to show how type and effect discipline may be relevant to memory safety in programming languages.
 Moreover, I encountered a statement I found easy to agree to "before we talk about effects, we need to understand their semantics".
 
 This is an interesting challenge in itself. How do we define precisely what a program that performs I/O actually _means_?
@@ -64,7 +64,7 @@ The M-set is the semantic domain that brings our abstract sequence to life.
 
 ### Beyond I/O: The Case of Memory 🧠
 
-This powerful pattern isn't limited to I/O. We can apply the exact same idea to memory management. Let's define a new set of memory operations:
+Why stop with I/O? We can apply the exact same idea to memory management. Let's define a new set of memory operations:
 
 $$ OpMem := \\{ \mathtt{alloc} \\} ∪ \\{ \mathtt{free\ n}\ |\ n \in \mathbb{N} \\} $$
 
