@@ -13,6 +13,9 @@ theme = "emily_zola_theme"
 # For overriding the default output directory `public`, set it to another value (e.g.: "docs")
 output_dir = "deploy"
 
+# For generating an atom.xml file.
+generate_feeds = true
+
 taxonomies = [
        {name = "tags", feed = true}, # each tag will have its own feed
        {name = "tags"}, # you can have taxonomies with the same name in multiple languages
