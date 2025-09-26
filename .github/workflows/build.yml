@@ -12,9 +12,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Build and deploy
-        # v0.17.2 didn't work for me for some reason, so I used v0.17.1
-        # master also worked: shalzz/zola-deploy-action@master
-        uses: shalzz/zola-deploy-action@v0.17.1
+        uses: shalzz/zola-deploy-action@v0.21.1
         env:
           PAGES_BRANCH: gh-pages
           BUILD_DIR: src
