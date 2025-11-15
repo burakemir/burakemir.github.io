@@ -19,6 +19,7 @@ arrowlogo :
 book:
 	$(MAKE) -C mangle-point-in-time-01
 	$(MAKE) -C mangle-point-in-time-02
+	cd odersky-fest-23 && zola build
 
 deploy : $(location_deploy) book
 	cd src && zola build

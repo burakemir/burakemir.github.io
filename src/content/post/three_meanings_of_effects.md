@@ -17,7 +17,7 @@ programming language concepts.
 Effects - in more than one sense - are interesting today. The software industry is gearing up 
 to move its system programming artifacts from a dark swamp of legacy
 into the flushing green meadows of *memory safety*.
-I argue between the lines of [Memory Safety - the missing definition](memory_safety_the_missing_def), 
+I argue between the lines of [Memory Safety - the missing definition](/post/memory-safety-the-missing-def), 
 programming language design is the source and cause of all memory safety problems.
 Maybe effects can help turn it into a solution.
 

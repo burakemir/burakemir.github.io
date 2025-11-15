@@ -6,21 +6,25 @@ template = "post-page.html"
 
 ### about me
 
-This is Burak Emir and you are looking at my homepage. I have been passionate about programming languages ever since studying in Martin Odersky's group at EPFL.
-I live in Zurich, Switzerland with my wife and two daughters, and work at Google as *Alchemist of Happiness*.
+This is Burak Emir and you are looking at my homepage and blog. I mainly write
+about programming languages.  I live in Zurich, Switzerland with my wife and two daughters, 
+and work at Google as *Alchemist of Happiness*.
 
-I joined Google right after handing in my PhD thesis, and worked as engineer and manager on various systems and teams. Engineering is more than writing code,
-but the speed at which ideas from research permeate the industry is very slow. I wonder if the knowledge and experience could not be organized and
-made accessible in a better way.
+My professional life started earlier, somewhere during my PhD in Martin Odersky's group at EPFL
+Lausanne where I worked on Scala and translating pattern matching. At Google, I worked as 
+engineer and manager on various systems and teams, building backends, distributed systems, middleware. 
+I then started getting back to programming language related things, and a few years later 
+joined the org responsible for compilers and language-related infrastructure.
 
 ### about this site
 
-I am interested in systems, languages, types, logic where one can bridge theory and practice.
+I am interested in languages, types, logic, systems where one can bridge theory and practice.
 Occasionally I write things up. You could call it research, but outside any academic institution.
 This site is a place where I keep some notes. 
 
-The posts are a way to share the little I know on programming methods, programming 
-language technology and related topics, like education or cybersecurity.
+The posts are a way to share what I learnt on programming methods, programming 
+language technology and occasionally some other topics, like knowledge management
+or cybersecurity.
 
 ### reach out
 

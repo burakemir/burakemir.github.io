@@ -12,28 +12,23 @@ Here are some snapshots from the journey [(dblp)](https://dblp.uni-trier.de/pers
   * Burak Emir, Martin Odersky, John Williams. [Matching objects with patterns.](https://infoscience.epfl.ch/record/98468) ECOOP 2007.
   * Burak Emir, Qin Ma, Martin Odersky. [Translation Correctness for First-Order Object-Oriented Pattern Matching.](https://infoscience.epfl.ch/record/108817?ln=en) APLAS 2007
 
-* *Constrained Polymorphism* (for lack of a better word). 
+* *Constrained Generics (Universal Polymorphism)*
    * Burak Emir, Andrew Kennedy, Claudio Russo, Dachuan Yu. [Variance and Generalized Constraints for C# generics.](https://www.microsoft.com/en-us/research/publication/variance-and-generalized-constraints-for-c-generics/) ECOOP 2006. I think variance annotations made it to C# 4.0 later.
-
- * *Symbolic Execution*
-   * In 2010, I got funding for an internship to apply symbolic execution. This was ultimately unsuccessful, but we learned a few things. The intern was hired later.
 
  * *arrow-logo*
     * I did a few programming courses for kids using LOGO and wrote an interpreter [arrow-logo](https://github.com/google/arrow-logo) that runs in the browser. Some thoughts on [educational programming environments for kids](https://blog.burakemir.ch/2015/03/educational-programming-environments.html) on my old blog.
-    * Play with it here: [https://burakemir.ch/arrowlogo/ArrowLogo.html](https://burakemir.ch/arrowlogo/ArrowLogo.html)
 
  * *Datalog and Logic Programming*.
 
     * I develop and maintain a language called [Mangle](https://github.com/google/mangle) and its implementation, open-sourced it (Nov 2022). More people need to know datalog.
+    * [Mangle Point in Time 01](/mangle-point-in-time-01)
+    * [Mangle Point in Time 02](/mangle-point-in-time-02)
 
-    * Or do we need to write [SQL interpreters?](https://gist.github.com/burakemir/541c709e570ea770bf21f855034c1dba)?
+  * [Odersky Fest 2023](/odersky-fest-23)
 
 ### posts on the old blog
 
-I used to post at [bq9.blogspot.com](https://bq9.blogspot.com) because it needed minimal effort but I just can't. Editing html with mathjax in this blogger interface is driving me nuts and drains
-all my writing energy.
-
-Here are some posts:
+The old blog is at [bq9.blogspot.com](https://bq9.blogspot.com). Some posts you can find over there:
 
 <ul>
   <li><a href="https://blog.burakemir.ch/2021/12/worked-example-of-automata-runs-as.html">(2021) Worked example of automata runs as sheaves</a></li>
