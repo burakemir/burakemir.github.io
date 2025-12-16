@@ -116,13 +116,15 @@ If you have not compiled to Wasm before, you may want to run `rustup target add 
 
 ### Step 3: The Guest "Init" (The Micro-OS)
 
-We will write a Rust program that acts as the entire guest operating system. It boots, listens on a socket, runs Wasm, and shuts down. Interaction happens via system calls, mediated by the C runtime library.
+We will write a Rust program that acts as the entire guest operating system (init process). It boots, listens on a socket, runs Wasm, and shuts down. Interaction happens via system calls, mediated by the C runtime library.
 
 We use a Dual-Socket design:
 *   **Port 1000 (Control):** Metadata, Wasm binary uploads, status signals.
 *   **Port 1001 (Data):** Raw data stream.
 
 This allows streaming data directly from the socket into the Wasm memory buffer. Zero-copy isn't possible here because we must copy data into the Wasm module instance's memory to maintain isolation.
+
+The following demo code implements this, using tokio (1, "full" features), tokio-vsock (0.3) and Wasmtime (24.0) API calls.
 
 **guest_init/src/main.rs**
 
@@ -146,8 +148,10 @@ async fn main() {
     let mut store = Store::new(&engine, ());
 
     // 2. Start Listeners
-    let mut cmd_listener = VsockListener::bind(u32::MAX, CMD_PORT).expect("Bind CMD failed");
-    let mut data_listener = VsockListener::bind(u32::MAX, DATA_PORT).expect("Bind DATA failed");
+    let mut cmd_listener = 
+        VsockListener::bind(u32::MAX, CMD_PORT).expect("Bind CMD failed");
+    let mut data_listener = 
+        VsockListener::bind(u32::MAX, DATA_PORT).expect("Bind DATA failed");
     
     println!("[Guest] Waiting for Host to connect...");
 
@@ -172,9 +176,12 @@ async fn main() {
     let module = Module::new(&engine, &wasm_binary).unwrap();
     let instance = linker.instantiate_async(&mut store, &module).await.unwrap();
     
-    let memory = instance.get_memory(&mut store, "memory").expect("No memory exported");
-    let get_ptr = instance.get_typed_func::<(), i32>(&mut store, "get_buffer_ptr").unwrap();
-    let process_func = instance.get_typed_func::<i32, i32>(&mut store, "process_data").unwrap();
+    let memory = instance.get_memory(&mut store, "memory")
+        .expect("No memory exported");
+    let get_ptr = instance.get_typed_func::<(), i32>(&mut store, "get_buffer_ptr")
+        .unwrap();
+    let process_func = instance.get_typed_func::<i32, i32>(&mut store, "process_data")
+        .unwrap();
     
     let wasm_ptr = get_ptr.call_async(&mut store, ()).await.unwrap() as usize;
 
@@ -222,7 +229,9 @@ async fn main() {
 
 ```
 
-### Why we use Dynamic Linking
+### Building the Image
+
+We gather all files for the guest filesystem. Apart from the guest init binary, we need some files to support dynamic linking of the C runtime library.
 
 Many tutorials suggest compiling with `x86_64-unknown-linux-musl` to get a single static binary. While this is small (5MB), it breaks the ability to get stack traces because the musl unwinder often conflicts with JIT compilers like Wasmtime.
 
@@ -272,7 +281,8 @@ for DEP in $DEPENDENCIES; do
         echo "  Bundling: $DEP"
 
         # We need to copy it to the SAME path structure relative to root
-        # e.g., /lib/x86_64-linux-gnu/libc.so.6 -> build_output/lib/x86_64-linux-gnu/libc.so.6
+        # e.g., /lib/x86_64-linux-gnu/libc.so.6 
+        #        --> build_output/lib/x86_64-linux-gnu/libc.so.6
 
         DIRname=$(dirname "$DEP")
         mkdir -p "$BUILD_DIR$DIRname"
@@ -285,7 +295,8 @@ done
 # 4. Handle the Dynamic Linker explicitly
 # ldd output often shows the loader as a full path, but we need to ensure
 # the interpreter path hardcoded in the binary exists.
-INTERPRETER=$(readelf -l $BIN_PATH | grep "interpreter" | awk -F': ' '{print $2}' | tr -d ']')
+INTERPRETER=$(readelf -l $BIN_PATH \
+    | grep "interpreter" | awk -F': ' '{print $2}' | tr -d ']')
 echo "  Bundling Interpreter: $INTERPRETER"
 if [ -f "$INTERPRETER" ]; then
     DIRname=$(dirname "$INTERPRETER")
@@ -303,6 +314,8 @@ echo "Done! Dynamic initramfs ready."
 ```
 
 This increases the image size to ~25MB, but in return, if our Rust code panics or Wasmtime crashes, we get a full, readable stack trace in the console.
+
+At this point, we have neatly packaged up everything we need into a CPIO archive that we will use with Cloud Hypervisor's direct kernel boot method in a bit.
 
 ### Step 4: The Host Driver
 
@@ -371,7 +384,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn connect_via_unix(path: &str, port: u32) -> Result<UnixStream, Box<dyn std::error::Error>> {
+async fn connect_via_unix(path: &str, port: u32) 
+        -> Result<UnixStream, Box<dyn std::error::Error>> {
     loop {
         match UnixStream::connect(path).await {
             Ok(mut stream) => {

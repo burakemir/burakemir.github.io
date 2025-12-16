@@ -20,7 +20,7 @@ this post explains a way to represent parsed source code using a variation of Re
 in a contiguous array.
 
 We call this **Indexed RPN**. Ordering program parts in a linear sequence very naturally leads to 
-machine interpretation, which is well-known for calculators but maybe a little less well known
+machine interpretation, which is well-known for calculators but maybe a little less well-known
 when there are scoped definitions and control flow structures.
 
 This is by no means a new way of doing things, but with modern machines having plenty of memory, 
