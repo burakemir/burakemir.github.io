@@ -15,7 +15,7 @@ pronounced as matter-of-fact introduction to an undergrad course of compilers.
 Compiler engineers have come up with many useful programming techniques and representations.
 
 Today, I want to write about one such technique, an alternative to Abstract Syntax Trees (ASTs).
-Inspired by the parse tree representation in the [Carbon compiler](https://github.com/carbon/carbon-language), 
+Inspired by the parse tree representation in the [Carbon compiler](https://github.com/carbon-language/carbon-lang), 
 this post explains a way to represent parsed source code using a variation of Reverse Polish Notation (RPN),
 in a contiguous array.
 
