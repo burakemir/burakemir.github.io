@@ -35,9 +35,9 @@ Memory safety would actually be an opportunity to put PL research into the spotl
 
 Investing into security involves uncertainty, even if it is clear that something needs to change.
 We don't need to fully replace C and C++ in order to significantly improve security, but it will cost - time and money.
-When fighting over limited resources, you will not only find honest people arguing over hard decisions and also people who push a more selfish agenda.
+When fighting over limited resources, you will not only find honest people arguing over hard decisions but also people who push a more selfish agenda.
 
-I think academic PL people are a lot like mathematicians in that they practical application of their work, hoping someone with money and influence will discover their work and put it to good use.
+I think academic PL people are a lot like mathematicians in that they appreciate but don't prioritize practical applications of their theory work. They rather hope someone with money and influence will discover their work and put it to good use.
 
 So I will do the same! What follows is an invitation to get back to the _science_ of programming. If you want your compiler and libraries
 to work correctly and be secure, _someone_ has to argue from principles. 
