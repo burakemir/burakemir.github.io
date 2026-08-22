@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  
+<title>Programming Language Semantics and Memory Safety | </title>
+
+
+  <link rel="shortcut icon" type="image/png" href="&#x2F;images&#x2F;favicon-32x32.png">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <link id="stylesheet" rel="stylesheet" type="text/css" href="/dark.css">
+
+  <script type="text/javascript" src="/js/theme.js"></script>
+
+</head>
+
+<div class="header">
+  <div class="site_title">
+    <p><a href="/"><img src="https:&#x2F;&#x2F;burakemir.ch&#x2F;images&#x2F;totoro.jpg" alt=""
+          width="70" height=auto></a></p>
+    <p><a href="/">&nbsp;</a></p>
+  </div>
+  <div class="menu">
+    <a href="/post">>archives</a>
+    &nbsp;<a href="/pages/artifacts">>artifacts</a>
+    &nbsp;<a href="/about">>about</a>
+  </div>
+</div>
+
+<body onload="getTheme()">
+  <section class="section">
+    <div class="container">
+      
+<p>
+  <div class="title_postpage">Programming Language Semantics and Memory Safety</div>
+</p>
+<p>
+  <div class="date_postpage">2026-08-21</div>
+  <div class="taxonomies_postpage">
+  
+      
+      <a href="https://burakemir.ch/categories/blog/">/blog</a>
+      
+  
+  
+      
+      &emsp;<a href="https://burakemir.ch/tags/memory-safety/">#memory safety</a>
+      
+      &emsp;<a href="https://burakemir.ch/tags/semantics/">#semantics</a>
+      
+      &emsp;<a href="https://burakemir.ch/tags/rust/">#rust</a>
+      
+      &emsp;<a href="https://burakemir.ch/tags/c/">#c</a>
+      
+      &emsp;<a href="https://burakemir.ch/tags/c/">#c++</a>
+      
+  
+  </div>
+</p>
+
+<p>
+  <hr />
+<p>Have you ever wondered what a programming language <em>actually is</em>?</p>
+<p>People often say that a programming language is just a tool we use to tell computers what to do. I really don't like this metaphor.
+Tell me then, how does this tool work?</p>
+<p>At university, we may learn that a language is defined by its <strong>syntax</strong> and its <strong>semantics</strong>,
+along with ways to make these definitions with mathematical precision. For syntax, there is grammar, but for semantics?</p>
+<h3 id="why-care">Why care?</h3>
+<p>Memory safety, what else! I have been working on memory safety for a few years now. I helped
+get Rust adopted at Google as a lead of the Rust team, I joined memory safety standard discussions on behalf of Google. I met professionals with all sorts of view on the topic.
+I even contributed to design discussions of the Carbon programming language and a bit to its implementation, though unsure whether that matters.
+I am between jobs at the moment, so for once don't need to worry about the not-my-employer's-opinion disclaimer.</p>
+<p>To me, memory safety is a programming language topic. I love PL! It is a wild field of research with conventions and jargon that most people don't have access to. Hopefully this
+article fixes that a little bit.</p>
+<p>Memory safety would actually be an opportunity to put PL research into the spotlight! Alas, there are broad, political reasons that make fact-based discussions hard.</p>
+<ul>
+<li>When grown-ups talk about safety, they really mean cybersecurity. Preventing attacks is the main concern and driving force, conventions, testing, mitigations just won't cut it.</li>
+<li>security is risk-based and thus a frequent exercise in making trade-offs and economic arguments.</li>
+<li>the world is drowning in legacy code</li>
+</ul>
+<p>Investing into security involves uncertainty, even if it is clear that something needs to change.
+We don't need to fully replace C and C++ in order to significantly improve security, but it will cost - time and money.
+When fighting over limited resources, you will not only find honest people arguing over hard decisions but also people who push a more selfish agenda.</p>
+<p>I think academic PL people are a lot like mathematicians in that they appreciate but don't prioritize practical applications of their theory work. They rather hope someone with money and influence will discover their work and put it to good use.</p>
+<p>So I will do the same! What follows is an invitation to get back to the <em>science</em> of programming. If you want your compiler and libraries
+to work correctly and be secure, <em>someone</em> has to argue from principles.</p>
+<h3 id="diving-into-formal-semantics">Diving into formal semantics</h3>
+<p>When you write <code>x = y + 1</code>, how do we formally define what that means? It turns out, there are three main ways to look at it: <strong>Operational</strong>, <strong>Denotational</strong>, and <strong>Axiomatic</strong> semantics.</p>
+<p>These sound like intimidating academic terms, but as a working developer, you already intuitively understand the concepts. You just know them by different names: <em>interpreters</em>, <em>compilers</em>, and <em>assertions</em>. All these views on languages are simultaneously useful.</p>
+<p>To break this down, let’s invent a tiny toy language. It has arithmetic, immutable variables (<code>let</code>), and mutable variables (<code>var</code>).</p>
+<p>Here is a snippet of our toy language:</p>
+<pre data-lang="text" style="background-color:#383838;color:#e6e1dc;" class="language-text "><code class="language-text" data-lang="text"><span>var x = 0;
+</span><span>let y = 5 in
+</span><span>    x = y + 1
+</span></code></pre>
+<p><em><code>x</code> is a mutable variable initialized to 0. <code>y</code> is an immutable variable bound to 5. Finally, we update <code>x</code>.</em></p>
+<p>Let’s look at this snippet through the three lenses of formal semantics.</p>
+<hr />
+<h3 id="1-operational-semantics-the-interpreter-view">1. Operational Semantics: The "Interpreter" View</h3>
+<p><strong>The core question:</strong> <em>How do we execute this code step-by-step?</em></p>
+<p>Operational semantics defines a program's meaning by describing how it executes on an abstract machine. It is less concerned with "what it mathematically is" and more concerned with "how it runs."</p>
+<p>If you have ever written an interpreter, you have provided an operational semantics. It may not the best choice for typesetting and and publishing it in an article or book, but a program
+can certainly count as providing rules defined with mathematical precision. The researchers use a set of logical rules (often called Structural Operational Semantics) that involve rewriting
+a bunch of formal symbol strings.  But practically, the essence is this:</p>
+<p>We keep track of a <strong>State</strong> (a mapping of mutable variables to their values) and an <strong>Environment</strong> (a mapping of immutable <code>let</code> bindings to their values).</p>
+<ol>
+<li><strong>Initial State:</strong> <code>{ x: 0 }</code>, <strong>Env:</strong> <code>{}</code></li>
+<li>Evaluate <code>let y = 5</code>. We add <code>y</code> to the environment.
+<strong>State:</strong> <code>{ x: 0 }</code>, <strong>Env:</strong> <code>{ y: 5 }</code></li>
+<li>Evaluate <code>x = y + 1</code>. We look up <code>y</code> in the Env (5), add 1, and update <code>x</code> in the State.
+<strong>State:</strong> <code>{ x: 6 }</code>, <strong>Env:</strong> <code>{ y: 5 }</code></li>
+</ol>
+<p><strong>Why developers care:</strong> Operational semantics is the most common way to define language specifications. We just expect that it is clear and well-defined what happens when a line of code runs. When the ECMAScript specification describes how JavaScript should execute, it uses a form of operational semantics. It answers the question: <em>"What happens when this line of code runs?"</em></p>
+<hr />
+<h3 id="2-denotational-semantics-the-compiler-view">2. Denotational Semantics: The "Compiler" View</h3>
+<p><strong>The core question:</strong> <em>Tell me (with mathematical precision) what object does this code represent?</em></p>
+<p>Denotational semantics takes a different approach. Instead of defining <em>how</em> a program runs, it maps the program to what a program is (a "denotation"). In formal semantics,
+this is a mathematical concept and a semantics is essentially translation - a mathematical compiler.</p>
+<p>What is crucial is not mathematics but that the target of translation is something
+we already understand and need not define further. Also, we need to be able to tell whether two translated objects are "the same".</p>
+<p>Back to our little language. Instead of stepping through the code, we translate each line into a mathematical function.</p>
+<ul>
+<li><code>var x = 0</code> translates to a function that takes an input state and returns a new state where <code>x</code> is 0.</li>
+<li><code>let y = 5</code> translates to a function that takes an environment and returns a new environment where <code>y</code> is 5.</li>
+<li><code>x = y + 1</code> translates to a function that takes a State and an Environment, looks up <code>y</code>, adds 1, and updates <code>x</code>.</li>
+</ul>
+<p>In denotational semantics, the entire program is simply a composition of these mathematical functions.</p>
+<p>If $S$ is our State and $E$ is our Environment, our program becomes a single mathematical function $P$:
+$$P(S, E) = S' \text{ where } S'(x) = E(y) + 1$$</p>
+<p>Notice that we never talked about "running" the code step-by-step. We just said: "This program is a function that maps an input state to an output state."
+It is the concepts of mathematical function and function compositions where the magic happens.</p>
+<p>The compiler analogy is deeper than it seems: if I hand the Rust grammar and a Rust compiler to
+someone who only knows the machine code and target platform, they could learn from that what any Rust program means.
+Hopefully the compiler is correct, though. So just a compiler is hardly enough. We really need some other definition of semantics
+in order to tell whether a compiler is correct.</p>
+<p><strong>Why developers care:</strong> Denotational semantics makes it easy to prove things about programs mathematically. If you want to prove that two different code snippets do the exact same thing, denotational semantics allows you to just prove that their translations (say, into mathematical functions) are identical. It also forms the basis for pure functional languages like Haskell, where we would like see programs as mathematical functions.</p>
+<hr />
+<h3 id="3-axiomatic-semantics-the-assertions-view">3. Axiomatic Semantics: The "Assertions" View</h3>
+<p><strong>The core question:</strong> <em>What is true before and after this code runs?</em></p>
+<p>Axiomatic semantics completely ignores <em>how</em> a program runs or what mathematical function it represents. Instead, it defines a program's meaning by its effect on logical propositions.</p>
+<p>If you have ever written a unit test or used an <code>assert</code> statement, you are already doing axiomatic semantics.</p>
+<p>We use something called <strong>Hoare Triples</strong>, written as <code>{P} C {Q}</code>.
+This means: <em>If precondition P is true before running code C, then postcondition Q will be true after it runs.</em></p>
+<p>Let's look at our snippet:</p>
+<pre data-lang="text" style="background-color:#383838;color:#e6e1dc;" class="language-text "><code class="language-text" data-lang="text"><span>var x = 0;
+</span><span>let y = 5 in
+</span><span>    x = y + 1
+</span></code></pre>
+<p>What can we say about this code using axioms?</p>
+<ol>
+<li>We can assert a precondition: <code>{ True }</code> (We don't need anything to be true beforehand).</li>
+<li>We run the code.</li>
+<li>We can assert a postcondition: <code>{ x == 6 }</code></li>
+</ol>
+<p>Therefore, our Hoare triple is:
+<code>{ True } var x = 0; let y = 5 in x = y+1 { x == 6 }</code></p>
+<p>But how do we <em>know</em> the postcondition is true without running it? We use logical axioms. For instance, the axiom for assignment (<code>x = E</code>) says that if you want <code>{ x == 6 }</code> to be true <em>after</em> the assignment, then <code>E == 6</code> must be true <em>before</em> the assignment (with <code>x</code> substituted by <code>E</code>).</p>
+<p><strong>Why developers care:</strong> Axiomatic semantics is the foundation of formal verification and program proving. When ESA writes software for spaceships, they don't just test it; they use axiomatic semantics to mathematically prove that certain postconditions (like "the thrusters won't fire when the hatch is open") are mathematically guaranteed by the code. Tools like modern static analyzers and proof assistants (like Coq or Dafny) rely heavily on this view.</p>
+<hr />
+<h3 id="interlude-which-lens-should-you-use">Interlude: Which lens should you use?</h3>
+<p>You don't have to choose just one! Each semantic model gives us a different tool for a different job:</p>
+<ul>
+<li><strong>Operational Semantics:</strong> "How does this execute?" Think <em>Interpreters</em>. Great for language designers writing a reference implementation.</li>
+<li><strong>Denotational Semantics:</strong> "What does this mean mathematically?" Think <em>Compilers to Math</em>. Great for proving equivalencies between different pieces of code.</li>
+<li><strong>Axiomatic Semantics:</strong> "What can we prove is true?" Think <em>Assertions</em>. Great for verifying safety and correctness.</li>
+</ul>
+<p>Formal semantics doesn't have to be a terrifying realm of Greek letters. By shifting your perspective from "running code" to "interpreting, translating, and proving," you gain a deeper understanding of the tools you use every day.</p>
+<hr />
+<h3 id="the-dark-abyss-of-undefined-behavior-and-memory-safety">The Dark Abyss of Undefined Behavior and Memory Safety</h3>
+<p>I want to take this a step further into the real world and connect this to compilers and memory safety.</p>
+<p>If you write C or C++, you are intimately familiar with the dreaded phrase <strong>Undefined Behavior</strong> (UB).</p>
+<p>Memory safety issues—like buffer overflows, use-after-free, or null pointer dereferences—are all categorized as UB. But what does UB actually mean in the context of formal semantics? And why did a professor once tell me that the C specification can be understood as axiomatic semantics, even though UB feels like an operational gap?</p>
+<p>It turns out, operational and axiomatic semantics view UB from two different sides of the same coin.</p>
+<h4 id="the-operational-view-the-missing-rule">The Operational View: The Missing Rule</h4>
+<p>From an <strong>operational semantics</strong> perspective, a programming language is defined by a set of transition rules (e.g., "If state is X, move to state Y").</p>
+<p>Undefined behavior is exactly what it sounds like: <strong>a gap in the specification.</strong> It is a bland statement "we are neither willing not able to tell what happens next".
+A specification gap is very different from leaving something up to the implementation ("implementation-defined").</p>
+<p>Suppose our toy language has pointer arithmetic, and we write a rule for accessing an array. The rule says: <em>“If index <code>i</code> is within the bounds of the array, return the value.”</em></p>
+<p>But what if <code>i</code> is out of bounds? We simply didn't write a rule for that. In operational semantics, if a program reaches a state where no rule applies, the abstract machine is "stuck." The specification says nothing about what happens next. The program might crash, it might read garbage data, or it might format your hard drive. Operationally, it is a black hole.</p>
+<h4 id="the-axiomatic-view-the-void-consumes-logic">The Axiomatic View: The Void Consumes Logic</h4>
+<p>So, where does <strong>axiomatic semantics</strong> come into play? The professor was likely looking at the C standard through the lens of Hoare Logic (assertions).</p>
+<p>In axiomatic semantics, we define rules for how statements affect preconditions and postconditions. For a normal statement, we might say:
+<code>{ x == 5 } x = x + 1 { x == 6 }</code></p>
+<p>But how do we axiomatize a statement that has undefined behavior, like dereferencing a null pointer?</p>
+<p>In axiomatic semantics, UB is handled by a terrifying but mathematically elegant principle: <strong>If the precondition for safe execution is not met, the program can do literally anything.</strong></p>
+<p>Let’s say the C standard has an axiom:
+<em>“If you dereference pointer <code>p</code>, <code>p</code> must not be null.”</em></p>
+<p>If we write code that <em>might</em> dereference a null pointer, the precondition for that code block is violated. In formal logic, if you start from a false premise, you can prove anything to be true (this is called the Principle of Explosion).</p>
+<p>Therefore, the Hoare triple for UB becomes:
+<code>{ False } C { Anything }</code></p>
+<p><em>(If the precondition is false, any postcondition is true).</em></p>
+<h4 id="resolving-the-conflict-the-compiler-s-loophole">Resolving the Conflict: The Compiler's Loophole</h4>
+<p>So, how do we resolve this? Is UB a missing operational rule, or an axiomatic logical explosion?</p>
+<p><strong>It is both, and that is why compilers behave the way they do.</strong></p>
+<p>Modern C/C++ compilers (like GCC and Clang) don't just interpret your code; they rely on the <strong>axiomatic semantics</strong> of the C standard to optimize it.</p>
+<p>Because the standard says out-of-bounds access is UB, the compiler assumes—axiomatically—that you will never do it.</p>
+<p>Here is a classic example:</p>
+<pre data-lang="c" style="background-color:#383838;color:#e6e1dc;" class="language-c "><code class="language-c" data-lang="c"><span style="font-style:italic;color:#6e9cbe;">int</span><span> table[</span><span style="color:#a5c261;">10</span><span>];
+</span><span style="color:#cc7833;">for </span><span>(</span><span style="font-style:italic;color:#6e9cbe;">int</span><span> i </span><span style="color:#cc7833;">= </span><span style="color:#a5c261;">0</span><span>; i </span><span style="color:#cc7833;">&lt;= </span><span style="color:#a5c261;">10</span><span>; i</span><span style="color:#cc7833;">++</span><span>) {
+</span><span>    table[i] </span><span style="color:#cc7833;">= </span><span style="color:#a5c261;">0</span><span>;
+</span><span>}
+</span></code></pre>
+<p>Operationally, when <code>i</code> reaches 10, there is no rule for what happens. But the compiler doesn't just stop. It looks at the axioms.</p>
+<p>The compiler could reason like this:</p>
+<ol>
+<li>Accessing <code>table[10]</code> is Undefined Behavior.</li>
+<li>The programmer would never write code with Undefined Behavior (because it breaks the preconditions of the language).</li>
+<li>Therefore, <code>i</code> can never reach 10.</li>
+<li>Therefore, the condition <code>i &lt;= 10</code> is always true.</li>
+<li>Therefore, this is an infinite loop!</li>
+</ol>
+<p>The compiler is free to optimize this into a hardcoded infinite loop, completely removing the bounds check. The axiomatic gap allows the compiler to assume the impossible.</p>
+<p>Note that this is not the only behavior you may get. On my Mac, <code>clang</code> has "-fstack-protector" on by default and this program will abort before returning.
+If I switch that off, it will simply run and presumably write to a place where it is not supposed to write. Everything is possible!</p>
+<p>We may think "would it not be nicer if the compiler told us that this can be UB and signaled an error?" Have the
+compiler authors "weaponized UB"? Well, in the early days of C there were a lot of platforms and implementation, and agreeing
+on behavior may have been impossible. In this example,
+it is easy for us to see, but analyzing and diagnosing code without running it (static checking) is hard work.
+Both for specifying and for implementing.
+The authors of the C and C++ specs took the easy way out and so the spec actually permits them to do "anything".</p>
+<p>The grounds have also shifted. Concurrency makes everything a lot harder. Since the mid-2000s, CPU architectures feature multiple cores and concurrency.
+Multithreading is much older than that, but it used to be implemented by time-slicing. With multicore
+CPUs, threads would actually execute at the same time. Since then, understanding a natively executed program requires the
+spec to talk about multiple threads executing in parallel. The C and C++ memory models (which are different) were specified <em>decades</em> after the language
+specs.</p>
+<h4 id="the-lesson-for-memory-safety">The Lesson for Memory Safety</h4>
+<p>This is why memory safety is such a profound issue. It’s not just that a buggy line of code might crash. If the specification says something results
+in a crash (program is aborted), this is actually great: we know exactly what happens, we can diagnose, debug, test, fix.</p>
+<p>When a language allows for undefined behavior, it creates a logical void. Once the program enters that void, the axioms the compiler used to optimize the rest of your program no longer hold. A single memory safety bug invalidates the guarantees of every other line of code around it. UB means you <em>broke the language</em>.</p>
+<p>The grounds have shifted multipe times since C and C++ were invented. Fortunately, researchers have found ways of proving programs safe, primarily using more advanced type systems.</p>
+<p>This is why modern languages like Rust are a step forward. The Rust community uses the word "safe" to there is evidence (proof) that a program does not have UB. This
+is a lot more than patching the operational gaps of C. Its borrow checker acts as a proof assistant, ensuring that we can derive from the axioms and rules of memory safety
+that the program is allowed to compile. Reading from places that are initialized. It also explains what unsafe Rust really is: we are permitted to color outside the lines,
+as long as we can argue in safety comments why the axioms and rules of memory safety will still work.</p>
+<p>By understanding formal semantics, you can see exactly why a language is safe or unsafe (in the sense of guaranteeing absence of UB). All we want is to be able to reason with mathematical precision.
+Things like deallocation and pointer arithmetic make it harder or impossible to provide guarantees, but that is a topic for a different day.</p>
+
+</p>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']]
+    }
+  };
+</script>
+<script type="text/javascript" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
+
+
+
+    </div>
+  </section>
+</body>
+
+<div class="footer">
+  <a href="/"></a>&emsp;&copy; Burak Emir<br>
+  powered by <a href="https://www.getzola.org/">Zola</a>, theme <a
+    href="https://github.com/kyoheiu/emily_zola_theme">emily</a>.
+  <a rel='me' href='https://discuss.systems/@burakemir'>Mastodon</a>
+</div>
+
+</html>

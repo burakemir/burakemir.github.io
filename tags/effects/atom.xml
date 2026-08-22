@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title> - effects</title>
+    <link rel="self" type="application/atom+xml" href="https://burakemir.ch/tags/effects/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://burakemir.ch"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2025-09-25T00:00:00+00:00</updated>
+    <id>https://burakemir.ch/tags/effects/atom.xml</id>
+    <entry xml:lang="en">
+        <title>From Operations to Effects: A Journey Through M-Sets</title>
+        <published>2025-09-25T00:00:00+00:00</published>
+        <updated>2025-09-25T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://burakemir.ch/post/from-operations-to-effects/"/>
+        <id>https://burakemir.ch/post/from-operations-to-effects/</id>
+        
+        <content type="html" xml:base="https://burakemir.ch/post/from-operations-to-effects/">&lt;p&gt;This continues a meditation on effects. My last post on the various meanings of effects in the discourse on programming languages (PL)
+did very little to show how type and effect discipline may be relevant to memory safety in programming languages.
+Moreover, I encountered a statement I found easy to agree to &quot;before we talk about effects, we need to understand their semantics&quot;.&lt;&#x2F;p&gt;
+&lt;p&gt;This is an interesting challenge in itself. How do we define precisely what a program that performs I&#x2F;O actually &lt;em&gt;means&lt;&#x2F;em&gt;?
+When your code says &lt;code&gt;IO::get&lt;&#x2F;code&gt;, how should we describe what is really happening? We can formally answer this by modeling
+programs as sequences of operations. This journey will take us from a simple log of operations to the powerful idea of M-sets,
+and finally draw a bridge to a possible type and effect systems approach.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h2 id=&quot;the-i-o-logbook-scroll&quot;&gt;The I&#x2F;O Logbook 📜&lt;&#x2F;h2&gt;
+&lt;p&gt;Let&#x27;s start with a simple I&#x2F;O model. Imagine we only have two operations: reading an integer from an input stream and writing one to an output stream. We can define this set of operations, $OpIO$, as:&lt;&#x2F;p&gt;
+&lt;p&gt;$$OpIO := \{ \mathtt{get} \} ∪ \{ \mathtt{put}_i \ | \ i \in \mathbb{N} \}$$&lt;&#x2F;p&gt;
+&lt;p&gt;Instead of executing these operations immediately, let&#x27;s first think of a program as simply generating a &lt;strong&gt;log&lt;&#x2F;strong&gt; or a &lt;strong&gt;sequence&lt;&#x2F;strong&gt; of these operations. We can represent this sequence as $OpSeq$, which is the set of all possible finite sequences of $OpIO$ operations (in the
+language of mathematics, this is the free monoid $OpIO^*$).&lt;&#x2F;p&gt;
+&lt;p&gt;Under this model, the meaning of a program statement is defined by how it transforms this sequence. It&#x27;s a function from $OpSeq$ to $OpSeq$.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;let x = get&lt;&#x2F;code&gt; is a function that appends $ \mathtt{get} $ to the sequence.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;put 42&lt;&#x2F;code&gt; is a function that appends $ \mathtt{put}_{42} $ to the sequence.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;A program that reads an integer and then prints 42 simply produce the sequence $[\mathtt{get}, \mathtt{put}_{42}]$. OK,
+that is maybe not breath-taking, but it is a start. This describes the &quot;runtime effects&quot; of a program (that word again), but
+how can we see this as a declarative meaning of our program?&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h3 id=&quot;enter-the-m-set-the-interpreter-performing-arts&quot;&gt;Enter the M-Set: The Interpreter 🎭&lt;&#x2F;h3&gt;
+&lt;p&gt;So, we have a sequence of operations. Now what? This is where &lt;strong&gt;M-sets&lt;&#x2F;strong&gt; come in.&lt;&#x2F;p&gt;
+&lt;p&gt;An M-set (specifically an $OpSeq$-set in our case) is a mathematical structure that gives &lt;strong&gt;meaning&lt;&#x2F;strong&gt; to our sequence. You can think of it as a configurable &lt;strong&gt;interpreter&lt;&#x2F;strong&gt; for our log. The formal definition involves a &lt;em&gt;right action&lt;&#x2F;em&gt;, which specifies what will happen for every possible operation (get, put 42, etc.).&lt;&#x2F;p&gt;
+&lt;p&gt;The beauty is that we can now assert that we &lt;strong&gt;parameterized&lt;&#x2F;strong&gt; our program&#x27;s meaning (the sequence) by an M-set. We can plug in
+different M-sets to change the program&#x27;s behavior without changing the program itself:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Console M-set:&lt;&#x2F;strong&gt; A handler that interprets &lt;code&gt;get&lt;&#x2F;code&gt; by reading from the keyboard and &lt;code&gt;put i&lt;&#x2F;code&gt; by printing to the console.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;File M-set:&lt;&#x2F;strong&gt; A handler that interprets the operations by reading from and writing to a file.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Testing M-set:&lt;&#x2F;strong&gt; A handler that interprets &lt;code&gt;get&lt;&#x2F;code&gt; by returning a fixed value (e.g., 0) and &lt;code&gt;put i&lt;&#x2F;code&gt; by adding the integer to a test buffer.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;The M-set is the semantic domain that brings our abstract sequence to life.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h3 id=&quot;beyond-i-o-the-case-of-memory-brain&quot;&gt;Beyond I&#x2F;O: The Case of Memory 🧠&lt;&#x2F;h3&gt;
+&lt;p&gt;Why stop with I&#x2F;O? We can apply the exact same idea to memory management. Let&#x27;s define a new set of memory operations:&lt;&#x2F;p&gt;
+&lt;p&gt;$$ OpMem := \{ \mathtt{alloc} \} ∪ \{ \mathtt{free\ n}\ |\ n \in \mathbb{N} \} $$&lt;&#x2F;p&gt;
+&lt;p&gt;Here, $\mathtt{alloc}$ represents allocating a new memory location, and $\mathtt{free}\ n$ represents deallocating location $n$.
+Just like before, a program&#x27;s interaction with memory can be modeled as a sequence $MemSeq = OpMem^*$. The M-set for this system
+would be a model of a heap that defines the semantics of allocating and freeing memory.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h3 id=&quot;the-leap-to-type-and-effect-systems-sparkles&quot;&gt;The Leap to Type and Effect Systems ✨&lt;&#x2F;h3&gt;
+&lt;p&gt;In many cases, tracking the &lt;em&gt;exact&lt;&#x2F;em&gt; sequence of operations is overkill. We often don&#x27;t need to know the entire history; we just want a &lt;strong&gt;summary&lt;&#x2F;strong&gt; of what a function might do. This is the leap from concrete sequences to abstract &lt;strong&gt;effects&lt;&#x2F;strong&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;The operations we&#x27;ve been discussing — get, put, alloc, free — can be called (runtime) &lt;strong&gt;effects&lt;&#x2F;strong&gt;. A &lt;strong&gt;type and effect system&lt;&#x2F;strong&gt; is a
+static analysis tool, built into a compiler, that tracks the set of effects a piece of code might trigger.&lt;&#x2F;p&gt;
+&lt;p&gt;Instead of a concrete sequence like [&quot;alloc&quot;, &quot;free 0&quot;], the effect system provides an &lt;strong&gt;approximation&lt;&#x2F;strong&gt;. It tells us that a function has the potential to perform the effects {alloc, free}. These effects become part of the function&#x27;s type, giving developers a clear contract about what the function can do.&lt;&#x2F;p&gt;
+&lt;p&gt;Furthermore, effects can be parameterized. A function type might look like this:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#383838;color:#e6e1dc;&quot;&gt;&lt;code&gt;&lt;span&gt;fn update(x: &amp;amp;mut T) -&amp;gt; () effect { free(x[*]) }
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This signature tells us that the update function &lt;em&gt;may&lt;&#x2F;em&gt; free the memory associated with its parameter x. This brings us to a crucial point: effects are an &lt;strong&gt;approximation&lt;&#x2F;strong&gt;. The &lt;code&gt;free(x[*])&lt;&#x2F;code&gt; effect means the function &lt;em&gt;may&lt;&#x2F;em&gt; release memory associated with elements &lt;code&gt;x[i]&lt;&#x2F;code&gt;, not
+that it &lt;em&gt;will&lt;&#x2F;em&gt; on every execution path. This conservative approach is essential for guaranteeing safety.&lt;&#x2F;p&gt;
+&lt;p&gt;And so, we&#x27;ve traveled from a concrete sequence of operations, to a semantic interpreter (the M-set), all the way to an abstract
+summary of behavior used in modern type and effect systems to help us write safer, more predictable code. Lots of open
+questions here how information expressed in this language of effects (the annotations on the types) could be used for
+checking - we cannot talk about runtime values, only refer to them indirectly through expressions that talk about
+some set of locations. Unrestricted aliasing may make it impossible to decide whether two expressions refer to an overlapping set
+of memory locations. It does seem like a step towards something interesting.&lt;&#x2F;p&gt;
+&lt;p&gt;We started with a modest goal: have an answer to the question on the semantics of effects. It looks like we got there:
+effects (effect annotations) are may-approximations of runtime effects.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Three meanings of Effects</title>
+        <published>2025-09-19T00:00:00+00:00</published>
+        <updated>2025-09-19T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://burakemir.ch/post/three-meanings-of-effects/"/>
+        <id>https://burakemir.ch/post/three-meanings-of-effects/</id>
+        
+        <content type="html" xml:base="https://burakemir.ch/post/three-meanings-of-effects/">&lt;p&gt;In the programming languages discourse, the word &quot;effect&quot; is used with different meanings.&lt;&#x2F;p&gt;
+&lt;p&gt;This can lead to confusion. In research, it is difficult to avoid jargon, but it
+comes at the price of making it more difficult to make sense of interconnected meanings
+programming language concepts.&lt;&#x2F;p&gt;
+&lt;p&gt;Effects - in more than one sense - are interesting today. The software industry is gearing up
+to move its system programming artifacts from a dark swamp of legacy
+into the flushing green meadows of &lt;em&gt;memory safety&lt;&#x2F;em&gt;.
+I argue between the lines of &lt;a href=&quot;&#x2F;post&#x2F;memory-safety-the-missing-def&quot;&gt;Memory Safety - the missing definition&lt;&#x2F;a&gt;,
+programming language design is the source and cause of all memory safety problems.
+Maybe effects can help turn it into a solution.&lt;&#x2F;p&gt;
+&lt;p&gt;In the following, I will establish a baseline and then enumerate the three specialized meanings for &quot;effects&quot;:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Type and Effect Systems&lt;&#x2F;li&gt;
+&lt;li&gt;Notions-of-Computation Effects&lt;&#x2F;li&gt;
+&lt;li&gt;Effect Handlers (Algebraic Effects)&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;I am not aware of others meanings. The TL;DR is that type and effect systems come from a
+very different tradition than computational effects and effect handlers.&lt;&#x2F;p&gt;
+&lt;p&gt;This is not merely a terminology discussion, but an analytical effort fishing deep in semantics and
+pragmatics territory. Before we take the plunge, we have to establish a baseline, though.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;side-effects&quot;&gt;Side Effects&lt;&#x2F;h2&gt;
+&lt;p&gt;Imperative programming is about manipulation of state (memory, IO, ...) through a sequence of commands.
+Choosing this way to program has consequences on our ability to define a &lt;em&gt;static semantics&lt;&#x2F;em&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;By static semantics, we mean a type system that determines which programs we consider valid.
+This enable us to reason about properties of programs without having to run them.&lt;&#x2F;p&gt;
+&lt;p&gt;Imperative programs are composed of &quot;functions&quot; (really: procedures).
+We may assign a type to a function to describe inputs and output. This type does not contain
+any information about the state manipulation. If we imagine a function as a
+transformation process with a &quot;main&quot; direction going from input to output, the interactions
+that are not part of the output have been called &lt;strong&gt;side effects&lt;&#x2F;strong&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;These functions are not mathematical functions, even if mathematics is what led to computers
+and &quot;computation&quot;. Thinking about this may tempt us to go on a philosophical tangent on &lt;a href=&quot;https:&#x2F;&#x2F;bq9.blogspot.com&#x2F;2020&#x2F;07&#x2F;language-logic-and-modeling.html&quot;&gt;epistemology&lt;&#x2F;a&gt;
+and the &lt;a href=&quot;https:&#x2F;&#x2F;philpapers.org&#x2F;rec&#x2F;PICTMO-8&quot;&gt;Mangle of Practice&lt;&#x2F;a&gt;, but this is for another
+time and another post.&lt;&#x2F;p&gt;
+&lt;p&gt;One often encounters &quot;pure&quot; as an adjective for functions that do not have side-effects.
+This is as if side effects taint the purity of mathematics, and indeed formal reasoning
+becomes harder in languages with side effects (evaluation order matters). Is it possible
+to define a static semantics that retains essential information?&lt;&#x2F;p&gt;
+&lt;p&gt;Type systems are the most widespread and effective way to get static semantics. They are
+a special form of static analysis that is built into the programming language design.
+So why not add effects to type system and track more information that way?&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;type-and-effect-system&quot;&gt;Type and Effect System&lt;&#x2F;h2&gt;
+&lt;p&gt;A type and effect system is just that: the enrichment of types with annotations.&lt;&#x2F;p&gt;
+&lt;p&gt;The first effect system was about memory access: Lucassen, Gifford &lt;a href=&quot;https:&#x2F;&#x2F;dl.acm.org&#x2F;doi&#x2F;pdf&#x2F;10.1145&#x2F;319838.319848&quot;&gt;&quot;Integrating Imperative and Functional Programming&quot;&lt;&#x2F;a&gt; (1986)
+wrote about tracking reads, writes and allocation of memory:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;In the language presented in this paper, information about interference and referential
+transparency is inferred from three orthogonal properties:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;the ability to allocate and initialize memory locations whose value may be changed,&lt;&#x2F;li&gt;
+&lt;li&gt;the ability to read the contents of memory locations whose value may be changed (i.e. to observe side-effects), and&lt;&#x2F;li&gt;
+&lt;li&gt;the ability to unite new values to existing memory locations (i.e. to cause side-effects).&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;In general it is undecidable whether an expression will
+allocate, read or write memory locations whose value may
+be changed. Effect checking is &lt;em&gt;conservative&lt;&#x2F;em&gt;, and
+classifies an expression as having each of the three
+properties unless the opposite can be shown.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;They discuss the role of effect polymorphism in &lt;a href=&quot;https:&#x2F;&#x2F;dl.acm.org&#x2F;doi&#x2F;pdf&#x2F;10.1145&#x2F;73560.73564&quot;&gt;&quot;Polymorphic Effect Systems&quot;&lt;&#x2F;a&gt; (1988)
+(updated: thanks Colin Gordon for pointing me to the earlier paper).&lt;&#x2F;p&gt;
+&lt;p&gt;Nielson and Nielson give a wonderful, timeless description in &lt;a href=&quot;https:&#x2F;&#x2F;web.cs.ucla.edu&#x2F;~palsberg&#x2F;tba&#x2F;papers&#x2F;nielson-nielson-csd99.pdf&quot;&gt;&quot;Type and Effect Systems&quot;&lt;&#x2F;a&gt;, from 1999.
+The wikipedia page &lt;a href=&quot;https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Effect_system&quot;&gt;&quot;Effect system&quot;&lt;&#x2F;a&gt; is very congruent with that.
+This is a good place to remark that in industry it is at present entirely normal that decades pass before ideas
+from research get taken up.&lt;&#x2F;p&gt;
+&lt;p&gt;Time for a brief example: imagine we have a toy imperative programming language with a built-in &lt;code&gt;print&lt;&#x2F;code&gt;
+command. We can define a &lt;code&gt;print&lt;&#x2F;code&gt; effect and tag function types. Thus we gained the ability to
+distinguish between functions that print and functions that don&#x27;t print. This would give us ways
+to enforce a &lt;em&gt;type discipline&lt;&#x2F;em&gt; where certain operations can take functions that are not permitted
+to print anything. We can immediately see that we then also need to think about propagating effect
+information (effect-polymorphism).&lt;&#x2F;p&gt;
+&lt;p&gt;Our mere decision to be tracking effects in the type system leads to more questions: which effects should
+we track? And what should we check? Marino and Millstein write about a type and effect checking
+framework &lt;a href=&quot;https:&#x2F;&#x2F;web.cs.ucla.edu&#x2F;~todd&#x2F;research&#x2F;tldi09.pdf&quot;&gt;&quot;A Generic Type-and-Effect System&quot;&lt;&#x2F;a&gt; that
+we are pretty free to choose, as long as rules for checking and adjusting satisfy
+certain monotonicity properties.&lt;&#x2F;p&gt;
+&lt;p&gt;So it is very easy to state that something is (or should be) an effect. Whether that is valuable
+has to be demonstrated by the rules that make use of the effect information. The proof of the
+pudding is in the eating!&lt;&#x2F;p&gt;
+&lt;p&gt;Modern programming languages give programmers various ways to &quot;extend the language&quot;: user-defined data types
+and operations (bundled as classes in OOP), only providing built-in operations (primitives) for
+IO, memory allocation. A challenge in type and effect systems outside of minimal research languages
+is how these facilities for user-defined constructs should be combined with effects. In
+particular, &lt;em&gt;abstraction&lt;&#x2F;em&gt; depends on the ability to hide information.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;notions-of-computation&quot;&gt;Notions of Computation&lt;&#x2F;h2&gt;
+&lt;p&gt;We now shift our perspective completely and embrace the functional programming view.
+Away with side effects - unless we can capture them in a mathematical framework.&lt;&#x2F;p&gt;
+&lt;p&gt;Researchers who study programming languages (PL) have a need to describe
+PL concepts and semantics formally. Many mathematical and logical
+characterizations have entered the discourse on programming, for example
+&quot;boolean&quot;, &quot;set&quot;, &quot;map&quot; for data types. The meaning of programs as a whole, and
+programming languages as notation for programs has been approached from a
+mathematics angle.&lt;&#x2F;p&gt;
+&lt;p&gt;A particular mathematical field that stands out in PL semantics is category theory. Don&#x27;t run away yet!
+It is a language for making precise statements about structure-preserving
+transformations. The goal is to learn about the structures by studying these transformations.&lt;&#x2F;p&gt;
+&lt;p&gt;In PL theory, one constantly needs to talk about structures (concepts) that exist across
+different PLs, or can be expressed in many different ways. And thus, product types,
+sum types (co-product), co- and contravariance and functors found their way into PL discourse.
+Not only semantics, but also as actual ways to define data structures (algebraic data types).
+The connection to category theory is often lost in the process, but that has not
+led to significant problems so far.&lt;&#x2F;p&gt;
+&lt;p&gt;The $\lambda$-calculus has been used as a vehicle for PL research.  Its basic unit
+computation step (substitution) lends itself so well for compositionality and formal reasoning.
+This has given rise to functional programming.&lt;&#x2F;p&gt;
+&lt;p&gt;When researchers assign &lt;em&gt;meaning&lt;&#x2F;em&gt; to programs through mathematical structures (denotational semantics), the
+idea is that these are widely understood, or understandable. In this vein, a $\lambda$-term would ultimately
+correspond to a mathematical function of some kind. But not always a mathematical function from the
+domain of argument types to the domain of the result type.&lt;&#x2F;p&gt;
+&lt;p&gt;In his 1989 LICS paper &quot;Computational lambda-calculus and monads&quot;, Eugenio Moggi
+challenged the idea that semantics of $\lambda$-terms should correspond to
+simple mathematical functions. He pointed out the existence of various firmly
+established &lt;em&gt;notions of computation&lt;&#x2F;em&gt; which are all better explained by something else,
+and this would pave the way to reason about program equivalence logically.&lt;&#x2F;p&gt;
+&lt;p&gt;We will not explain monads here, but just the particular &quot;notions of computation&quot; view.
+It turns out to not be that difficult. In the context of programming, monads are
+about program composition.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;types-and-algebra&quot;&gt;Types and Algebra&lt;&#x2F;h3&gt;
+&lt;p&gt;Today (!) all programmers understand the concept of a generic type. For instance,
+we can make sense of the phrase &quot;a type $List[T]$ is a list whose elements are of type $T$&quot;.
+Let&#x27;s call $List$ a type constructor.&lt;&#x2F;p&gt;
+&lt;p&gt;A type constructor with a single argument $F[T]$ could be considered an operation that takes
+a type and returns a type. Other operations that constructing types are $\times$ for product
+types and $+$ for sum types, and 1 for unit (a type that holds no information), and 0 for
+a type that has no members. Types built from $\times$, $+$, 1 and 0 can be called algebraic
+types because they look like terms we use in high school algebra.&lt;&#x2F;p&gt;
+&lt;p&gt;Now, we need to make a mental step away from types in a given programming language, into a
+world where instead of &lt;em&gt;types&lt;&#x2F;em&gt; talking about specific values in a given language,
+we have &lt;em&gt;domains of types&lt;&#x2F;em&gt; that talk about all semantics. We continue to call these types,
+though, because types can be used in the abstract to describe mathematical structures.
+Semantics go beyond values, we also have to give meaning to the operations.&lt;&#x2F;p&gt;
+&lt;p&gt;The insight, then, is this: suppose we have a $T$ that represents all semantic values
+of our programming language, we can think of a &quot;semantic type constructor&quot; $F$ that transform
+it into a mathematical structure that very accurately describes a notion of computation:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;$F[T] = 1 + T$ partial computation: either returns a result $T$ or nothing.&lt;&#x2F;li&gt;
+&lt;li&gt;$F[T] = List[T]$ non determinism: returns a whole list (or set) of results.&lt;&#x2F;li&gt;
+&lt;li&gt;$F[T] = S \times T$ stateful computation: operations may read and modify a state $S$&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;One can think of others.  When we see this, we can say $F$ captures the
+computational effects of the operations given in such a notion of computation.
+Where in a Rust or Haskell program, you return &lt;code&gt;Some(x)&lt;&#x2F;code&gt; or &lt;code&gt;None&lt;&#x2F;code&gt;, we can lift this
+to whole computational model or partial computations that either return something or
+they don&#x27;t. Such programs (functions) can be composed in a way that preserves their
+type structure.&lt;&#x2F;p&gt;
+&lt;p&gt;The &quot;monad&quot; part comes in when we talk about composing program fragments from building blocks.
+As promised, we will not go into the monad laws and join,unit,bind operations here.
+It is enough to say: when we focus on the way programs are composed &#x2F; sequences, we end
+up with an abstract framework for reasoning about programs with effects.&lt;&#x2F;p&gt;
+&lt;p&gt;This turns out to be super-useful for practical programming. This approach lets us
+define our own programming language inside a given programming language. And what&#x27;s
+more, we can see embedded &quot;languages&quot; (programs composed from commands) in this way
+even if the people who built them never heard about monads.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;effects-in-functional-programming&quot;&gt;Effects in Functional Programming&lt;&#x2F;h3&gt;
+&lt;p&gt;This is the place to mention Haskell, where the main function of every program
+is a computation in the IO monad. Over the years, people have taken up this
+approach in many languages. They:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;use type constructors in their favorite language to structure their programs to implement domain-specific languages&lt;&#x2F;li&gt;
+&lt;li&gt;started to call the $F$ itself a &quot;computational effect&quot;&lt;&#x2F;li&gt;
+&lt;li&gt;write lots of monad tutorials&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;And this has some justification, because it is useful to define data types and operations
+that act as domain-specific languages (the &quot;Interpreter&quot; design pattern, anyone?).&lt;&#x2F;p&gt;
+&lt;p&gt;What if I told you that &lt;code&gt;async&lt;&#x2F;code&gt; is an effect? As we know, a widespread way to implement
+&lt;code&gt;async&lt;&#x2F;code&gt; functions is to transform them into normal functions that return a &lt;code&gt;Future&amp;lt;T&amp;gt;&lt;&#x2F;code&gt;.
+&lt;code&gt;Future&lt;&#x2F;code&gt; is a unary type constructor and we can come up with rules of composing such functions.&lt;&#x2F;p&gt;
+&lt;p&gt;I think it is fair to say that the vast majority of programmers will not bother to ask whether monad axioms hold,
+presumably because the vast majority of programmers will never have the time and
+energy to learn category theory. So using &quot;effect&quot; as a hand-wavy replacement for monad
+can certainly be seen in the wild, and we can see the use of it.&lt;&#x2F;p&gt;
+&lt;p&gt;And what if we want a partial computation returns an error? &lt;code&gt;Result&amp;lt;T, E&amp;gt; = T + E&lt;&#x2F;code&gt; gives
+us the same ways to compose, even if it is not unary type constructor. This is pretty
+useful, and we seem not really bothered by the fact that &lt;code&gt;Result&lt;&#x2F;code&gt; takes two type
+arguments instead of one. This is because in practice, programmers use monads as an
+&quot;abstraction pattern&quot;, &lt;strong&gt;mutatis mutandis&lt;&#x2F;strong&gt;, and the transformations that would
+be enabled by adherence to monad laws are less of a concern.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;control-effects-and-effect-handlers&quot;&gt;Control Effects and Effect handlers&lt;&#x2F;h2&gt;
+&lt;p&gt;We can see that manipulating memory may be a good candidate for effect tracking, but the print
+example shows that we can also single out specific operations and consider these as effects.&lt;&#x2F;p&gt;
+&lt;p&gt;What if we committed to a world of user-definable effects? This is where &quot;algebraic effects&quot; and
+control flow come in. Control flow is one of the many area where programming language research
+is looking for something better than mere function calls and for-loops. Consider the
+ability to suspend computation or return through multiple paths and multiple approaches to
+package that like exceptions, coroutines, iterators, generators and async functions.&lt;&#x2F;p&gt;
+&lt;p&gt;The &quot;algebraic&quot; comes in when we consider a user-definable operation and effect, and that
+operation takes parameters. I will not try to get into definitions but just point
+to the excellent &lt;a href=&quot;https:&#x2F;&#x2F;effekt-lang.org&#x2F;#intro-handlers&quot;&gt;&quot;Effekt&quot; research programming language&lt;&#x2F;a&gt;
+where everything is explained pretty well.&lt;&#x2F;p&gt;
+&lt;p&gt;In particular, a type and effect system is used to check whether the (user-defined) effects
+are handled. Here, the multiple meanings hit us with full force, the effects - annotations on types - that
+are being tracked are effects, as in user-defined operations that can be interleave with
+normal control flow.&lt;&#x2F;p&gt;
+&lt;p&gt;(updated:) In a language that supports definition of effect handlers one sees the type and effect
+checking used for a user-definable composition mechanism. In Jonathan Brachthäuser&#x27;s words:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;monadic effects start with the semantics (like &lt;code&gt;List[T]&lt;&#x2F;code&gt;) and then see which operations
+can be supported, while algebraic effects start with the operations (the signature)
+and then see which domains can support (implement) them.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;h1 id=&quot;the-end&quot;&gt;The End&lt;&#x2F;h1&gt;
+&lt;p&gt;I hope this post helped establish a clearer idea how the venerable idea of type and effect
+systems, the venerable idea of notions-of-computation and how they get combined in
+the &lt;strong&gt;très en vogue&lt;&#x2F;strong&gt; algebraic effects trend in research.&lt;&#x2F;p&gt;
+&lt;p&gt;There are multiple deep connections between category and programming language technology.
+We only scratched the surface here.&lt;&#x2F;p&gt;
+&lt;p&gt;Monads are a remarkable method to structure programming language semantics. That seems to indicate that a science
+of programming languages could benefit from using the meta language of categories, types and logic.&lt;&#x2F;p&gt;
+&lt;p&gt;For mere practical uses of a type and effect system, that may not be so relevant. And
+even in practical uses, we may be fine using a &quot;monad abstraction pattern&quot; for
+structure embedded, domain-specific programming languages without really being
+constrained by the &quot;mathematics&quot; that led to the concept.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+</feed>

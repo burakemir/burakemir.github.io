@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  
+<title>Indexed Reverse Polish Notation, an Alternative to AST | </title>
+
+
+  <link rel="shortcut icon" type="image/png" href="&#x2F;images&#x2F;favicon-32x32.png">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <link id="stylesheet" rel="stylesheet" type="text/css" href="/dark.css">
+
+  <script type="text/javascript" src="/js/theme.js"></script>
+
+</head>
+
+<div class="header">
+  <div class="site_title">
+    <p><a href="/"><img src="https:&#x2F;&#x2F;burakemir.ch&#x2F;images&#x2F;totoro.jpg" alt=""
+          width="70" height=auto></a></p>
+    <p><a href="/">&nbsp;</a></p>
+  </div>
+  <div class="menu">
+    <a href="/post">>archives</a>
+    &nbsp;<a href="/pages/artifacts">>artifacts</a>
+    &nbsp;<a href="/about">>about</a>
+  </div>
+</div>
+
+<body onload="getTheme()">
+  <section class="section">
+    <div class="container">
+      
+<p>
+  <div class="title_postpage">Indexed Reverse Polish Notation, an Alternative to AST</div>
+</p>
+<p>
+  <div class="date_postpage">2025-12-12</div>
+  <div class="taxonomies_postpage">
+  
+      
+      <a href="https://burakemir.ch/categories/blog/">/blog</a>
+      
+  
+  
+      
+      &emsp;<a href="https://burakemir.ch/tags/compilers/">#compilers</a>
+      
+  
+  </div>
+</p>
+
+<p>
+  <p>"Why study compiler construction? Because knowing how a programming language is specified
+and implemented makes you a better programmer." I still remember these words,
+pronounced as matter-of-fact introduction to an undergrad course of compilers.</p>
+<p>Compiler engineers have come up with many useful programming techniques and representations.</p>
+<p>Today, I want to write about one such technique, an alternative to Abstract Syntax Trees (ASTs).
+Inspired by the parse tree representation in the <a href="https://github.com/carbon-language/carbon-lang">Carbon compiler</a>,
+this post explains a way to represent parsed source code using a variation of Reverse Polish Notation (RPN),
+in a contiguous array.</p>
+<p>We call this <strong>Indexed RPN</strong>. Ordering program parts in a linear sequence very naturally leads to
+machine interpretation, which is well-known for calculators but maybe a little less well-known
+when there are scoped definitions and control flow structures.</p>
+<p>This is by no means a new way of doing things, but with modern machines having plenty of memory,
+there may have been less pressure to reach for techniques that memory-friendly.</p>
+<h2 id="1-from-arithmetic-to-indices">1. From Arithmetic to Indices</h2>
+<p>Let’s start with an arithmetic expression example: We want to represent (3 + 4) * 5.</p>
+<p>In a standard AST, this is a tree of pointers. In a standard stack-machine RPN, this looks like 3 4 + 5 *.
+Now we want something slightly different, because we want to operate on tree structure.
+For example, if we deal with this expression in a compiler that translates and optimizes.
+We want to be able to refer to specific sub-expressions later.</p>
+<h3 id="the-administrative-normal-form-perspective">The "Administrative Normal Form" Perspective</h3>
+<p>Before we look at the memory layout, let's imagine breaking up this expression by <em>naming</em> subexpression.
+If we had local definitions in our language this would give us Administrative Normal Form (ANF).
+In ANF, we give a name to every intermediate result:</p>
+<pre style="background-color:#383838;color:#e6e1dc;"><code><span>// Source: (3 + 4) * 5
+</span><span>
+</span><span>val t0 = 3 
+</span><span>val t1 = 4
+</span><span>val t2 = add(t0, t1)
+</span><span>val t3 = 5
+</span><span>val t4 = mul(t2, t3)
+</span></code></pre>
+<p>The expression now takes a lot more to write, but for a compiler it is much more structured.
+The arguments of the operations are always names, which makes the data flow and also the
+order in which arguments get evaluated fully explicit. Here, <code>t2</code> depends entirely on <code>t0</code> and <code>t1</code>,
+and <code>t0</code> is evaluated before <code>t1</code>.</p>
+<h3 id="the-in-memory-representation">The In-Memory Representation</h3>
+<p>We don't want local definitions just yet, the above is just to motivate flattening of a tree structure.
+If we store the instructions in a contiguous array (e.g., a vector or Vec), the <strong>index</strong> of the node becomes its name.</p>
+<p>The internal names are merely indices into the sequence of nodes.</p>
+<table><thead><tr><th style="text-align: left">Index (ID)</th><th style="text-align: left">Node Kind</th><th style="text-align: left">Operands / Data</th></tr></thead><tbody>
+<tr><td style="text-align: left"><strong>0</strong></td><td style="text-align: left"><code>IntLiteral</code></td><td style="text-align: left"><code>3</code></td></tr>
+<tr><td style="text-align: left"><strong>1</strong></td><td style="text-align: left"><code>IntLiteral</code></td><td style="text-align: left"><code>4</code></td></tr>
+<tr><td style="text-align: left"><strong>2</strong></td><td style="text-align: left"><code>BinaryOp</code></td><td style="text-align: left"><code>Add(lhs: 0, rhs: 1)</code></td></tr>
+<tr><td style="text-align: left"><strong>3</strong></td><td style="text-align: left"><code>IntLiteral</code></td><td style="text-align: left"><code>5</code></td></tr>
+<tr><td style="text-align: left"><strong>4</strong></td><td style="text-align: left"><code>BinaryOp</code></td><td style="text-align: left"><code>Mul(lhs: 2, rhs: 3)</code></td></tr>
+</tbody></table>
+<p>This is similar to Reverse Polish Notation (RPN), but there is a difference. In standard RPN, there is an implicit stack from which <code>Add</code> consumes items blindly. In <strong>Indexed RPN</strong>, <code>Add</code> explicitly refers to indices 0 and 1. This provides a stable reference to every sub-expression, allowing us to traverse the code and locate nodes without necessarily having to build up a stack.</p>
+<h2 id="2-dealing-with-let-and-scope">2. Dealing with "Let" and Scope</h2>
+<p>Let us make the language more realistic by adding local let-declarations and scoping.</p>
+<pre style="background-color:#383838;color:#e6e1dc;"><code><span>// Source
+</span><span>let a = 10;
+</span><span>let b = a + 5;
+</span></code></pre>
+<p>Here we face a problem: Source variables (a, b) are different from our internal indices (0, 1, 2...). We need a node that bridges this gap — an <strong>"Introducer"</strong>.</p>
+<h3 id="the-bind-node">The Bind Node</h3>
+<p>We introduce a Bind node. This node represents the action of bringing a name into existence in the current scope.
+Depending on the language you are working with, a binding may have semantic significance. For example, if references to the binding are objects of the language like Rust or C++ references.</p>
+<table><thead><tr><th style="text-align: left">Index</th><th style="text-align: left">Node Kind</th><th style="text-align: left">Operands</th><th style="text-align: left">Meaning</th></tr></thead><tbody>
+<tr><td style="text-align: left"><strong>0</strong></td><td style="text-align: left"><code>IntLiteral</code></td><td style="text-align: left"><code>10</code></td><td style="text-align: left">The raw value 10.</td></tr>
+<tr><td style="text-align: left"><strong>1</strong></td><td style="text-align: left"><code>Bind</code></td><td style="text-align: left"><code>name: "a", val: 0</code></td><td style="text-align: left"><strong>Introducer</strong>: "a" exists, bound to Index 0.</td></tr>
+<tr><td style="text-align: left"><strong>2</strong></td><td style="text-align: left"><code>NameRef</code></td><td style="text-align: left"><code>ref: 1</code></td><td style="text-align: left">A reference back to the introducer node.</td></tr>
+<tr><td style="text-align: left"><strong>3</strong></td><td style="text-align: left"><code>IntLiteral</code></td><td style="text-align: left"><code>5</code></td><td style="text-align: left">The raw value 5.</td></tr>
+<tr><td style="text-align: left"><strong>4</strong></td><td style="text-align: left"><code>BinaryOp</code></td><td style="text-align: left"><code>Add(2, 3)</code></td><td style="text-align: left">Adds the NameRef and the Literal.</td></tr>
+<tr><td style="text-align: left"><strong>5</strong></td><td style="text-align: left"><code>Bind</code></td><td style="text-align: left"><code>name: "b", val: 4</code></td><td style="text-align: left"><strong>Introducer</strong>: "b" exists, bound to Index 4.</td></tr>
+</tbody></table>
+<h3 id="the-stack-returns-for-compilation">The Stack Returns (For Compilation)</h3>
+<p>In order to deal with this data, we traverse it but we will also want to build up a stack. You might ask: <em>If we flattened the tree, why do we need a stack?</em></p>
+<p>While the <strong>storage</strong> is flat, the <strong>compilation process</strong> requires a stack to handle scopes. Because let declarations can be nested, we cannot simply scan linearly and remember everything forever. We need to handle when names go <em>out</em> of scope (shadowing).</p>
+<p>Let's add <code>BlockStart</code> and <code>BlockEnd</code> nodes that indicate nested blocks.</p>
+<pre style="background-color:#383838;color:#e6e1dc;"><code><span>// Source Code
+</span><span>let x = 10;       // Outer &#39;x&#39;
+</span><span>{
+</span><span>    let x = 20;   // Inner &#39;x&#39; (shadows outer)
+</span><span>    print(x);     // Should print 20
+</span><span>}
+</span><span>print(x);         // Should print 10
+</span></code></pre>
+<h3 id="the-resolve-names-algorithm">The resolve_names Algorithm</h3>
+<p>I am too lazy for full code examples, just the idea.</p>
+<p>We use a SymbolTableStack during the resolution pass.
+We iterate through the array once. We maintain a stack of scopes, where each scope maps a string name to an integer index.</p>
+<pre data-lang="Python" style="background-color:#383838;color:#e6e1dc;" class="language-Python "><code class="language-Python" data-lang="Python"><span>
+</span><span>function resolve_names(nodes):
+</span><span>    </span><span style="color:#95815e;"># A stack of scopes. Each scope is a Map: String -&gt; Index
+</span><span>    scope_stack </span><span style="color:#cc7833;">= </span><span>[ new Map() ]
+</span><span>
+</span><span>    </span><span style="color:#cc7833;">for </span><span>i, node </span><span style="color:#cc7833;">in </span><span style="color:#da4939;">enumerate</span><span>(nodes):
+</span><span>        
+</span><span>        match node.kind:
+</span><span>            case BlockStart:
+</span><span>                </span><span style="color:#95815e;"># Push a new, empty scope onto the stack
+</span><span>                scope_stack.push( new Map() )
+</span><span>
+</span><span>            case BlockEnd:
+</span><span>                </span><span style="color:#95815e;"># Pop the top scope. Inner variables are forgotten.
+</span><span>                scope_stack.pop()
+</span><span>
+</span><span>            case Bind(name, value_index):
+</span><span>                </span><span style="color:#95815e;"># Register the variable in the CURRENT (top) scope.
+</span><span>                current_scope </span><span style="color:#cc7833;">= </span><span>scope_stack.top()
+</span><span>                current_scope.set(name, i)
+</span><span>
+</span><span>            case NameRef(name):
+</span><span>                </span><span style="color:#95815e;"># Look for the name, starting from the top scope down.
+</span><span>                target_index </span><span style="color:#cc7833;">= </span><span>find_in_stack(scope_stack, name)
+</span><span>                
+</span><span>                </span><span style="color:#95815e;"># PATCH THE NODE:
+</span><span>                </span><span style="color:#95815e;"># The node no longer holds &quot;x&quot;. It holds the index (e.g., 4).
+</span><span>                node.resolved_index </span><span style="color:#cc7833;">= </span><span>target_index
+</span></code></pre>
+<p>After this pass, the stack is discarded. The IR is now "wired." Every variable usage points directly to the instruction that created it.</p>
+<p>When representing source as AST, we would use an algebraic data type. One could use mutable data structures there, or build up a symbol table.</p>
+<h2 id="3-breaking-the-line-control-flow">3. Breaking the Line: Control Flow</h2>
+<p>So far, execution has been linear: Index 0, then 1, then 2. But branching constructs like if, else, and while break this line.</p>
+<p>In a tree-based AST, an If node has children pointers to "Then" and "Else" blocks. In our flat array, we may prefer to have in the same contiguous vector, instead of blocks
+floating in separate memory. So we introduce <strong>Jump</strong> nodes.</p>
+<h3 id="the-linear-layout">The Linear Layout</h3>
+<p>Consider this source:</p>
+<pre style="background-color:#383838;color:#e6e1dc;"><code><span>if (a) { print(1); } else { print(2); }
+</span><span>print(3);
+</span></code></pre>
+<p>Here is the Indexed RPN layout. Note the use of <code>BrFalse</code> (Branch if False) and <code>Jmp</code> (Unconditional Jump).</p>
+<table><thead><tr><th style="text-align: left">Index</th><th style="text-align: left">Node Kind</th><th style="text-align: left">Data</th><th style="text-align: left">Explanation</th></tr></thead><tbody>
+<tr><td style="text-align: left"><strong>0</strong></td><td style="text-align: left"><code>NameRef</code></td><td style="text-align: left"><code>"a"</code></td><td style="text-align: left">Load variable <code>a</code>.</td></tr>
+<tr><td style="text-align: left"><strong>1</strong></td><td style="text-align: left"><code>BrFalse</code></td><td style="text-align: left"><code>target: 5</code></td><td style="text-align: left">If <code>a</code> is false, jump to Index 5 (Else).</td></tr>
+<tr><td style="text-align: left"><strong>2</strong></td><td style="text-align: left"><code>Int</code></td><td style="text-align: left"><code>1</code></td><td style="text-align: left">Start of "Then" block.</td></tr>
+<tr><td style="text-align: left"><strong>3</strong></td><td style="text-align: left"><code>Print</code></td><td style="text-align: left"><code>2</code></td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><strong>4</strong></td><td style="text-align: left"><code>Jmp</code></td><td style="text-align: left"><code>target: 7</code></td><td style="text-align: left">Jump over the "Else" block.</td></tr>
+<tr><td style="text-align: left"><strong>5</strong></td><td style="text-align: left"><code>Int</code></td><td style="text-align: left"><code>2</code></td><td style="text-align: left">Start of "Else" block (Target of node 1).</td></tr>
+<tr><td style="text-align: left"><strong>6</strong></td><td style="text-align: left"><code>Print</code></td><td style="text-align: left"><code>5</code></td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><strong>7</strong></td><td style="text-align: left"><code>Int</code></td><td style="text-align: left"><code>3</code></td><td style="text-align: left"><strong>Merge Point.</strong> Execution continues here.</td></tr>
+<tr><td style="text-align: left"><strong>8</strong></td><td style="text-align: left"><code>Print</code></td><td style="text-align: left"><code>7</code></td><td style="text-align: left"></td></tr>
+</tbody></table>
+<h3 id="building-it-backpatching">Building It: Backpatching</h3>
+<p>When we emit the BrFalse instruction at index 1, we haven't written the Else block yet, so we don't know the target index.</p>
+<p>It is quite straightforward to deal with that:</p>
+<ol>
+<li>Emit BrFalse with a placeholder target. Save the index.</li>
+<li>Emit the "Then" block.</li>
+<li>Emit Jmp with a placeholder target. Save the index.</li>
+<li>Mark the current index as the start of "Else". <strong>Backpatch</strong> (update) the BrFalse at index 1.</li>
+<li>Emit the "Else" block.</li>
+<li>Mark the current index as the end. <strong>Backpatch</strong> the Jmp at index 4.</li>
+</ol>
+<p>This effectively flattens the logic of the program into a shape that mirrors how hardware executes instructions: predictable, linear memory access with explicit jumps.</p>
+<h2 id="4-towards-interpretation-and-code-gen">4. Towards Interpretation and Code Gen</h2>
+<p>We have successfully flattened our source code. We have resolved variable names into absolute indices and lowered high-level control flow into jumps. Now comes the reward.</p>
+<h3 id="the-interpreter-the-big-switch">The Interpreter: The "Big Switch"</h3>
+<p>Because our code is a flat array, we can come up with a Virtual Machine (VM) that looks exactly like a hardware CPU: it has an Instruction Pointer (ip) and a big loop.
+As a reminder — I will never get tired of repeating this — the difference between a virtual machine and abstract machine is that a virtual machine
+has <em>instructions</em>, whereas an abstract machine has <em>transitions</em>.</p>
+<p>A translation to a low-level format and a virtual machine plays the role of an interpreter, which provides an implementation of our language. We <em>can</em> also use it to
+specify the <em>operational semantics</em>, roughly: however you implement this language,
+it should produce the same result as the reference interpreter. For "real" languages, often specification comes as an afterthought but there
+are plenty of situations where one really would like to know how a piece of source code is supposed to behave. For example, to find out
+if the "real" implementation is correct. Somehow, educated people who really should know better can parrot statements like "undefined behavior is all about compiler optimizations"
+and completely ignore that "undefined behavior" is first and foremost a gap in the specification.</p>
+<p>Back to our interpreter: we can do something really simple: since we used ANF, (where every node index represents a runtime value), we don't even need a runtime stack for intermediate calculations. We can simply map the nodes array to a parallel values array. A real implementation would not do this, but if we use an interpreter solely to specify behavior, this is sufficient, and we can defer optimizations.
+Note that since we have already resolved names to indices, instructions like <code>Bind</code> or <code>BlockStart</code> are effectively metadata. The interpreter can simply skip them.</p>
+<pre data-lang="Python" style="background-color:#383838;color:#e6e1dc;" class="language-Python "><code class="language-Python" data-lang="Python"><span>
+</span><span>function run_vm(nodes):
+</span><span>    </span><span style="color:#95815e;"># Holds the runtime result of every node.
+</span><span>    values </span><span style="color:#cc7833;">= </span><span>new Array(</span><span style="font-style:italic;color:#fd971f;">size</span><span style="color:#cc7833;">=</span><span style="color:#da4939;">len</span><span>(nodes))
+</span><span>    ip </span><span style="color:#cc7833;">= </span><span style="color:#a5c261;">0
+</span><span>    
+</span><span>    </span><span style="color:#cc7833;">while </span><span>ip </span><span style="color:#cc7833;">&lt; </span><span style="color:#da4939;">len</span><span>(nodes):
+</span><span>        node </span><span style="color:#cc7833;">= </span><span>nodes[ip]
+</span><span>        
+</span><span>        match node.kind:
+</span><span>            case IntLiteral:
+</span><span>                values[ip] </span><span style="color:#cc7833;">= </span><span>node.raw_value
+</span><span>                ip </span><span style="color:#cc7833;">+= </span><span style="color:#a5c261;">1
+</span><span>                
+</span><span>            case Add:
+</span><span>                </span><span style="color:#95815e;"># Direct access by index! No stack popping needed.
+</span><span>                lhs_val </span><span style="color:#cc7833;">= </span><span>values[node.lhs_index]
+</span><span>                rhs_val </span><span style="color:#cc7833;">= </span><span>values[node.rhs_index]
+</span><span>                values[ip] </span><span style="color:#cc7833;">= </span><span>lhs_val </span><span style="color:#cc7833;">+ </span><span>rhs_val
+</span><span>                ip </span><span style="color:#cc7833;">+= </span><span style="color:#a5c261;">1
+</span><span>
+</span><span>            case BrFalse:
+</span><span>                </span><span style="color:#cc7833;">if </span><span>values[node.cond_index] </span><span style="color:#cc7833;">== </span><span style="color:#6e9cbe;">False</span><span>:
+</span><span>                    ip </span><span style="color:#cc7833;">= </span><span>node.target_index </span><span style="color:#95815e;"># JUMP
+</span><span>                </span><span style="color:#cc7833;">else</span><span>:
+</span><span>                    ip </span><span style="color:#cc7833;">+= </span><span style="color:#a5c261;">1 
+</span><span>            
+</span><span>            case Jmp:
+</span><span>                ip </span><span style="color:#cc7833;">= </span><span>node.target_index </span><span style="color:#95815e;"># Unconditional JUMP
+</span><span>
+</span><span>            case </span><span style="color:#d0d0ff;">_</span><span>:
+</span><span>                 </span><span style="color:#95815e;"># Skip metadata nodes (Bind, BlockStart, etc.)
+</span><span>                 ip </span><span style="color:#cc7833;">+= </span><span style="color:#a5c261;">1
+</span></code></pre>
+<h3 id="the-code-generator">The Code Generator</h3>
+<p>We could also do a source-to-source translation and generate C code. The Indexed RPN shines again, because the complexity of the source language is reduced quite a bit.
+Since instructions are topologically sorted and dependencies are explicit, generating C can be as simple as a single for loop where every node becomes a temporary variable t{i}.</p>
+<p>This is maybe not a great way to specify what a language means, but a clear implementation advantage of translating to an existing language is that one can build
+on top of an existing whole compiler, with optimizations, native code generation backends. How exactly the semantics and runtime aspects of the source language
+and the target language are connected is of course a design choice and can be wildly different.</p>
+<pre data-lang="Python" style="background-color:#383838;color:#e6e1dc;" class="language-Python "><code class="language-Python" data-lang="Python"><span>
+</span><span>
+</span><span>function generate_c_code(nodes):
+</span><span>    output </span><span style="color:#cc7833;">= </span><span>StringBuilder()
+</span><span>    output.append(</span><span style="color:#c1be91;">&quot;int main() {</span><span style="color:#519f50;">\n</span><span style="color:#c1be91;">&quot;</span><span>)
+</span><span>    
+</span><span>    </span><span style="color:#cc7833;">for </span><span>i, node </span><span style="color:#cc7833;">in </span><span style="color:#da4939;">enumerate</span><span>(nodes):
+</span><span>        </span><span style="color:#95815e;"># 1. Create a label for every instruction so Jumps can find it
+</span><span>        </span><span style="color:#95815e;">#    e.g., &quot;L_0:&quot;, &quot;L_1:&quot;, etc.
+</span><span>        output.append(</span><span style="font-style:italic;color:#6e9cbe;">f</span><span style="color:#c1be91;">&quot;L_</span><span>{i}</span><span style="color:#c1be91;">: ;</span><span style="color:#519f50;">\n</span><span style="color:#c1be91;">&quot;</span><span>)
+</span><span>        
+</span><span>        </span><span style="color:#95815e;"># 2. Create a variable name for this node&#39;s result
+</span><span>        </span><span style="color:#95815e;">#    e.g., &quot;t_0&quot;, &quot;t_1&quot;
+</span><span>        var_name </span><span style="color:#cc7833;">= </span><span style="font-style:italic;color:#6e9cbe;">f</span><span style="color:#c1be91;">&quot;t_</span><span>{i}</span><span style="color:#c1be91;">&quot;
+</span><span>        
+</span><span>        match node.kind:
+</span><span>            case IntLiteral:
+</span><span>                </span><span style="color:#95815e;"># int t_0 = 10;
+</span><span>                output.append(</span><span style="font-style:italic;color:#6e9cbe;">f</span><span style="color:#c1be91;">&quot;    int </span><span>{var_name}</span><span style="color:#c1be91;"> = </span><span>{node.value}</span><span style="color:#c1be91;">;</span><span style="color:#519f50;">\n</span><span style="color:#c1be91;">&quot;</span><span>)
+</span><span>                
+</span><span>            case Add:
+</span><span>                </span><span style="color:#95815e;"># int t_2 = t_0 + t_1;
+</span><span>                lhs </span><span style="color:#cc7833;">= </span><span style="font-style:italic;color:#6e9cbe;">f</span><span style="color:#c1be91;">&quot;t_</span><span>{node.lhs_index}</span><span style="color:#c1be91;">&quot;
+</span><span>                rhs </span><span style="color:#cc7833;">= </span><span style="font-style:italic;color:#6e9cbe;">f</span><span style="color:#c1be91;">&quot;t_</span><span>{node.rhs_index}</span><span style="color:#c1be91;">&quot;
+</span><span>                output.append(</span><span style="font-style:italic;color:#6e9cbe;">f</span><span style="color:#c1be91;">&quot;    int </span><span>{var_name}</span><span style="color:#c1be91;"> = </span><span>{lhs}</span><span style="color:#c1be91;"> + </span><span>{rhs}</span><span style="color:#c1be91;">;</span><span style="color:#519f50;">\n</span><span style="color:#c1be91;">&quot;</span><span>)
+</span><span>            
+</span><span>            case Print:
+</span><span>                </span><span style="color:#95815e;"># printf(&quot;%d\n&quot;, t_5);
+</span><span>                arg </span><span style="color:#cc7833;">= </span><span style="font-style:italic;color:#6e9cbe;">f</span><span style="color:#c1be91;">&quot;t_</span><span>{node.arg_index}</span><span style="color:#c1be91;">&quot;
+</span><span>                output.append(</span><span style="font-style:italic;color:#6e9cbe;">f</span><span style="color:#c1be91;">&quot;    printf(</span><span style="color:#519f50;">\&quot;</span><span style="color:#c1be91;">%d</span><span style="color:#519f50;">\\</span><span style="color:#c1be91;">n</span><span style="color:#519f50;">\&quot;</span><span style="color:#c1be91;">, </span><span>{arg}</span><span style="color:#c1be91;">);</span><span style="color:#519f50;">\n</span><span style="color:#c1be91;">&quot;</span><span>)
+</span><span>            
+</span><span>            case BrFalse:
+</span><span>                </span><span style="color:#95815e;"># if (!t_1) goto L_5;
+</span><span>                cond </span><span style="color:#cc7833;">= </span><span style="font-style:italic;color:#6e9cbe;">f</span><span style="color:#c1be91;">&quot;t_</span><span>{node.cond_index}</span><span style="color:#c1be91;">&quot;
+</span><span>                target </span><span style="color:#cc7833;">= </span><span style="font-style:italic;color:#6e9cbe;">f</span><span style="color:#c1be91;">&quot;L_</span><span>{node.target_index}</span><span style="color:#c1be91;">&quot;
+</span><span>                output.append(</span><span style="font-style:italic;color:#6e9cbe;">f</span><span style="color:#c1be91;">&quot;    if (!</span><span>{cond}</span><span style="color:#c1be91;">) goto </span><span>{target}</span><span style="color:#c1be91;">;</span><span style="color:#519f50;">\n</span><span style="color:#c1be91;">&quot;</span><span>)
+</span><span>            
+</span><span>            case Jmp:
+</span><span>                </span><span style="color:#95815e;"># goto L_7;
+</span><span>                target </span><span style="color:#cc7833;">= </span><span style="font-style:italic;color:#6e9cbe;">f</span><span style="color:#c1be91;">&quot;L_</span><span>{node.target_index}</span><span style="color:#c1be91;">&quot;
+</span><span>                output.append(</span><span style="font-style:italic;color:#6e9cbe;">f</span><span style="color:#c1be91;">&quot;    goto </span><span>{target}</span><span style="color:#c1be91;">;</span><span style="color:#519f50;">\n</span><span style="color:#c1be91;">&quot;</span><span>)
+</span><span>
+</span><span>    output.append(</span><span style="color:#c1be91;">&quot;    return 0;</span><span style="color:#519f50;">\n</span><span style="color:#c1be91;">}&quot;</span><span>)
+</span><span>    </span><span style="color:#cc7833;">return </span><span>output.toString()
+</span><span>
+</span></code></pre>
+<h3 id="conclusion">Conclusion</h3>
+<p>People will always build more languages, especially domain-specific ones.
+A realistic work-in-progress language that uses indexed RPN is <a href="http://github.com/carbon-language/carbon-lang/">Carbon</a>.</p>
+<p>By moving from a tree to an <strong>Indexed RPN</strong>, we replace heap allocations with a single contiguous vector. What was recursive tree-walking of AST can in many cases become index lookups.
+So there should be a lot less memory-traffic, and when programs get large, memory traffic can have a significant impact on performance.</p>
+<p>If you are like me and build toy programming language implementations for fun, consider trying this out and see how it works for you!</p>
+
+</p>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']]
+    }
+  };
+</script>
+<script type="text/javascript" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
+
+
+
+    </div>
+  </section>
+</body>
+
+<div class="footer">
+  <a href="/"></a>&emsp;&copy; Burak Emir<br>
+  powered by <a href="https://www.getzola.org/">Zola</a>, theme <a
+    href="https://github.com/kyoheiu/emily_zola_theme">emily</a>.
+  <a rel='me' href='https://discuss.systems/@burakemir'>Mastodon</a>
+</div>
+
+</html>

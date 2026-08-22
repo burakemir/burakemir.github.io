@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  
+<title>Building a Wasm Runner with Cloud Hypervisor | </title>
+
+
+  <link rel="shortcut icon" type="image/png" href="&#x2F;images&#x2F;favicon-32x32.png">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <link id="stylesheet" rel="stylesheet" type="text/css" href="/dark.css">
+
+  <script type="text/javascript" src="/js/theme.js"></script>
+
+</head>
+
+<div class="header">
+  <div class="site_title">
+    <p><a href="/"><img src="https:&#x2F;&#x2F;burakemir.ch&#x2F;images&#x2F;totoro.jpg" alt=""
+          width="70" height=auto></a></p>
+    <p><a href="/">&nbsp;</a></p>
+  </div>
+  <div class="menu">
+    <a href="/post">>archives</a>
+    &nbsp;<a href="/pages/artifacts">>artifacts</a>
+    &nbsp;<a href="/about">>about</a>
+  </div>
+</div>
+
+<body onload="getTheme()">
+  <section class="section">
+    <div class="container">
+      
+<p>
+  <div class="title_postpage">Building a Wasm Runner with Cloud Hypervisor</div>
+</p>
+<p>
+  <div class="date_postpage">2025-12-16</div>
+  <div class="taxonomies_postpage">
+  
+      
+      <a href="https://burakemir.ch/categories/blog/">/blog</a>
+      
+  
+  
+      
+      &emsp;<a href="https://burakemir.ch/tags/rust/">#rust</a>
+      
+      &emsp;<a href="https://burakemir.ch/tags/wasm/">#wasm</a>
+      
+      &emsp;<a href="https://burakemir.ch/tags/cloud-hypervisor/">#cloud-hypervisor</a>
+      
+      &emsp;<a href="https://burakemir.ch/tags/virtualization/">#virtualization</a>
+      
+  
+  </div>
+</p>
+
+<p>
+  <p>In this post, I will demonstrate how to run WebAssembly (Wasm) inside a MicroVM. I'll provide context first, then focus on a few selected implementation details.</p>
+<h2 id="wasm-for-extensibility">Wasm for Extensibility</h2>
+<p>Architecture defines what parts of a system are stable and what parts are dynamic. System extensions are a prime example of dynamic components, but they raise significant security and observability concerns—especially when the code is untrusted.</p>
+<p>Consider this scenario:</p>
+<ul>
+<li>I need to run user-provided code.</li>
+<li>I do not trust this code.</li>
+<li>The system must load, execute, and potentially unload the code at runtime without build dependencies.</li>
+<li>It must be efficient.</li>
+<li>It must support user-friendly debugging.</li>
+</ul>
+<p>This mirrors the challenges faced by cloud providers and security-conscious platform engineers.</p>
+<p>WebAssembly (Wasm) is an excellent fit for this because:</p>
+<ul>
+<li>Many languages compile to Wasm.</li>
+<li>Wasm is designed for a specific execution environment (the runtime).</li>
+<li>The runtime is extensible.</li>
+</ul>
+<p>The Wasm runtime allows running user code that interacts with the "outside" through a well-defined interface. Note that "runtime" here is synonymous with "execution environment" or "virtual machine" (like the JVM).</p>
+<p>In summary, Wasm allows us to run code while the runtime manages the API and isolation. Problem solved? Not quite.</p>
+<h2 id="sandboxing-the-sandbox">Sandboxing the Sandbox</h2>
+<p>The isolation provided by a Wasm runtime reduces the privileges of user code (sandboxing), but risks remain:</p>
+<ul>
+<li>The Wasm runtime itself may have vulnerabilities.</li>
+<li>The API exposed to user code might inadvertently allow unsafe access to the operating system.</li>
+</ul>
+<p>Wasm acts as a security boundary, but mistakes are possible. Two levels of isolation provide significantly better security.</p>
+<p>In this post, we will set up a "MicroVM" to execute Wasm payloads. We will build a minimal Function-as-a-Service (FaaS) runtime from scratch using Rust, <a href="https://github.com/cloud-hypervisor/cloud-hypervisor">Cloud Hypervisor</a>, and Wasmtime. This setup will boot a Linux kernel, load a WebAssembly module over a virtual socket, and execute it.</p>
+<p>If you are familiar with Microsoft's <a href="https://github.com/hyperlight-dev/hyperlight-wasm">Hyperlight-Wasm</a>, this approach is similar but focuses on the fundamentals.</p>
+<p>To follow along, you need a Linux machine with KVM enabled and the ability to configure and build a Linux kernel. If you are using a cloud VPS, ensure nested virtualization is enabled.</p>
+<p>Unlike many minimal tutorials that use static linking (musl), we will use a dynamically linked C runtime. This allows us to use the standard system unwinder (glibc), providing full panic stack traces inside the VM—crucial for debugging failing user code.</p>
+<h3 id="the-architecture">The Architecture</h3>
+<p>Cloud Hypervisor is a virtual machine monitor (VMM) written in Rust, descending from the CrosVM and Firecracker family. It simulates hardware abstractions rather than executing high-level language instructions.</p>
+<p>We will simulate a machine that boots a minimal Linux kernel, which then executes the Wasm runtime as its <em>only</em> process.</p>
+<p>We will use "Direct Kernel Boot" with the following components:</p>
+<ul>
+<li><strong>The Hypervisor:</strong> Cloud Hypervisor (built in Rust, runs on top of KVM).</li>
+<li><strong>The Guest Kernel:</strong> A minimal Linux kernel (<code>vmlinux</code>).</li>
+<li><strong>The Guest OS:</strong> A custom Initramfs containing our Rust binary and necessary shared libraries (<code>libc.so</code>, <code>libgcc</code>, etc.).</li>
+<li><strong>The Payload:</strong> A Wasm module that performs pure computation.</li>
+<li><strong>The Transport:</strong> VirtIO-VSOCK, providing a direct pipe between host and guest.</li>
+</ul>
+<h3 id="step-1-the-minimal-kernel">Step 1: The Minimal Kernel</h3>
+<p>Cloud Hypervisor works best with a kernel tuned for PVH booting (skipping legacy BIOS/UEFI).</p>
+<p>Follow instructions on <a href="https://github.com/cloud-hypervisor/cloud-hypervisor?tab=readme-ov-file#building-your-kernel">Cloud Hypervisor docs</a> or
+build the kernel your own way using <code>make menuconfig</code>. Ensure the following are set to <strong>Yes</strong> (not Module):</p>
+<ul>
+<li><code>CONFIG_PVH=y</code>: For fast booting.</li>
+<li><code>CONFIG_VIRTIO_PCI=y</code>: To see virtual hardware.</li>
+<li><code>CONFIG_VIRTIO_VSOCKETS=y</code>: For communication.</li>
+<li><code>CONFIG_BLK_DEV_INITRD=y</code>: To load the custom binary.</li>
+</ul>
+<h3 id="step-2-the-wasm-payload">Step 2: The Wasm Payload</h3>
+<p>We need code to run. We’ll compile this Rust function to <code>wasm32-unknown-unknown</code> to keep it "pure"—no system calls, just math and memory.</p>
+<p><strong>wasm_payload/src/lib.rs</strong></p>
+<pre data-lang="rust" style="background-color:#383838;color:#e6e1dc;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#95815e;">// A 1MB static buffer inside the Wasm linear memory
+</span><span style="font-style:italic;color:#6e9cbe;">const </span><span style="color:#6d9cbe;">BUF_SIZE</span><span>: </span><span style="font-style:italic;color:#6e9cbe;">usize </span><span style="color:#cc7833;">= </span><span style="color:#a5c261;">1024 </span><span style="color:#cc7833;">* </span><span style="color:#a5c261;">1024</span><span>;
+</span><span style="font-style:italic;color:#6e9cbe;">static </span><span style="color:#cc7833;">mut </span><span style="color:#6d9cbe;">BUFFER</span><span>: [</span><span style="font-style:italic;color:#6e9cbe;">u8</span><span>; </span><span style="color:#6d9cbe;">BUF_SIZE</span><span>] </span><span style="color:#cc7833;">= </span><span>[</span><span style="color:#a5c261;">0</span><span>; </span><span style="color:#6d9cbe;">BUF_SIZE</span><span>];
+</span><span>
+</span><span>#[unsafe(no_mangle)]
+</span><span>#[allow(static_mut_refs)]
+</span><span style="color:#cc7833;">pub extern </span><span style="color:#c1be91;">&quot;C&quot; </span><span style="font-style:italic;color:#6e9cbe;">fn </span><span style="color:#ffc66d;">get_buffer_ptr</span><span>() -&gt; </span><span style="color:#cc7833;">*mut </span><span style="font-style:italic;color:#6e9cbe;">u8 </span><span>{
+</span><span>    </span><span style="color:#cc7833;">unsafe </span><span>{ </span><span style="color:#6d9cbe;">BUFFER</span><span>.</span><span style="color:#da4939;">as_mut_ptr</span><span>() }
+</span><span>}
+</span><span>
+</span><span>#[unsafe(no_mangle)]
+</span><span style="color:#cc7833;">pub extern </span><span style="color:#c1be91;">&quot;C&quot; </span><span style="font-style:italic;color:#6e9cbe;">fn </span><span style="color:#ffc66d;">process_data</span><span>(</span><span style="font-style:italic;color:#fd971f;">len</span><span>: </span><span style="font-style:italic;color:#6e9cbe;">usize</span><span>) -&gt; </span><span style="font-style:italic;color:#6e9cbe;">usize </span><span>{
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> slice </span><span style="color:#cc7833;">= unsafe </span><span>{ </span><span style="color:#cc7833;">&amp;mut </span><span style="color:#6d9cbe;">BUFFER</span><span>[</span><span style="color:#a5c261;">0</span><span style="color:#cc7833;">..</span><span>len] };
+</span><span>    
+</span><span>    </span><span style="color:#95815e;">// Example: Reverse the bytes
+</span><span>    slice.</span><span style="color:#da4939;">reverse</span><span>();
+</span><span>    
+</span><span>    </span><span style="color:#95815e;">// Return the length processed
+</span><span>    len
+</span><span>}
+</span></code></pre>
+<p>Compile it:</p>
+<pre data-lang="bash" style="background-color:#383838;color:#e6e1dc;" class="language-bash "><code class="language-bash" data-lang="bash"><span>cargo build</span><span style="font-style:italic;color:#fd971f;"> --target</span><span> wasm32-unknown-unknown</span><span style="font-style:italic;color:#fd971f;"> --release
+</span></code></pre>
+<p>If you have not compiled to Wasm before, you may want to run <code>rustup target add wasm32-unknown-unknown</code>.</p>
+<h3 id="step-3-the-guest-init-the-micro-os">Step 3: The Guest "Init" (The Micro-OS)</h3>
+<p>We will write a Rust program that acts as the entire guest operating system (init process). It boots, listens on a socket, runs Wasm, and shuts down. Interaction happens via system calls, mediated by the C runtime library.</p>
+<p>We use a Dual-Socket design:</p>
+<ul>
+<li><strong>Port 1000 (Control):</strong> Metadata, Wasm binary uploads, status signals.</li>
+<li><strong>Port 1001 (Data):</strong> Raw data stream.</li>
+</ul>
+<p>This allows streaming data directly from the socket into the Wasm memory buffer. Zero-copy isn't possible here because we must copy data into the Wasm module instance's memory to maintain isolation.</p>
+<p>The following demo code implements this, using tokio (1, "full" features), tokio-vsock (0.3) and Wasmtime (24.0) API calls.</p>
+<p><strong>guest_init/src/main.rs</strong></p>
+<pre data-lang="rust" style="background-color:#383838;color:#e6e1dc;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#cc7833;">use </span><span>tokio::io::{AsyncReadExt, AsyncWriteExt};
+</span><span style="color:#cc7833;">use </span><span>tokio_vsock::VsockListener;
+</span><span style="color:#cc7833;">use </span><span>wasmtime::</span><span style="color:#cc7833;">*</span><span>;
+</span><span>
+</span><span style="font-style:italic;color:#6e9cbe;">const </span><span style="color:#6d9cbe;">CMD_PORT</span><span>: </span><span style="font-style:italic;color:#6e9cbe;">u32 </span><span style="color:#cc7833;">= </span><span style="color:#a5c261;">1000</span><span>;
+</span><span style="font-style:italic;color:#6e9cbe;">const </span><span style="color:#6d9cbe;">DATA_PORT</span><span>: </span><span style="font-style:italic;color:#6e9cbe;">u32 </span><span style="color:#cc7833;">= </span><span style="color:#a5c261;">1001</span><span>;
+</span><span>
+</span><span>#[tokio::main]
+</span><span>async </span><span style="font-style:italic;color:#6e9cbe;">fn </span><span style="color:#ffc66d;">main</span><span>() {
+</span><span>    println!(</span><span style="color:#c1be91;">&quot;[Guest] Booting Dual-Socket Runner...&quot;</span><span>);
+</span><span>
+</span><span>    </span><span style="color:#95815e;">// 1. Setup Wasm Engine
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let </span><span style="color:#cc7833;">mut</span><span> config </span><span style="color:#cc7833;">= </span><span>Config::new();
+</span><span>    config.</span><span style="color:#da4939;">async_support</span><span>(</span><span style="color:#6e9cbe;">true</span><span>);
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> engine </span><span style="color:#cc7833;">= </span><span>Engine::new(</span><span style="color:#cc7833;">&amp;</span><span>config).</span><span style="color:#da4939;">unwrap</span><span>();
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> linker </span><span style="color:#cc7833;">= </span><span>Linker::new(</span><span style="color:#cc7833;">&amp;</span><span>engine);
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let </span><span style="color:#cc7833;">mut</span><span> store </span><span style="color:#cc7833;">= </span><span>Store::new(</span><span style="color:#cc7833;">&amp;</span><span>engine, ());
+</span><span>
+</span><span>    </span><span style="color:#95815e;">// 2. Start Listeners
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let </span><span style="color:#cc7833;">mut</span><span> cmd_listener </span><span style="color:#cc7833;">= 
+</span><span>        VsockListener::bind(</span><span style="font-style:italic;color:#6e9cbe;">u32</span><span>::</span><span style="color:#6d9cbe;">MAX</span><span>, </span><span style="color:#6d9cbe;">CMD_PORT</span><span>).</span><span style="color:#da4939;">expect</span><span>(</span><span style="color:#c1be91;">&quot;Bind CMD failed&quot;</span><span>);
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let </span><span style="color:#cc7833;">mut</span><span> data_listener </span><span style="color:#cc7833;">= 
+</span><span>        VsockListener::bind(</span><span style="font-style:italic;color:#6e9cbe;">u32</span><span>::</span><span style="color:#6d9cbe;">MAX</span><span>, </span><span style="color:#6d9cbe;">DATA_PORT</span><span>).</span><span style="color:#da4939;">expect</span><span>(</span><span style="color:#c1be91;">&quot;Bind DATA failed&quot;</span><span>);
+</span><span>    
+</span><span>    println!(</span><span style="color:#c1be91;">&quot;[Guest] Waiting for Host to connect...&quot;</span><span>);
+</span><span>
+</span><span>    </span><span style="color:#95815e;">// 3. Accept Connections (Sequential for simplicity)
+</span><span>    </span><span style="color:#95815e;">// Host must connect to CMD first, then DATA.
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let </span><span>(</span><span style="color:#cc7833;">mut</span><span> cmd_stream, </span><span style="color:#cc7833;">_</span><span>) </span><span style="color:#cc7833;">=</span><span> cmd_listener.</span><span style="color:#da4939;">accept</span><span>().await.</span><span style="color:#da4939;">unwrap</span><span>();
+</span><span>    println!(</span><span style="color:#c1be91;">&quot;[Guest] CMD connected.&quot;</span><span>);
+</span><span>    
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let </span><span>(</span><span style="color:#cc7833;">mut</span><span> data_stream, </span><span style="color:#cc7833;">_</span><span>) </span><span style="color:#cc7833;">=</span><span> data_listener.</span><span style="color:#da4939;">accept</span><span>().await.</span><span style="color:#da4939;">unwrap</span><span>();
+</span><span>    println!(</span><span style="color:#c1be91;">&quot;[Guest] DATA connected.&quot;</span><span>);
+</span><span>
+</span><span>    </span><span style="color:#95815e;">// 4. Receive Wasm Binary (over CMD channel for reliability)
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let </span><span style="color:#cc7833;">mut</span><span> size_buf </span><span style="color:#cc7833;">= </span><span>[</span><span style="color:#a5c261;">0</span><span style="font-style:italic;color:#6e9cbe;">u8</span><span>; </span><span style="color:#a5c261;">4</span><span>];
+</span><span>    cmd_stream.</span><span style="color:#da4939;">read_exact</span><span>(</span><span style="color:#cc7833;">&amp;mut</span><span> size_buf).await.</span><span style="color:#da4939;">unwrap</span><span>();
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> wasm_len </span><span style="color:#cc7833;">= </span><span style="font-style:italic;color:#6e9cbe;">u32</span><span>::from_be_bytes(size_buf) </span><span style="color:#cc7833;">as </span><span style="font-style:italic;color:#6e9cbe;">usize</span><span>;
+</span><span>    println!(</span><span style="color:#c1be91;">&quot;[Guest] Downloading Wasm module (</span><span style="color:#6d9cbe;">{}</span><span style="color:#c1be91;"> bytes)...&quot;</span><span>, wasm_len);
+</span><span>
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let </span><span style="color:#cc7833;">mut</span><span> wasm_binary </span><span style="color:#cc7833;">= </span><span>vec![</span><span style="color:#a5c261;">0</span><span style="font-style:italic;color:#6e9cbe;">u8</span><span>; wasm_len];
+</span><span>    cmd_stream.</span><span style="color:#da4939;">read_exact</span><span>(</span><span style="color:#cc7833;">&amp;mut</span><span> wasm_binary).await.</span><span style="color:#da4939;">unwrap</span><span>();
+</span><span>
+</span><span>    </span><span style="color:#95815e;">// 5. Instantiate
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> module </span><span style="color:#cc7833;">= </span><span>Module::new(</span><span style="color:#cc7833;">&amp;</span><span>engine, </span><span style="color:#cc7833;">&amp;</span><span>wasm_binary).</span><span style="color:#da4939;">unwrap</span><span>();
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> instance </span><span style="color:#cc7833;">=</span><span> linker.</span><span style="color:#da4939;">instantiate_async</span><span>(</span><span style="color:#cc7833;">&amp;mut</span><span> store, </span><span style="color:#cc7833;">&amp;</span><span>module).await.</span><span style="color:#da4939;">unwrap</span><span>();
+</span><span>    
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> memory </span><span style="color:#cc7833;">=</span><span> instance.</span><span style="color:#da4939;">get_memory</span><span>(</span><span style="color:#cc7833;">&amp;mut</span><span> store, </span><span style="color:#c1be91;">&quot;memory&quot;</span><span>)
+</span><span>        .</span><span style="color:#da4939;">expect</span><span>(</span><span style="color:#c1be91;">&quot;No memory exported&quot;</span><span>);
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> get_ptr </span><span style="color:#cc7833;">=</span><span> instance.get_typed_func::&lt;(), </span><span style="font-style:italic;color:#6e9cbe;">i32</span><span>&gt;(</span><span style="color:#cc7833;">&amp;mut</span><span> store, </span><span style="color:#c1be91;">&quot;get_buffer_ptr&quot;</span><span>)
+</span><span>        .</span><span style="color:#da4939;">unwrap</span><span>();
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> process_func </span><span style="color:#cc7833;">=</span><span> instance.get_typed_func::&lt;</span><span style="font-style:italic;color:#6e9cbe;">i32</span><span>, </span><span style="font-style:italic;color:#6e9cbe;">i32</span><span>&gt;(</span><span style="color:#cc7833;">&amp;mut</span><span> store, </span><span style="color:#c1be91;">&quot;process_data&quot;</span><span>)
+</span><span>        .</span><span style="color:#da4939;">unwrap</span><span>();
+</span><span>    
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> wasm_ptr </span><span style="color:#cc7833;">=</span><span> get_ptr.</span><span style="color:#da4939;">call_async</span><span>(</span><span style="color:#cc7833;">&amp;mut</span><span> store, ()).await.</span><span style="color:#da4939;">unwrap</span><span>() </span><span style="color:#cc7833;">as </span><span style="font-style:italic;color:#6e9cbe;">usize</span><span>;
+</span><span>
+</span><span>    println!(</span><span style="color:#c1be91;">&quot;[Guest] Wasm Ready. Entering Processing Loop.&quot;</span><span>);
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let </span><span style="color:#cc7833;">_ =</span><span> cmd_stream.</span><span style="color:#da4939;">write_all</span><span>(</span><span style="font-style:italic;color:#6e9cbe;">b</span><span style="color:#c1be91;">&quot;READY&quot;</span><span>).await; </span><span style="color:#95815e;">// Signal Host
+</span><span>
+</span><span>    </span><span style="color:#95815e;">// 6. Processing Loop
+</span><span>    </span><span style="color:#cc7833;">loop </span><span>{
+</span><span>        </span><span style="color:#95815e;">// A. Wait for Command: &quot;Process X bytes&quot;
+</span><span>        </span><span style="font-style:italic;color:#6e9cbe;">let </span><span style="color:#cc7833;">mut</span><span> job_header </span><span style="color:#cc7833;">= </span><span>[</span><span style="color:#a5c261;">0</span><span style="font-style:italic;color:#6e9cbe;">u8</span><span>; </span><span style="color:#a5c261;">4</span><span>];
+</span><span>        </span><span style="color:#cc7833;">if</span><span> cmd_stream.</span><span style="color:#da4939;">read_exact</span><span>(</span><span style="color:#cc7833;">&amp;mut</span><span> job_header).await.</span><span style="color:#da4939;">is_err</span><span>() { </span><span style="color:#cc7833;">break</span><span>; }
+</span><span>        </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> data_len </span><span style="color:#cc7833;">= </span><span style="font-style:italic;color:#6e9cbe;">u32</span><span>::from_be_bytes(job_header) </span><span style="color:#cc7833;">as </span><span style="font-style:italic;color:#6e9cbe;">usize</span><span>;
+</span><span>        eprintln!(</span><span style="color:#c1be91;">&quot;Expecting Payload len </span><span style="color:#6d9cbe;">{data_len}</span><span style="color:#c1be91;">!&quot;</span><span>);
+</span><span>
+</span><span>        </span><span style="color:#95815e;">// B. READ DIRECTLY TO WASM MEMORY
+</span><span>        </span><span style="color:#95815e;">// We get a mutable slice of Wasm memory.
+</span><span>        </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> mem_data </span><span style="color:#cc7833;">=</span><span> memory.</span><span style="color:#da4939;">data_mut</span><span>(</span><span style="color:#cc7833;">&amp;mut</span><span> store);
+</span><span>        </span><span style="color:#95815e;">// Safety check bounds
+</span><span>        </span><span style="color:#cc7833;">if</span><span> wasm_ptr </span><span style="color:#cc7833;">+</span><span> data_len </span><span style="color:#cc7833;">&gt;</span><span> mem_data.</span><span style="color:#da4939;">len</span><span>() {
+</span><span>            eprintln!(</span><span style="color:#c1be91;">&quot;Payload too big for Wasm buffer!&quot;</span><span>);
+</span><span>            </span><span style="color:#cc7833;">break</span><span>;
+</span><span>        }
+</span><span>        </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> wasm_slice </span><span style="color:#cc7833;">= &amp;mut</span><span> mem_data[wasm_ptr </span><span style="color:#cc7833;">..</span><span> wasm_ptr </span><span style="color:#cc7833;">+</span><span> data_len];
+</span><span>        
+</span><span>        </span><span style="color:#95815e;">// This is the key step: Kernel copies socket buffer -&gt; Wasm Memory directly.
+</span><span>        data_stream.</span><span style="color:#da4939;">read_exact</span><span>(wasm_slice).await.</span><span style="color:#da4939;">unwrap</span><span>();
+</span><span>
+</span><span>        eprintln!(</span><span style="color:#c1be91;">&quot;Read data!!&quot;</span><span>);
+</span><span>        </span><span style="color:#95815e;">// C. EXECUTE
+</span><span>        process_func.</span><span style="color:#da4939;">call_async</span><span>(</span><span style="color:#cc7833;">&amp;mut</span><span> store, data_len </span><span style="color:#cc7833;">as </span><span style="font-style:italic;color:#6e9cbe;">i32</span><span>).await.</span><span style="color:#da4939;">unwrap</span><span>();
+</span><span>        eprintln!(</span><span style="color:#c1be91;">&quot;Made call!!&quot;</span><span>);
+</span><span>
+</span><span>        </span><span style="color:#95815e;">// D. WRITE DIRECTLY FROM WASM MEMORY
+</span><span>        </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> mem_data </span><span style="color:#cc7833;">=</span><span> memory.</span><span style="color:#da4939;">data</span><span>(</span><span style="color:#cc7833;">&amp;</span><span>store); </span><span style="color:#95815e;">// Re-borrow immutable
+</span><span>        </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> result_slice </span><span style="color:#cc7833;">= &amp;</span><span>mem_data[wasm_ptr </span><span style="color:#cc7833;">..</span><span> wasm_ptr </span><span style="color:#cc7833;">+</span><span> data_len];
+</span><span>
+</span><span>        eprintln!(</span><span style="color:#c1be91;">&quot;Writing result!!&quot;</span><span>);
+</span><span>        data_stream.</span><span style="color:#da4939;">write_all</span><span>(result_slice).await.</span><span style="color:#da4939;">unwrap</span><span>();
+</span><span>        
+</span><span>        eprintln!(</span><span style="color:#c1be91;">&quot;Writing done!!&quot;</span><span>);
+</span><span>        </span><span style="color:#95815e;">// E. Ack
+</span><span>        </span><span style="font-style:italic;color:#6e9cbe;">let </span><span style="color:#cc7833;">_ =</span><span> cmd_stream.</span><span style="color:#da4939;">write_all</span><span>(</span><span style="font-style:italic;color:#6e9cbe;">b</span><span style="color:#c1be91;">&quot;DONE&quot;</span><span>).await;
+</span><span>    }
+</span><span>}
+</span><span>
+</span></code></pre>
+<h3 id="building-the-image">Building the Image</h3>
+<p>We gather all files for the guest filesystem. Apart from the guest init binary, we need some files to support dynamic linking of the C runtime library.</p>
+<p>Many tutorials suggest compiling with <code>x86_64-unknown-linux-musl</code> to get a single static binary. While this is small (5MB), it breaks the ability to get stack traces because the musl unwinder often conflicts with JIT compilers like Wasmtime.</p>
+<p>Instead, we compile normally which on Linux will link dynamically against glibc. We then bundle the shared libraries and ship them into the VM.</p>
+<pre data-lang="bash" style="background-color:#383838;color:#e6e1dc;" class="language-bash "><code class="language-bash" data-lang="bash"><span>cargo build</span><span style="font-style:italic;color:#fd971f;"> --release 
+</span></code></pre>
+<p>We use a script to automatically find the required <code>.so</code> files (<code>libc.so.6</code>, <code>libgcc_s.so.1</code>, etc.) and package them into the initramfs.
+Please note that my cargo outputs binaries into <code>/tmp</code>, you may need to adjust the paths to the binary.</p>
+<p><strong>package_vm.sh</strong></p>
+<pre data-lang="bash" style="background-color:#383838;color:#e6e1dc;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="font-style:italic;color:#7c7865;">#!/bin/bash
+</span><span style="color:#da4939;">set </span><span style="font-style:italic;color:#fd971f;">-e
+</span><span>
+</span><span style="color:#d0d0ff;">APP_NAME</span><span style="color:#cc7833;">=</span><span style="color:#c1be91;">&quot;guest_init&quot;
+</span><span style="color:#d0d0ff;">BIN_PATH</span><span style="color:#cc7833;">=</span><span style="color:#c1be91;">&quot;/tmp/target/release/$</span><span style="color:#d0d0ff;">APP_NAME</span><span style="color:#c1be91;">&quot;
+</span><span style="color:#d0d0ff;">BUILD_DIR</span><span style="color:#cc7833;">=</span><span style="color:#c1be91;">&quot;./build_output&quot;
+</span><span>
+</span><span style="font-style:italic;color:#7c7865;"># 1. Clean and Create Staging Area
+</span><span>rm</span><span style="font-style:italic;color:#fd971f;"> -rf </span><span>$</span><span style="color:#d0d0ff;">BUILD_DIR
+</span><span>mkdir</span><span style="font-style:italic;color:#fd971f;"> -p </span><span>$</span><span style="color:#d0d0ff;">BUILD_DIR</span><span>/lib64
+</span><span>mkdir</span><span style="font-style:italic;color:#fd971f;"> -p </span><span>$</span><span style="color:#d0d0ff;">BUILD_DIR</span><span>/lib/x86_64-linux-gnu
+</span><span>
+</span><span style="font-style:italic;color:#7c7865;"># 2. Copy the Main Binary to /init
+</span><span style="color:#da4939;">echo </span><span style="color:#c1be91;">&quot;Copying binary...&quot;
+</span><span>cp $</span><span style="color:#d0d0ff;">BIN_PATH </span><span>$</span><span style="color:#d0d0ff;">BUILD_DIR</span><span>/init
+</span><span>
+</span><span style="font-style:italic;color:#7c7865;"># 3. Find and Copy Shared Libraries
+</span><span style="color:#da4939;">echo </span><span style="color:#c1be91;">&quot;Resolving dependencies...&quot;
+</span><span>
+</span><span style="font-style:italic;color:#7c7865;"># Get list of dependencies using ldd
+</span><span style="font-style:italic;color:#7c7865;"># Output format is usually: &quot;libname.so =&gt; /path/to/libname.so (address)&quot;
+</span><span style="color:#d0d0ff;">DEPENDENCIES</span><span style="color:#cc7833;">=</span><span style="color:#a5c261;">$(ldd $</span><span style="color:#d0d0ff;">BIN_PATH </span><span style="color:#cc7833;">| </span><span style="color:#a5c261;">awk &#39;{if ($3 != &quot;&quot;) print $3; else print $1}&#39;)
+</span><span>
+</span><span style="color:#cc7833;">for</span><span> DEP </span><span style="color:#cc7833;">in </span><span>$</span><span style="color:#d0d0ff;">DEPENDENCIES</span><span style="color:#cc7833;">; do
+</span><span>    </span><span style="font-style:italic;color:#7c7865;"># Skip virtual dynamically linked things like linux-vdso.so.1
+</span><span>    </span><span style="color:#cc7833;">if </span><span style="color:#da4939;">[[ </span><span style="color:#c1be91;">&quot;$</span><span style="color:#d0d0ff;">DEP</span><span style="color:#c1be91;">&quot; </span><span style="color:#cc7833;">== *</span><span style="color:#c1be91;">&quot;vdso&quot;</span><span style="color:#cc7833;">* </span><span style="color:#da4939;">]]</span><span style="color:#cc7833;">; then
+</span><span>        </span><span style="color:#cc7833;">continue
+</span><span>    </span><span style="color:#cc7833;">fi
+</span><span>
+</span><span>    </span><span style="font-style:italic;color:#7c7865;"># Check if file exists
+</span><span>    </span><span style="color:#cc7833;">if </span><span style="color:#da4939;">[ </span><span style="font-style:italic;color:#fd971f;">-f </span><span style="color:#c1be91;">&quot;$</span><span style="color:#d0d0ff;">DEP</span><span style="color:#c1be91;">&quot; </span><span style="color:#da4939;">]</span><span style="color:#cc7833;">; then
+</span><span>        </span><span style="color:#da4939;">echo </span><span style="color:#c1be91;">&quot;  Bundling: $</span><span style="color:#d0d0ff;">DEP</span><span style="color:#c1be91;">&quot;
+</span><span>
+</span><span>        </span><span style="font-style:italic;color:#7c7865;"># We need to copy it to the SAME path structure relative to root
+</span><span>        </span><span style="font-style:italic;color:#7c7865;"># e.g., /lib/x86_64-linux-gnu/libc.so.6 
+</span><span>        </span><span style="font-style:italic;color:#7c7865;">#        --&gt; build_output/lib/x86_64-linux-gnu/libc.so.6
+</span><span>
+</span><span>        </span><span style="color:#d0d0ff;">DIRname</span><span style="color:#cc7833;">=</span><span style="color:#a5c261;">$(dirname </span><span style="color:#c1be91;">&quot;$</span><span style="color:#d0d0ff;">DEP</span><span style="color:#c1be91;">&quot;</span><span style="color:#a5c261;">)
+</span><span>        mkdir</span><span style="font-style:italic;color:#fd971f;"> -p </span><span style="color:#c1be91;">&quot;$</span><span style="color:#d0d0ff;">BUILD_DIR</span><span style="color:#c1be91;">$</span><span style="color:#d0d0ff;">DIRname</span><span style="color:#c1be91;">&quot;
+</span><span>        cp </span><span style="color:#c1be91;">&quot;$</span><span style="color:#d0d0ff;">DEP</span><span style="color:#c1be91;">&quot; &quot;$</span><span style="color:#d0d0ff;">BUILD_DIR</span><span style="color:#c1be91;">$</span><span style="color:#d0d0ff;">DEP</span><span style="color:#c1be91;">&quot;
+</span><span>    </span><span style="color:#cc7833;">else
+</span><span>        </span><span style="color:#da4939;">echo </span><span style="color:#c1be91;">&quot;  Warning: Could not find $</span><span style="color:#d0d0ff;">DEP</span><span style="color:#c1be91;">&quot;
+</span><span>    </span><span style="color:#cc7833;">fi
+</span><span style="color:#cc7833;">done
+</span><span>
+</span><span style="font-style:italic;color:#7c7865;"># 4. Handle the Dynamic Linker explicitly
+</span><span style="font-style:italic;color:#7c7865;"># ldd output often shows the loader as a full path, but we need to ensure
+</span><span style="font-style:italic;color:#7c7865;"># the interpreter path hardcoded in the binary exists.
+</span><span style="color:#d0d0ff;">INTERPRETER</span><span style="color:#cc7833;">=</span><span style="color:#a5c261;">$(readelf</span><span style="font-style:italic;color:#fd971f;"> -l </span><span style="color:#a5c261;">$</span><span style="color:#d0d0ff;">BIN_PATH </span><span style="color:#a5c261;">\
+</span><span style="color:#a5c261;">    </span><span style="color:#cc7833;">| </span><span style="color:#a5c261;">grep </span><span style="color:#c1be91;">&quot;interpreter&quot; </span><span style="color:#cc7833;">| </span><span style="color:#a5c261;">awk</span><span style="font-style:italic;color:#fd971f;"> -F</span><span style="color:#a5c261;">&#39;: &#39; &#39;{print $2}&#39; </span><span style="color:#cc7833;">| </span><span style="color:#a5c261;">tr</span><span style="font-style:italic;color:#fd971f;"> -d </span><span style="color:#a5c261;">&#39;]&#39;)
+</span><span style="color:#da4939;">echo </span><span style="color:#c1be91;">&quot;  Bundling Interpreter: $</span><span style="color:#d0d0ff;">INTERPRETER</span><span style="color:#c1be91;">&quot;
+</span><span style="color:#cc7833;">if </span><span style="color:#da4939;">[ </span><span style="font-style:italic;color:#fd971f;">-f </span><span style="color:#c1be91;">&quot;$</span><span style="color:#d0d0ff;">INTERPRETER</span><span style="color:#c1be91;">&quot; </span><span style="color:#da4939;">]</span><span style="color:#cc7833;">; then
+</span><span>    </span><span style="color:#d0d0ff;">DIRname</span><span style="color:#cc7833;">=</span><span style="color:#a5c261;">$(dirname </span><span style="color:#c1be91;">&quot;$</span><span style="color:#d0d0ff;">INTERPRETER</span><span style="color:#c1be91;">&quot;</span><span style="color:#a5c261;">)
+</span><span>    mkdir</span><span style="font-style:italic;color:#fd971f;"> -p </span><span style="color:#c1be91;">&quot;$</span><span style="color:#d0d0ff;">BUILD_DIR</span><span style="color:#c1be91;">$</span><span style="color:#d0d0ff;">DIRname</span><span style="color:#c1be91;">&quot;
+</span><span>    cp </span><span style="color:#c1be91;">&quot;$</span><span style="color:#d0d0ff;">INTERPRETER</span><span style="color:#c1be91;">&quot; &quot;$</span><span style="color:#d0d0ff;">BUILD_DIR</span><span style="color:#c1be91;">$</span><span style="color:#d0d0ff;">INTERPRETER</span><span style="color:#c1be91;">&quot;
+</span><span style="color:#cc7833;">fi
+</span><span>
+</span><span style="font-style:italic;color:#7c7865;"># 5. Create CPIO
+</span><span style="color:#da4939;">echo </span><span style="color:#c1be91;">&quot;Creating initramfs.cpio...&quot;
+</span><span style="color:#da4939;">cd </span><span>$</span><span style="color:#d0d0ff;">BUILD_DIR
+</span><span>find .</span><span style="font-style:italic;color:#fd971f;"> -print0 </span><span style="color:#cc7833;">| </span><span>cpio</span><span style="font-style:italic;color:#fd971f;"> --null -ov --format</span><span style="color:#cc7833;">=</span><span>newc </span><span style="color:#cc7833;">&gt;</span><span> ../initramfs.cpio
+</span><span style="color:#da4939;">cd</span><span> ..
+</span><span>
+</span><span style="color:#da4939;">echo </span><span style="color:#c1be91;">&quot;Done! Dynamic initramfs ready.&quot;
+</span></code></pre>
+<p>This increases the image size to ~25MB, but in return, if our Rust code panics or Wasmtime crashes, we get a full, readable stack trace in the console.</p>
+<p>At this point, we have neatly packaged up everything we need into a CPIO archive that we will use with Cloud Hypervisor's direct kernel boot method in a bit.</p>
+<h3 id="step-4-the-host-driver">Step 4: The Host Driver</h3>
+<p>We implement the host driver in Rust to orchestrate the VM. It connects to the Cloud Hypervisor via the Unix domain socket <code>/tmp/ch_vsock.sock</code>.</p>
+<p><strong>The "Connect String" Mechanism</strong></p>
+<p>Cloud Hypervisor uses a Unix domain socket on the host to expose the VSOCK capability. It acts as a bridge. However, unlike a direct socket connection where you just connect and talk, Cloud Hypervisor acts as a multiplexer.</p>
+<p>When we connect to the Unix socket, we are talking to the Hypervisor, not the guest yet. We must tell the Hypervisor which <em>guest port</em> we want to reach. We do this by sending a text command:</p>
+<p><code>CONNECT &lt;PORT&gt;\n</code></p>
+<p>If the connection is successful, Cloud Hypervisor will respond with:</p>
+<p><code>OK &lt;PORT&gt;\n</code></p>
+<p>Only <em>after</em> receiving this acknowledgement can we start sending raw binary data intended for the guest. If we skip this, our data will be interpreted as commands by the Hypervisor, causing errors.</p>
+<p><strong>host_runner/src/main.rs</strong></p>
+<pre data-lang="rust" style="background-color:#383838;color:#e6e1dc;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#cc7833;">use </span><span>tokio::io::{AsyncReadExt, AsyncWriteExt};
+</span><span style="color:#cc7833;">use </span><span>tokio::net::UnixStream;
+</span><span style="color:#cc7833;">use </span><span>std::time::Duration;
+</span><span>
+</span><span style="font-style:italic;color:#6e9cbe;">const </span><span style="color:#6d9cbe;">SOCKET_PATH</span><span>: </span><span style="color:#cc7833;">&amp;</span><span style="font-style:italic;color:#6e9cbe;">str </span><span style="color:#cc7833;">= </span><span style="color:#c1be91;">&quot;/tmp/ch_vsock.sock&quot;</span><span>;
+</span><span style="font-style:italic;color:#6e9cbe;">const </span><span style="color:#6d9cbe;">CMD_PORT</span><span>: </span><span style="font-style:italic;color:#6e9cbe;">u32 </span><span style="color:#cc7833;">= </span><span style="color:#a5c261;">1000</span><span>;
+</span><span style="font-style:italic;color:#6e9cbe;">const </span><span style="color:#6d9cbe;">DATA_PORT</span><span>: </span><span style="font-style:italic;color:#6e9cbe;">u32 </span><span style="color:#cc7833;">= </span><span style="color:#a5c261;">1001</span><span>;
+</span><span>
+</span><span>#[tokio::main]
+</span><span>async </span><span style="font-style:italic;color:#6e9cbe;">fn </span><span style="color:#ffc66d;">main</span><span>() -&gt; </span><span style="font-style:italic;color:#6e9cbe;">Result</span><span>&lt;(), </span><span style="font-style:italic;color:#6e9cbe;">Box</span><span>&lt;dyn std::error::Error&gt;&gt; {
+</span><span>    println!(</span><span style="color:#c1be91;">&quot;[Host] Connecting to Guest via </span><span style="color:#6d9cbe;">{}</span><span style="color:#c1be91;">...&quot;</span><span>, </span><span style="color:#6d9cbe;">SOCKET_PATH</span><span>);
+</span><span>
+</span><span>    </span><span style="color:#95815e;">// 1. Connect to Guest (Retry loop until Guest is up)
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let </span><span style="color:#cc7833;">mut</span><span> cmd_stream </span><span style="color:#cc7833;">= </span><span style="color:#da4939;">connect_via_unix</span><span>(</span><span style="color:#6d9cbe;">SOCKET_PATH</span><span>, </span><span style="color:#6d9cbe;">CMD_PORT</span><span>).await</span><span style="color:#cc7833;">?</span><span>;
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let </span><span style="color:#cc7833;">mut</span><span> data_stream </span><span style="color:#cc7833;">= </span><span style="color:#da4939;">connect_via_unix</span><span>(</span><span style="color:#6d9cbe;">SOCKET_PATH</span><span>, </span><span style="color:#6d9cbe;">DATA_PORT</span><span>).await</span><span style="color:#cc7833;">?</span><span>;
+</span><span>
+</span><span>    </span><span style="color:#95815e;">// 2. Read Wasm Binary
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> wasm_path </span><span style="color:#cc7833;">= </span><span style="color:#c1be91;">&quot;target/wasm32-unknown-unknown/release/payload.wasm&quot;</span><span>;
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> wasm_binary </span><span style="color:#cc7833;">= </span><span>std::fs::read(wasm_path).</span><span style="color:#da4939;">expect</span><span>(</span><span style="color:#c1be91;">&quot;Failed to read Wasm file&quot;</span><span>);
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> wasm_len </span><span style="color:#cc7833;">=</span><span> wasm_binary.</span><span style="color:#da4939;">len</span><span>() </span><span style="color:#cc7833;">as </span><span style="font-style:italic;color:#6e9cbe;">u32</span><span>;
+</span><span>
+</span><span>    </span><span style="color:#95815e;">// 3. Send Wasm Binary
+</span><span>    println!(</span><span style="color:#c1be91;">&quot;[Host] Sending Wasm binary...&quot;</span><span>);
+</span><span>    cmd_stream.</span><span style="color:#da4939;">write_all</span><span>(</span><span style="color:#cc7833;">&amp;</span><span>wasm_len.</span><span style="color:#da4939;">to_be_bytes</span><span>()).await</span><span style="color:#cc7833;">?</span><span>;
+</span><span>    cmd_stream.</span><span style="color:#da4939;">write_all</span><span>(</span><span style="color:#cc7833;">&amp;</span><span>wasm_binary).await</span><span style="color:#cc7833;">?</span><span>;
+</span><span>    
+</span><span>    </span><span style="color:#95815e;">// 4. Wait for Ready Signal from Guest
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let </span><span style="color:#cc7833;">mut</span><span> buf </span><span style="color:#cc7833;">= </span><span>[</span><span style="color:#a5c261;">0</span><span style="font-style:italic;color:#6e9cbe;">u8</span><span>; </span><span style="color:#a5c261;">5</span><span>]; </span><span style="color:#95815e;">// &quot;READY&quot;
+</span><span>    cmd_stream.</span><span style="color:#da4939;">read_exact</span><span>(</span><span style="color:#cc7833;">&amp;mut</span><span> buf).await</span><span style="color:#cc7833;">?</span><span>;
+</span><span>    assert_eq!(</span><span style="color:#cc7833;">&amp;</span><span>buf, </span><span style="font-style:italic;color:#6e9cbe;">b</span><span style="color:#c1be91;">&quot;READY&quot;</span><span>);
+</span><span>    println!(</span><span style="color:#c1be91;">&quot;[Host] Guest is READY.&quot;</span><span>);
+</span><span>
+</span><span>    </span><span style="color:#95815e;">// 5. Send Data Job
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> payload </span><span style="color:#cc7833;">= </span><span style="font-style:italic;color:#6e9cbe;">b</span><span style="color:#c1be91;">&quot;Hello MicroVM!&quot;</span><span>;
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> payload_len </span><span style="color:#cc7833;">=</span><span> payload.</span><span style="color:#da4939;">len</span><span>() </span><span style="color:#cc7833;">as </span><span style="font-style:italic;color:#6e9cbe;">u32</span><span>;
+</span><span>    cmd_stream.</span><span style="color:#da4939;">write_all</span><span>(</span><span style="color:#cc7833;">&amp;</span><span>payload_len.</span><span style="color:#da4939;">to_be_bytes</span><span>()).await</span><span style="color:#cc7833;">?</span><span>;
+</span><span>    data_stream.</span><span style="color:#da4939;">write_all</span><span>(payload).await</span><span style="color:#cc7833;">?</span><span>;
+</span><span>
+</span><span>    </span><span style="color:#95815e;">// 6. Receive Result
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let </span><span style="color:#cc7833;">mut</span><span> result_buf </span><span style="color:#cc7833;">= </span><span>vec![</span><span style="color:#a5c261;">0</span><span style="font-style:italic;color:#6e9cbe;">u8</span><span>; payload_len </span><span style="color:#cc7833;">as </span><span style="font-style:italic;color:#6e9cbe;">usize</span><span>];
+</span><span>    data_stream.</span><span style="color:#da4939;">read_exact</span><span>(</span><span style="color:#cc7833;">&amp;mut</span><span> result_buf).await</span><span style="color:#cc7833;">?</span><span>;
+</span><span>    println!(</span><span style="color:#c1be91;">&quot;[Host] Result: </span><span style="color:#6d9cbe;">{:?}</span><span style="color:#c1be91;">&quot;</span><span>, </span><span style="font-style:italic;color:#6e9cbe;">String</span><span>::from_utf8_lossy(</span><span style="color:#cc7833;">&amp;</span><span>result_buf));
+</span><span>
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">Ok</span><span>(())
+</span><span>}
+</span><span>
+</span><span>async </span><span style="font-style:italic;color:#6e9cbe;">fn </span><span style="color:#ffc66d;">connect_via_unix</span><span>(</span><span style="font-style:italic;color:#fd971f;">path</span><span>: </span><span style="color:#cc7833;">&amp;</span><span style="font-style:italic;color:#6e9cbe;">str</span><span>, </span><span style="font-style:italic;color:#fd971f;">port</span><span>: </span><span style="font-style:italic;color:#6e9cbe;">u32</span><span>) 
+</span><span>        -&gt; </span><span style="font-style:italic;color:#6e9cbe;">Result</span><span>&lt;UnixStream, </span><span style="font-style:italic;color:#6e9cbe;">Box</span><span>&lt;dyn std::error::Error&gt;&gt; {
+</span><span>    </span><span style="color:#cc7833;">loop </span><span>{
+</span><span>        </span><span style="color:#cc7833;">match </span><span>UnixStream::connect(path).await {
+</span><span>            </span><span style="font-style:italic;color:#6e9cbe;">Ok</span><span>(</span><span style="color:#cc7833;">mut</span><span> stream) </span><span style="color:#cc7833;">=&gt; </span><span>{
+</span><span>                </span><span style="color:#95815e;">// Handshake for Cloud Hypervisor
+</span><span>                </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> msg </span><span style="color:#cc7833;">= </span><span>format!(</span><span style="color:#c1be91;">&quot;CONNECT </span><span style="color:#6d9cbe;">{}</span><span style="color:#519f50;">\n</span><span style="color:#c1be91;">&quot;</span><span>, port);
+</span><span>                stream.</span><span style="color:#da4939;">write_all</span><span>(msg.</span><span style="color:#da4939;">as_bytes</span><span>()).await</span><span style="color:#cc7833;">?</span><span>;
+</span><span>                
+</span><span>                </span><span style="color:#95815e;">// Read Response: &quot;OK &lt;port&gt;\n&quot;
+</span><span>                </span><span style="font-style:italic;color:#6e9cbe;">let </span><span style="color:#cc7833;">mut</span><span> resp </span><span style="color:#cc7833;">= </span><span style="font-style:italic;color:#6e9cbe;">String</span><span>::new();
+</span><span>                </span><span style="color:#cc7833;">loop </span><span>{
+</span><span>                    </span><span style="font-style:italic;color:#6e9cbe;">let </span><span style="color:#cc7833;">mut</span><span> b </span><span style="color:#cc7833;">= </span><span>[</span><span style="color:#a5c261;">0</span><span style="font-style:italic;color:#6e9cbe;">u8</span><span>; </span><span style="color:#a5c261;">1</span><span>];
+</span><span>                    stream.</span><span style="color:#da4939;">read_exact</span><span>(</span><span style="color:#cc7833;">&amp;mut</span><span> b).await</span><span style="color:#cc7833;">?</span><span>;
+</span><span>                    </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> c </span><span style="color:#cc7833;">=</span><span> b[</span><span style="color:#a5c261;">0</span><span>] </span><span style="color:#cc7833;">as </span><span style="font-style:italic;color:#6e9cbe;">char</span><span>;
+</span><span>                    resp.</span><span style="color:#da4939;">push</span><span>(c);
+</span><span>                    </span><span style="color:#cc7833;">if</span><span> c </span><span style="color:#cc7833;">== </span><span style="color:#a5c261;">&#39;</span><span style="color:#519f50;">\n</span><span style="color:#a5c261;">&#39; </span><span>{ </span><span style="color:#cc7833;">break</span><span>; }
+</span><span>                }
+</span><span>                
+</span><span>                </span><span style="color:#cc7833;">if !</span><span>resp.</span><span style="color:#da4939;">starts_with</span><span>(</span><span style="color:#c1be91;">&quot;OK&quot;</span><span>) {
+</span><span>                     </span><span style="color:#cc7833;">return </span><span style="font-style:italic;color:#6e9cbe;">Err</span><span>(format!(</span><span style="color:#c1be91;">&quot;Handshake failed: </span><span style="color:#6d9cbe;">{}</span><span style="color:#c1be91;">&quot;</span><span>, resp.</span><span style="color:#da4939;">trim</span><span>()).</span><span style="color:#da4939;">into</span><span>());
+</span><span>                }
+</span><span>                </span><span style="color:#cc7833;">return </span><span style="font-style:italic;color:#6e9cbe;">Ok</span><span>(stream);
+</span><span>            },
+</span><span>            </span><span style="font-style:italic;color:#6e9cbe;">Err</span><span>(</span><span style="color:#cc7833;">_</span><span>) </span><span style="color:#cc7833;">=&gt; </span><span>{
+</span><span>                </span><span style="color:#95815e;">// Wait for Cloud Hypervisor to create the socket
+</span><span>                tokio::time::sleep(Duration::from_millis(</span><span style="color:#a5c261;">500</span><span>)).await;
+</span><span>            }
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<h3 id="step-5-launch">Step 5: Launch!</h3>
+<p>We invoke Cloud Hypervisor, pointing it to our kernel, our CPIO (initramfs), and enabling the VSOCK device.</p>
+<pre data-lang="bash" style="background-color:#383838;color:#e6e1dc;" class="language-bash "><code class="language-bash" data-lang="bash"><span>sudo ./cloud-hypervisor \
+</span><span style="font-style:italic;color:#fd971f;">    --kernel</span><span> ./vmlinux \
+</span><span style="font-style:italic;color:#fd971f;">    --cmdline </span><span style="color:#c1be91;">&quot;console=hvc0 quiet&quot; </span><span>\
+</span><span style="font-style:italic;color:#fd971f;">    --initramfs</span><span> ./initramfs.cpio \
+</span><span style="font-style:italic;color:#fd971f;">    --vsock</span><span> cid=3,socket=/tmp/ch_vsock.sock
+</span></code></pre>
+<p>In a separate terminal, run the Host Runner:</p>
+<pre data-lang="bash" style="background-color:#383838;color:#e6e1dc;" class="language-bash "><code class="language-bash" data-lang="bash"><span>cargo run</span><span style="font-style:italic;color:#fd971f;"> --release --bin</span><span> host_runner
+</span></code></pre>
+<h3 id="summary">Summary</h3>
+<p>We just built a secure, isolated runtime where:</p>
+<ul>
+<li><strong>Isolation:</strong> The code runs in a VM, not a container. The kernel enforces the boundary.</li>
+<li><strong>Observability:</strong> By shipping glibc, we have full debugging capabilities inside the guest.</li>
+<li><strong>Speed:</strong> By stripping the OS to the bare essentials and using VSOCK, overhead is minimal.</li>
+</ul>
+<p>There is a lot more here that can be done, like using virtiofs to expose selected files on the
+host to the guest, tuning the kernel to optimize boot time, or system programming interface,
+all the way to implementing hypercalls.</p>
+<p>This architecture is the foundation of modern high-density serverless platforms. You now have the blueprint to build your own.</p>
+
+</p>
+
+
+
+
+    </div>
+  </section>
+</body>
+
+<div class="footer">
+  <a href="/"></a>&emsp;&copy; Burak Emir<br>
+  powered by <a href="https://www.getzola.org/">Zola</a>, theme <a
+    href="https://github.com/kyoheiu/emily_zola_theme">emily</a>.
+  <a rel='me' href='https://discuss.systems/@burakemir'>Mastodon</a>
+</div>
+
+</html>

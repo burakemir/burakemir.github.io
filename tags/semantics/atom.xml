@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title> - semantics</title>
+    <link rel="self" type="application/atom+xml" href="https://burakemir.ch/tags/semantics/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://burakemir.ch"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2026-08-21T00:00:00+00:00</updated>
+    <id>https://burakemir.ch/tags/semantics/atom.xml</id>
+    <entry xml:lang="en">
+        <title>Programming Language Semantics and Memory Safety</title>
+        <published>2026-08-21T00:00:00+00:00</published>
+        <updated>2026-08-21T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://burakemir.ch/post/formal-semantics/"/>
+        <id>https://burakemir.ch/post/formal-semantics/</id>
+        
+        <content type="html" xml:base="https://burakemir.ch/post/formal-semantics/">&lt;hr &#x2F;&gt;
+&lt;p&gt;Have you ever wondered what a programming language &lt;em&gt;actually is&lt;&#x2F;em&gt;?&lt;&#x2F;p&gt;
+&lt;p&gt;People often say that a programming language is just a tool we use to tell computers what to do. I really don&#x27;t like this metaphor.
+Tell me then, how does this tool work?&lt;&#x2F;p&gt;
+&lt;p&gt;At university, we may learn that a language is defined by its &lt;strong&gt;syntax&lt;&#x2F;strong&gt; and its &lt;strong&gt;semantics&lt;&#x2F;strong&gt;,
+along with ways to make these definitions with mathematical precision. For syntax, there is grammar, but for semantics?&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;why-care&quot;&gt;Why care?&lt;&#x2F;h3&gt;
+&lt;p&gt;Memory safety, what else! I have been working on memory safety for a few years now. I helped
+get Rust adopted at Google as a lead of the Rust team, I joined memory safety standard discussions on behalf of Google. I met professionals with all sorts of view on the topic.
+I even contributed to design discussions of the Carbon programming language and a bit to its implementation, though unsure whether that matters.
+I am between jobs at the moment, so for once don&#x27;t need to worry about the not-my-employer&#x27;s-opinion disclaimer.&lt;&#x2F;p&gt;
+&lt;p&gt;To me, memory safety is a programming language topic. I love PL! It is a wild field of research with conventions and jargon that most people don&#x27;t have access to. Hopefully this
+article fixes that a little bit.&lt;&#x2F;p&gt;
+&lt;p&gt;Memory safety would actually be an opportunity to put PL research into the spotlight! Alas, there are broad, political reasons that make fact-based discussions hard.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;When grown-ups talk about safety, they really mean cybersecurity. Preventing attacks is the main concern and driving force, conventions, testing, mitigations just won&#x27;t cut it.&lt;&#x2F;li&gt;
+&lt;li&gt;security is risk-based and thus a frequent exercise in making trade-offs and economic arguments.&lt;&#x2F;li&gt;
+&lt;li&gt;the world is drowning in legacy code&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Investing into security involves uncertainty, even if it is clear that something needs to change.
+We don&#x27;t need to fully replace C and C++ in order to significantly improve security, but it will cost - time and money.
+When fighting over limited resources, you will not only find honest people arguing over hard decisions but also people who push a more selfish agenda.&lt;&#x2F;p&gt;
+&lt;p&gt;I think academic PL people are a lot like mathematicians in that they appreciate but don&#x27;t prioritize practical applications of their theory work. They rather hope someone with money and influence will discover their work and put it to good use.&lt;&#x2F;p&gt;
+&lt;p&gt;So I will do the same! What follows is an invitation to get back to the &lt;em&gt;science&lt;&#x2F;em&gt; of programming. If you want your compiler and libraries
+to work correctly and be secure, &lt;em&gt;someone&lt;&#x2F;em&gt; has to argue from principles.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;diving-into-formal-semantics&quot;&gt;Diving into formal semantics&lt;&#x2F;h3&gt;
+&lt;p&gt;When you write &lt;code&gt;x = y + 1&lt;&#x2F;code&gt;, how do we formally define what that means? It turns out, there are three main ways to look at it: &lt;strong&gt;Operational&lt;&#x2F;strong&gt;, &lt;strong&gt;Denotational&lt;&#x2F;strong&gt;, and &lt;strong&gt;Axiomatic&lt;&#x2F;strong&gt; semantics.&lt;&#x2F;p&gt;
+&lt;p&gt;These sound like intimidating academic terms, but as a working developer, you already intuitively understand the concepts. You just know them by different names: &lt;em&gt;interpreters&lt;&#x2F;em&gt;, &lt;em&gt;compilers&lt;&#x2F;em&gt;, and &lt;em&gt;assertions&lt;&#x2F;em&gt;. All these views on languages are simultaneously useful.&lt;&#x2F;p&gt;
+&lt;p&gt;To break this down, let’s invent a tiny toy language. It has arithmetic, immutable variables (&lt;code&gt;let&lt;&#x2F;code&gt;), and mutable variables (&lt;code&gt;var&lt;&#x2F;code&gt;).&lt;&#x2F;p&gt;
+&lt;p&gt;Here is a snippet of our toy language:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;text&quot; style=&quot;background-color:#383838;color:#e6e1dc;&quot; class=&quot;language-text &quot;&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;&lt;span&gt;var x = 0;
+&lt;&#x2F;span&gt;&lt;span&gt;let y = 5 in
+&lt;&#x2F;span&gt;&lt;span&gt;    x = y + 1
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;em&gt;&lt;code&gt;x&lt;&#x2F;code&gt; is a mutable variable initialized to 0. &lt;code&gt;y&lt;&#x2F;code&gt; is an immutable variable bound to 5. Finally, we update &lt;code&gt;x&lt;&#x2F;code&gt;.&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Let’s look at this snippet through the three lenses of formal semantics.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h3 id=&quot;1-operational-semantics-the-interpreter-view&quot;&gt;1. Operational Semantics: The &quot;Interpreter&quot; View&lt;&#x2F;h3&gt;
+&lt;p&gt;&lt;strong&gt;The core question:&lt;&#x2F;strong&gt; &lt;em&gt;How do we execute this code step-by-step?&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Operational semantics defines a program&#x27;s meaning by describing how it executes on an abstract machine. It is less concerned with &quot;what it mathematically is&quot; and more concerned with &quot;how it runs.&quot;&lt;&#x2F;p&gt;
+&lt;p&gt;If you have ever written an interpreter, you have provided an operational semantics. It may not the best choice for typesetting and and publishing it in an article or book, but a program
+can certainly count as providing rules defined with mathematical precision. The researchers use a set of logical rules (often called Structural Operational Semantics) that involve rewriting
+a bunch of formal symbol strings.  But practically, the essence is this:&lt;&#x2F;p&gt;
+&lt;p&gt;We keep track of a &lt;strong&gt;State&lt;&#x2F;strong&gt; (a mapping of mutable variables to their values) and an &lt;strong&gt;Environment&lt;&#x2F;strong&gt; (a mapping of immutable &lt;code&gt;let&lt;&#x2F;code&gt; bindings to their values).&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;Initial State:&lt;&#x2F;strong&gt; &lt;code&gt;{ x: 0 }&lt;&#x2F;code&gt;, &lt;strong&gt;Env:&lt;&#x2F;strong&gt; &lt;code&gt;{}&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Evaluate &lt;code&gt;let y = 5&lt;&#x2F;code&gt;. We add &lt;code&gt;y&lt;&#x2F;code&gt; to the environment.
+&lt;strong&gt;State:&lt;&#x2F;strong&gt; &lt;code&gt;{ x: 0 }&lt;&#x2F;code&gt;, &lt;strong&gt;Env:&lt;&#x2F;strong&gt; &lt;code&gt;{ y: 5 }&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Evaluate &lt;code&gt;x = y + 1&lt;&#x2F;code&gt;. We look up &lt;code&gt;y&lt;&#x2F;code&gt; in the Env (5), add 1, and update &lt;code&gt;x&lt;&#x2F;code&gt; in the State.
+&lt;strong&gt;State:&lt;&#x2F;strong&gt; &lt;code&gt;{ x: 6 }&lt;&#x2F;code&gt;, &lt;strong&gt;Env:&lt;&#x2F;strong&gt; &lt;code&gt;{ y: 5 }&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;&lt;strong&gt;Why developers care:&lt;&#x2F;strong&gt; Operational semantics is the most common way to define language specifications. We just expect that it is clear and well-defined what happens when a line of code runs. When the ECMAScript specification describes how JavaScript should execute, it uses a form of operational semantics. It answers the question: &lt;em&gt;&quot;What happens when this line of code runs?&quot;&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h3 id=&quot;2-denotational-semantics-the-compiler-view&quot;&gt;2. Denotational Semantics: The &quot;Compiler&quot; View&lt;&#x2F;h3&gt;
+&lt;p&gt;&lt;strong&gt;The core question:&lt;&#x2F;strong&gt; &lt;em&gt;Tell me (with mathematical precision) what object does this code represent?&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Denotational semantics takes a different approach. Instead of defining &lt;em&gt;how&lt;&#x2F;em&gt; a program runs, it maps the program to what a program is (a &quot;denotation&quot;). In formal semantics,
+this is a mathematical concept and a semantics is essentially translation - a mathematical compiler.&lt;&#x2F;p&gt;
+&lt;p&gt;What is crucial is not mathematics but that the target of translation is something
+we already understand and need not define further. Also, we need to be able to tell whether two translated objects are &quot;the same&quot;.&lt;&#x2F;p&gt;
+&lt;p&gt;Back to our little language. Instead of stepping through the code, we translate each line into a mathematical function.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;var x = 0&lt;&#x2F;code&gt; translates to a function that takes an input state and returns a new state where &lt;code&gt;x&lt;&#x2F;code&gt; is 0.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;let y = 5&lt;&#x2F;code&gt; translates to a function that takes an environment and returns a new environment where &lt;code&gt;y&lt;&#x2F;code&gt; is 5.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;x = y + 1&lt;&#x2F;code&gt; translates to a function that takes a State and an Environment, looks up &lt;code&gt;y&lt;&#x2F;code&gt;, adds 1, and updates &lt;code&gt;x&lt;&#x2F;code&gt;.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;In denotational semantics, the entire program is simply a composition of these mathematical functions.&lt;&#x2F;p&gt;
+&lt;p&gt;If $S$ is our State and $E$ is our Environment, our program becomes a single mathematical function $P$:
+$$P(S, E) = S&#x27; \text{ where } S&#x27;(x) = E(y) + 1$$&lt;&#x2F;p&gt;
+&lt;p&gt;Notice that we never talked about &quot;running&quot; the code step-by-step. We just said: &quot;This program is a function that maps an input state to an output state.&quot;
+It is the concepts of mathematical function and function compositions where the magic happens.&lt;&#x2F;p&gt;
+&lt;p&gt;The compiler analogy is deeper than it seems: if I hand the Rust grammar and a Rust compiler to
+someone who only knows the machine code and target platform, they could learn from that what any Rust program means.
+Hopefully the compiler is correct, though. So just a compiler is hardly enough. We really need some other definition of semantics
+in order to tell whether a compiler is correct.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Why developers care:&lt;&#x2F;strong&gt; Denotational semantics makes it easy to prove things about programs mathematically. If you want to prove that two different code snippets do the exact same thing, denotational semantics allows you to just prove that their translations (say, into mathematical functions) are identical. It also forms the basis for pure functional languages like Haskell, where we would like see programs as mathematical functions.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h3 id=&quot;3-axiomatic-semantics-the-assertions-view&quot;&gt;3. Axiomatic Semantics: The &quot;Assertions&quot; View&lt;&#x2F;h3&gt;
+&lt;p&gt;&lt;strong&gt;The core question:&lt;&#x2F;strong&gt; &lt;em&gt;What is true before and after this code runs?&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Axiomatic semantics completely ignores &lt;em&gt;how&lt;&#x2F;em&gt; a program runs or what mathematical function it represents. Instead, it defines a program&#x27;s meaning by its effect on logical propositions.&lt;&#x2F;p&gt;
+&lt;p&gt;If you have ever written a unit test or used an &lt;code&gt;assert&lt;&#x2F;code&gt; statement, you are already doing axiomatic semantics.&lt;&#x2F;p&gt;
+&lt;p&gt;We use something called &lt;strong&gt;Hoare Triples&lt;&#x2F;strong&gt;, written as &lt;code&gt;{P} C {Q}&lt;&#x2F;code&gt;.
+This means: &lt;em&gt;If precondition P is true before running code C, then postcondition Q will be true after it runs.&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Let&#x27;s look at our snippet:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;text&quot; style=&quot;background-color:#383838;color:#e6e1dc;&quot; class=&quot;language-text &quot;&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;&lt;span&gt;var x = 0;
+&lt;&#x2F;span&gt;&lt;span&gt;let y = 5 in
+&lt;&#x2F;span&gt;&lt;span&gt;    x = y + 1
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;What can we say about this code using axioms?&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;We can assert a precondition: &lt;code&gt;{ True }&lt;&#x2F;code&gt; (We don&#x27;t need anything to be true beforehand).&lt;&#x2F;li&gt;
+&lt;li&gt;We run the code.&lt;&#x2F;li&gt;
+&lt;li&gt;We can assert a postcondition: &lt;code&gt;{ x == 6 }&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;Therefore, our Hoare triple is:
+&lt;code&gt;{ True } var x = 0; let y = 5 in x = y+1 { x == 6 }&lt;&#x2F;code&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;But how do we &lt;em&gt;know&lt;&#x2F;em&gt; the postcondition is true without running it? We use logical axioms. For instance, the axiom for assignment (&lt;code&gt;x = E&lt;&#x2F;code&gt;) says that if you want &lt;code&gt;{ x == 6 }&lt;&#x2F;code&gt; to be true &lt;em&gt;after&lt;&#x2F;em&gt; the assignment, then &lt;code&gt;E == 6&lt;&#x2F;code&gt; must be true &lt;em&gt;before&lt;&#x2F;em&gt; the assignment (with &lt;code&gt;x&lt;&#x2F;code&gt; substituted by &lt;code&gt;E&lt;&#x2F;code&gt;).&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Why developers care:&lt;&#x2F;strong&gt; Axiomatic semantics is the foundation of formal verification and program proving. When ESA writes software for spaceships, they don&#x27;t just test it; they use axiomatic semantics to mathematically prove that certain postconditions (like &quot;the thrusters won&#x27;t fire when the hatch is open&quot;) are mathematically guaranteed by the code. Tools like modern static analyzers and proof assistants (like Coq or Dafny) rely heavily on this view.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h3 id=&quot;interlude-which-lens-should-you-use&quot;&gt;Interlude: Which lens should you use?&lt;&#x2F;h3&gt;
+&lt;p&gt;You don&#x27;t have to choose just one! Each semantic model gives us a different tool for a different job:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Operational Semantics:&lt;&#x2F;strong&gt; &quot;How does this execute?&quot; Think &lt;em&gt;Interpreters&lt;&#x2F;em&gt;. Great for language designers writing a reference implementation.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Denotational Semantics:&lt;&#x2F;strong&gt; &quot;What does this mean mathematically?&quot; Think &lt;em&gt;Compilers to Math&lt;&#x2F;em&gt;. Great for proving equivalencies between different pieces of code.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Axiomatic Semantics:&lt;&#x2F;strong&gt; &quot;What can we prove is true?&quot; Think &lt;em&gt;Assertions&lt;&#x2F;em&gt;. Great for verifying safety and correctness.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Formal semantics doesn&#x27;t have to be a terrifying realm of Greek letters. By shifting your perspective from &quot;running code&quot; to &quot;interpreting, translating, and proving,&quot; you gain a deeper understanding of the tools you use every day.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h3 id=&quot;the-dark-abyss-of-undefined-behavior-and-memory-safety&quot;&gt;The Dark Abyss of Undefined Behavior and Memory Safety&lt;&#x2F;h3&gt;
+&lt;p&gt;I want to take this a step further into the real world and connect this to compilers and memory safety.&lt;&#x2F;p&gt;
+&lt;p&gt;If you write C or C++, you are intimately familiar with the dreaded phrase &lt;strong&gt;Undefined Behavior&lt;&#x2F;strong&gt; (UB).&lt;&#x2F;p&gt;
+&lt;p&gt;Memory safety issues—like buffer overflows, use-after-free, or null pointer dereferences—are all categorized as UB. But what does UB actually mean in the context of formal semantics? And why did a professor once tell me that the C specification can be understood as axiomatic semantics, even though UB feels like an operational gap?&lt;&#x2F;p&gt;
+&lt;p&gt;It turns out, operational and axiomatic semantics view UB from two different sides of the same coin.&lt;&#x2F;p&gt;
+&lt;h4 id=&quot;the-operational-view-the-missing-rule&quot;&gt;The Operational View: The Missing Rule&lt;&#x2F;h4&gt;
+&lt;p&gt;From an &lt;strong&gt;operational semantics&lt;&#x2F;strong&gt; perspective, a programming language is defined by a set of transition rules (e.g., &quot;If state is X, move to state Y&quot;).&lt;&#x2F;p&gt;
+&lt;p&gt;Undefined behavior is exactly what it sounds like: &lt;strong&gt;a gap in the specification.&lt;&#x2F;strong&gt; It is a bland statement &quot;we are neither willing not able to tell what happens next&quot;.
+A specification gap is very different from leaving something up to the implementation (&quot;implementation-defined&quot;).&lt;&#x2F;p&gt;
+&lt;p&gt;Suppose our toy language has pointer arithmetic, and we write a rule for accessing an array. The rule says: &lt;em&gt;“If index &lt;code&gt;i&lt;&#x2F;code&gt; is within the bounds of the array, return the value.”&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;But what if &lt;code&gt;i&lt;&#x2F;code&gt; is out of bounds? We simply didn&#x27;t write a rule for that. In operational semantics, if a program reaches a state where no rule applies, the abstract machine is &quot;stuck.&quot; The specification says nothing about what happens next. The program might crash, it might read garbage data, or it might format your hard drive. Operationally, it is a black hole.&lt;&#x2F;p&gt;
+&lt;h4 id=&quot;the-axiomatic-view-the-void-consumes-logic&quot;&gt;The Axiomatic View: The Void Consumes Logic&lt;&#x2F;h4&gt;
+&lt;p&gt;So, where does &lt;strong&gt;axiomatic semantics&lt;&#x2F;strong&gt; come into play? The professor was likely looking at the C standard through the lens of Hoare Logic (assertions).&lt;&#x2F;p&gt;
+&lt;p&gt;In axiomatic semantics, we define rules for how statements affect preconditions and postconditions. For a normal statement, we might say:
+&lt;code&gt;{ x == 5 } x = x + 1 { x == 6 }&lt;&#x2F;code&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;But how do we axiomatize a statement that has undefined behavior, like dereferencing a null pointer?&lt;&#x2F;p&gt;
+&lt;p&gt;In axiomatic semantics, UB is handled by a terrifying but mathematically elegant principle: &lt;strong&gt;If the precondition for safe execution is not met, the program can do literally anything.&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Let’s say the C standard has an axiom:
+&lt;em&gt;“If you dereference pointer &lt;code&gt;p&lt;&#x2F;code&gt;, &lt;code&gt;p&lt;&#x2F;code&gt; must not be null.”&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;If we write code that &lt;em&gt;might&lt;&#x2F;em&gt; dereference a null pointer, the precondition for that code block is violated. In formal logic, if you start from a false premise, you can prove anything to be true (this is called the Principle of Explosion).&lt;&#x2F;p&gt;
+&lt;p&gt;Therefore, the Hoare triple for UB becomes:
+&lt;code&gt;{ False } C { Anything }&lt;&#x2F;code&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;(If the precondition is false, any postcondition is true).&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;h4 id=&quot;resolving-the-conflict-the-compiler-s-loophole&quot;&gt;Resolving the Conflict: The Compiler&#x27;s Loophole&lt;&#x2F;h4&gt;
+&lt;p&gt;So, how do we resolve this? Is UB a missing operational rule, or an axiomatic logical explosion?&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;It is both, and that is why compilers behave the way they do.&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Modern C&#x2F;C++ compilers (like GCC and Clang) don&#x27;t just interpret your code; they rely on the &lt;strong&gt;axiomatic semantics&lt;&#x2F;strong&gt; of the C standard to optimize it.&lt;&#x2F;p&gt;
+&lt;p&gt;Because the standard says out-of-bounds access is UB, the compiler assumes—axiomatically—that you will never do it.&lt;&#x2F;p&gt;
+&lt;p&gt;Here is a classic example:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;c&quot; style=&quot;background-color:#383838;color:#e6e1dc;&quot; class=&quot;language-c &quot;&gt;&lt;code class=&quot;language-c&quot; data-lang=&quot;c&quot;&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;int&lt;&#x2F;span&gt;&lt;span&gt; table[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a5c261;&quot;&gt;10&lt;&#x2F;span&gt;&lt;span&gt;];
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;for &lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;int&lt;&#x2F;span&gt;&lt;span&gt; i &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a5c261;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;; i &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;&amp;lt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a5c261;&quot;&gt;10&lt;&#x2F;span&gt;&lt;span&gt;; i&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;++&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;    table[i] &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a5c261;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Operationally, when &lt;code&gt;i&lt;&#x2F;code&gt; reaches 10, there is no rule for what happens. But the compiler doesn&#x27;t just stop. It looks at the axioms.&lt;&#x2F;p&gt;
+&lt;p&gt;The compiler could reason like this:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;Accessing &lt;code&gt;table[10]&lt;&#x2F;code&gt; is Undefined Behavior.&lt;&#x2F;li&gt;
+&lt;li&gt;The programmer would never write code with Undefined Behavior (because it breaks the preconditions of the language).&lt;&#x2F;li&gt;
+&lt;li&gt;Therefore, &lt;code&gt;i&lt;&#x2F;code&gt; can never reach 10.&lt;&#x2F;li&gt;
+&lt;li&gt;Therefore, the condition &lt;code&gt;i &amp;lt;= 10&lt;&#x2F;code&gt; is always true.&lt;&#x2F;li&gt;
+&lt;li&gt;Therefore, this is an infinite loop!&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;The compiler is free to optimize this into a hardcoded infinite loop, completely removing the bounds check. The axiomatic gap allows the compiler to assume the impossible.&lt;&#x2F;p&gt;
+&lt;p&gt;Note that this is not the only behavior you may get. On my Mac, &lt;code&gt;clang&lt;&#x2F;code&gt; has &quot;-fstack-protector&quot; on by default and this program will abort before returning.
+If I switch that off, it will simply run and presumably write to a place where it is not supposed to write. Everything is possible!&lt;&#x2F;p&gt;
+&lt;p&gt;We may think &quot;would it not be nicer if the compiler told us that this can be UB and signaled an error?&quot; Have the
+compiler authors &quot;weaponized UB&quot;? Well, in the early days of C there were a lot of platforms and implementation, and agreeing
+on behavior may have been impossible. In this example,
+it is easy for us to see, but analyzing and diagnosing code without running it (static checking) is hard work.
+Both for specifying and for implementing.
+The authors of the C and C++ specs took the easy way out and so the spec actually permits them to do &quot;anything&quot;.&lt;&#x2F;p&gt;
+&lt;p&gt;The grounds have also shifted. Concurrency makes everything a lot harder. Since the mid-2000s, CPU architectures feature multiple cores and concurrency.
+Multithreading is much older than that, but it used to be implemented by time-slicing. With multicore
+CPUs, threads would actually execute at the same time. Since then, understanding a natively executed program requires the
+spec to talk about multiple threads executing in parallel. The C and C++ memory models (which are different) were specified &lt;em&gt;decades&lt;&#x2F;em&gt; after the language
+specs.&lt;&#x2F;p&gt;
+&lt;h4 id=&quot;the-lesson-for-memory-safety&quot;&gt;The Lesson for Memory Safety&lt;&#x2F;h4&gt;
+&lt;p&gt;This is why memory safety is such a profound issue. It’s not just that a buggy line of code might crash. If the specification says something results
+in a crash (program is aborted), this is actually great: we know exactly what happens, we can diagnose, debug, test, fix.&lt;&#x2F;p&gt;
+&lt;p&gt;When a language allows for undefined behavior, it creates a logical void. Once the program enters that void, the axioms the compiler used to optimize the rest of your program no longer hold. A single memory safety bug invalidates the guarantees of every other line of code around it. UB means you &lt;em&gt;broke the language&lt;&#x2F;em&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;The grounds have shifted multipe times since C and C++ were invented. Fortunately, researchers have found ways of proving programs safe, primarily using more advanced type systems.&lt;&#x2F;p&gt;
+&lt;p&gt;This is why modern languages like Rust are a step forward. The Rust community uses the word &quot;safe&quot; to there is evidence (proof) that a program does not have UB. This
+is a lot more than patching the operational gaps of C. Its borrow checker acts as a proof assistant, ensuring that we can derive from the axioms and rules of memory safety
+that the program is allowed to compile. Reading from places that are initialized. It also explains what unsafe Rust really is: we are permitted to color outside the lines,
+as long as we can argue in safety comments why the axioms and rules of memory safety will still work.&lt;&#x2F;p&gt;
+&lt;p&gt;By understanding formal semantics, you can see exactly why a language is safe or unsafe (in the sense of guaranteeing absence of UB). All we want is to be able to reason with mathematical precision.
+Things like deallocation and pointer arithmetic make it harder or impossible to provide guarantees, but that is a topic for a different day.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>From Operations to Effects: A Journey Through M-Sets</title>
+        <published>2025-09-25T00:00:00+00:00</published>
+        <updated>2025-09-25T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://burakemir.ch/post/from-operations-to-effects/"/>
+        <id>https://burakemir.ch/post/from-operations-to-effects/</id>
+        
+        <content type="html" xml:base="https://burakemir.ch/post/from-operations-to-effects/">&lt;p&gt;This continues a meditation on effects. My last post on the various meanings of effects in the discourse on programming languages (PL)
+did very little to show how type and effect discipline may be relevant to memory safety in programming languages.
+Moreover, I encountered a statement I found easy to agree to &quot;before we talk about effects, we need to understand their semantics&quot;.&lt;&#x2F;p&gt;
+&lt;p&gt;This is an interesting challenge in itself. How do we define precisely what a program that performs I&#x2F;O actually &lt;em&gt;means&lt;&#x2F;em&gt;?
+When your code says &lt;code&gt;IO::get&lt;&#x2F;code&gt;, how should we describe what is really happening? We can formally answer this by modeling
+programs as sequences of operations. This journey will take us from a simple log of operations to the powerful idea of M-sets,
+and finally draw a bridge to a possible type and effect systems approach.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h2 id=&quot;the-i-o-logbook-scroll&quot;&gt;The I&#x2F;O Logbook 📜&lt;&#x2F;h2&gt;
+&lt;p&gt;Let&#x27;s start with a simple I&#x2F;O model. Imagine we only have two operations: reading an integer from an input stream and writing one to an output stream. We can define this set of operations, $OpIO$, as:&lt;&#x2F;p&gt;
+&lt;p&gt;$$OpIO := \{ \mathtt{get} \} ∪ \{ \mathtt{put}_i \ | \ i \in \mathbb{N} \}$$&lt;&#x2F;p&gt;
+&lt;p&gt;Instead of executing these operations immediately, let&#x27;s first think of a program as simply generating a &lt;strong&gt;log&lt;&#x2F;strong&gt; or a &lt;strong&gt;sequence&lt;&#x2F;strong&gt; of these operations. We can represent this sequence as $OpSeq$, which is the set of all possible finite sequences of $OpIO$ operations (in the
+language of mathematics, this is the free monoid $OpIO^*$).&lt;&#x2F;p&gt;
+&lt;p&gt;Under this model, the meaning of a program statement is defined by how it transforms this sequence. It&#x27;s a function from $OpSeq$ to $OpSeq$.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;let x = get&lt;&#x2F;code&gt; is a function that appends $ \mathtt{get} $ to the sequence.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;put 42&lt;&#x2F;code&gt; is a function that appends $ \mathtt{put}_{42} $ to the sequence.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;A program that reads an integer and then prints 42 simply produce the sequence $[\mathtt{get}, \mathtt{put}_{42}]$. OK,
+that is maybe not breath-taking, but it is a start. This describes the &quot;runtime effects&quot; of a program (that word again), but
+how can we see this as a declarative meaning of our program?&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h3 id=&quot;enter-the-m-set-the-interpreter-performing-arts&quot;&gt;Enter the M-Set: The Interpreter 🎭&lt;&#x2F;h3&gt;
+&lt;p&gt;So, we have a sequence of operations. Now what? This is where &lt;strong&gt;M-sets&lt;&#x2F;strong&gt; come in.&lt;&#x2F;p&gt;
+&lt;p&gt;An M-set (specifically an $OpSeq$-set in our case) is a mathematical structure that gives &lt;strong&gt;meaning&lt;&#x2F;strong&gt; to our sequence. You can think of it as a configurable &lt;strong&gt;interpreter&lt;&#x2F;strong&gt; for our log. The formal definition involves a &lt;em&gt;right action&lt;&#x2F;em&gt;, which specifies what will happen for every possible operation (get, put 42, etc.).&lt;&#x2F;p&gt;
+&lt;p&gt;The beauty is that we can now assert that we &lt;strong&gt;parameterized&lt;&#x2F;strong&gt; our program&#x27;s meaning (the sequence) by an M-set. We can plug in
+different M-sets to change the program&#x27;s behavior without changing the program itself:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Console M-set:&lt;&#x2F;strong&gt; A handler that interprets &lt;code&gt;get&lt;&#x2F;code&gt; by reading from the keyboard and &lt;code&gt;put i&lt;&#x2F;code&gt; by printing to the console.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;File M-set:&lt;&#x2F;strong&gt; A handler that interprets the operations by reading from and writing to a file.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Testing M-set:&lt;&#x2F;strong&gt; A handler that interprets &lt;code&gt;get&lt;&#x2F;code&gt; by returning a fixed value (e.g., 0) and &lt;code&gt;put i&lt;&#x2F;code&gt; by adding the integer to a test buffer.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;The M-set is the semantic domain that brings our abstract sequence to life.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h3 id=&quot;beyond-i-o-the-case-of-memory-brain&quot;&gt;Beyond I&#x2F;O: The Case of Memory 🧠&lt;&#x2F;h3&gt;
+&lt;p&gt;Why stop with I&#x2F;O? We can apply the exact same idea to memory management. Let&#x27;s define a new set of memory operations:&lt;&#x2F;p&gt;
+&lt;p&gt;$$ OpMem := \{ \mathtt{alloc} \} ∪ \{ \mathtt{free\ n}\ |\ n \in \mathbb{N} \} $$&lt;&#x2F;p&gt;
+&lt;p&gt;Here, $\mathtt{alloc}$ represents allocating a new memory location, and $\mathtt{free}\ n$ represents deallocating location $n$.
+Just like before, a program&#x27;s interaction with memory can be modeled as a sequence $MemSeq = OpMem^*$. The M-set for this system
+would be a model of a heap that defines the semantics of allocating and freeing memory.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h3 id=&quot;the-leap-to-type-and-effect-systems-sparkles&quot;&gt;The Leap to Type and Effect Systems ✨&lt;&#x2F;h3&gt;
+&lt;p&gt;In many cases, tracking the &lt;em&gt;exact&lt;&#x2F;em&gt; sequence of operations is overkill. We often don&#x27;t need to know the entire history; we just want a &lt;strong&gt;summary&lt;&#x2F;strong&gt; of what a function might do. This is the leap from concrete sequences to abstract &lt;strong&gt;effects&lt;&#x2F;strong&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;The operations we&#x27;ve been discussing — get, put, alloc, free — can be called (runtime) &lt;strong&gt;effects&lt;&#x2F;strong&gt;. A &lt;strong&gt;type and effect system&lt;&#x2F;strong&gt; is a
+static analysis tool, built into a compiler, that tracks the set of effects a piece of code might trigger.&lt;&#x2F;p&gt;
+&lt;p&gt;Instead of a concrete sequence like [&quot;alloc&quot;, &quot;free 0&quot;], the effect system provides an &lt;strong&gt;approximation&lt;&#x2F;strong&gt;. It tells us that a function has the potential to perform the effects {alloc, free}. These effects become part of the function&#x27;s type, giving developers a clear contract about what the function can do.&lt;&#x2F;p&gt;
+&lt;p&gt;Furthermore, effects can be parameterized. A function type might look like this:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#383838;color:#e6e1dc;&quot;&gt;&lt;code&gt;&lt;span&gt;fn update(x: &amp;amp;mut T) -&amp;gt; () effect { free(x[*]) }
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This signature tells us that the update function &lt;em&gt;may&lt;&#x2F;em&gt; free the memory associated with its parameter x. This brings us to a crucial point: effects are an &lt;strong&gt;approximation&lt;&#x2F;strong&gt;. The &lt;code&gt;free(x[*])&lt;&#x2F;code&gt; effect means the function &lt;em&gt;may&lt;&#x2F;em&gt; release memory associated with elements &lt;code&gt;x[i]&lt;&#x2F;code&gt;, not
+that it &lt;em&gt;will&lt;&#x2F;em&gt; on every execution path. This conservative approach is essential for guaranteeing safety.&lt;&#x2F;p&gt;
+&lt;p&gt;And so, we&#x27;ve traveled from a concrete sequence of operations, to a semantic interpreter (the M-set), all the way to an abstract
+summary of behavior used in modern type and effect systems to help us write safer, more predictable code. Lots of open
+questions here how information expressed in this language of effects (the annotations on the types) could be used for
+checking - we cannot talk about runtime values, only refer to them indirectly through expressions that talk about
+some set of locations. Unrestricted aliasing may make it impossible to decide whether two expressions refer to an overlapping set
+of memory locations. It does seem like a step towards something interesting.&lt;&#x2F;p&gt;
+&lt;p&gt;We started with a modest goal: have an answer to the question on the semantics of effects. It looks like we got there:
+effects (effect annotations) are may-approximations of runtime effects.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+</feed>

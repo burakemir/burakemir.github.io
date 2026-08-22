@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  
+<title>From Operations to Effects: A Journey Through M-Sets | </title>
+
+
+  <link rel="shortcut icon" type="image/png" href="&#x2F;images&#x2F;favicon-32x32.png">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <link id="stylesheet" rel="stylesheet" type="text/css" href="/dark.css">
+
+  <script type="text/javascript" src="/js/theme.js"></script>
+
+</head>
+
+<div class="header">
+  <div class="site_title">
+    <p><a href="/"><img src="https:&#x2F;&#x2F;burakemir.ch&#x2F;images&#x2F;totoro.jpg" alt=""
+          width="70" height=auto></a></p>
+    <p><a href="/">&nbsp;</a></p>
+  </div>
+  <div class="menu">
+    <a href="/post">>archives</a>
+    &nbsp;<a href="/pages/artifacts">>artifacts</a>
+    &nbsp;<a href="/about">>about</a>
+  </div>
+</div>
+
+<body onload="getTheme()">
+  <section class="section">
+    <div class="container">
+      
+<p>
+  <div class="title_postpage">From Operations to Effects: A Journey Through M-Sets</div>
+</p>
+<p>
+  <div class="date_postpage">2025-09-25</div>
+  <div class="taxonomies_postpage">
+  
+      
+      <a href="https://burakemir.ch/categories/blog/">/blog</a>
+      
+  
+  
+      
+      &emsp;<a href="https://burakemir.ch/tags/semantics/">#semantics</a>
+      
+      &emsp;<a href="https://burakemir.ch/tags/effects/">#effects</a>
+      
+      &emsp;<a href="https://burakemir.ch/tags/types/">#types</a>
+      
+      &emsp;<a href="https://burakemir.ch/tags/memory-safety/">#memory safety</a>
+      
+  
+  </div>
+</p>
+
+<p>
+  <p>This continues a meditation on effects. My last post on the various meanings of effects in the discourse on programming languages (PL)
+did very little to show how type and effect discipline may be relevant to memory safety in programming languages.
+Moreover, I encountered a statement I found easy to agree to "before we talk about effects, we need to understand their semantics".</p>
+<p>This is an interesting challenge in itself. How do we define precisely what a program that performs I/O actually <em>means</em>?
+When your code says <code>IO::get</code>, how should we describe what is really happening? We can formally answer this by modeling
+programs as sequences of operations. This journey will take us from a simple log of operations to the powerful idea of M-sets,
+and finally draw a bridge to a possible type and effect systems approach.</p>
+<hr />
+<h2 id="the-i-o-logbook-scroll">The I/O Logbook 📜</h2>
+<p>Let's start with a simple I/O model. Imagine we only have two operations: reading an integer from an input stream and writing one to an output stream. We can define this set of operations, $OpIO$, as:</p>
+<p>$$OpIO := \{ \mathtt{get} \} ∪ \{ \mathtt{put}_i \ | \ i \in \mathbb{N} \}$$</p>
+<p>Instead of executing these operations immediately, let's first think of a program as simply generating a <strong>log</strong> or a <strong>sequence</strong> of these operations. We can represent this sequence as $OpSeq$, which is the set of all possible finite sequences of $OpIO$ operations (in the
+language of mathematics, this is the free monoid $OpIO^*$).</p>
+<p>Under this model, the meaning of a program statement is defined by how it transforms this sequence. It's a function from $OpSeq$ to $OpSeq$.</p>
+<ul>
+<li><code>let x = get</code> is a function that appends $ \mathtt{get} $ to the sequence.</li>
+<li><code>put 42</code> is a function that appends $ \mathtt{put}_{42} $ to the sequence.</li>
+</ul>
+<p>A program that reads an integer and then prints 42 simply produce the sequence $[\mathtt{get}, \mathtt{put}_{42}]$. OK,
+that is maybe not breath-taking, but it is a start. This describes the "runtime effects" of a program (that word again), but
+how can we see this as a declarative meaning of our program?</p>
+<hr />
+<h3 id="enter-the-m-set-the-interpreter-performing-arts">Enter the M-Set: The Interpreter 🎭</h3>
+<p>So, we have a sequence of operations. Now what? This is where <strong>M-sets</strong> come in.</p>
+<p>An M-set (specifically an $OpSeq$-set in our case) is a mathematical structure that gives <strong>meaning</strong> to our sequence. You can think of it as a configurable <strong>interpreter</strong> for our log. The formal definition involves a <em>right action</em>, which specifies what will happen for every possible operation (get, put 42, etc.).</p>
+<p>The beauty is that we can now assert that we <strong>parameterized</strong> our program's meaning (the sequence) by an M-set. We can plug in
+different M-sets to change the program's behavior without changing the program itself:</p>
+<ul>
+<li><strong>Console M-set:</strong> A handler that interprets <code>get</code> by reading from the keyboard and <code>put i</code> by printing to the console.</li>
+<li><strong>File M-set:</strong> A handler that interprets the operations by reading from and writing to a file.</li>
+<li><strong>Testing M-set:</strong> A handler that interprets <code>get</code> by returning a fixed value (e.g., 0) and <code>put i</code> by adding the integer to a test buffer.</li>
+</ul>
+<p>The M-set is the semantic domain that brings our abstract sequence to life.</p>
+<hr />
+<h3 id="beyond-i-o-the-case-of-memory-brain">Beyond I/O: The Case of Memory 🧠</h3>
+<p>Why stop with I/O? We can apply the exact same idea to memory management. Let's define a new set of memory operations:</p>
+<p>$$ OpMem := \{ \mathtt{alloc} \} ∪ \{ \mathtt{free\ n}\ |\ n \in \mathbb{N} \} $$</p>
+<p>Here, $\mathtt{alloc}$ represents allocating a new memory location, and $\mathtt{free}\ n$ represents deallocating location $n$.
+Just like before, a program's interaction with memory can be modeled as a sequence $MemSeq = OpMem^*$. The M-set for this system
+would be a model of a heap that defines the semantics of allocating and freeing memory.</p>
+<hr />
+<h3 id="the-leap-to-type-and-effect-systems-sparkles">The Leap to Type and Effect Systems ✨</h3>
+<p>In many cases, tracking the <em>exact</em> sequence of operations is overkill. We often don't need to know the entire history; we just want a <strong>summary</strong> of what a function might do. This is the leap from concrete sequences to abstract <strong>effects</strong>.</p>
+<p>The operations we've been discussing — get, put, alloc, free — can be called (runtime) <strong>effects</strong>. A <strong>type and effect system</strong> is a
+static analysis tool, built into a compiler, that tracks the set of effects a piece of code might trigger.</p>
+<p>Instead of a concrete sequence like ["alloc", "free 0"], the effect system provides an <strong>approximation</strong>. It tells us that a function has the potential to perform the effects {alloc, free}. These effects become part of the function's type, giving developers a clear contract about what the function can do.</p>
+<p>Furthermore, effects can be parameterized. A function type might look like this:</p>
+<pre style="background-color:#383838;color:#e6e1dc;"><code><span>fn update(x: &amp;mut T) -&gt; () effect { free(x[*]) }
+</span></code></pre>
+<p>This signature tells us that the update function <em>may</em> free the memory associated with its parameter x. This brings us to a crucial point: effects are an <strong>approximation</strong>. The <code>free(x[*])</code> effect means the function <em>may</em> release memory associated with elements <code>x[i]</code>, not
+that it <em>will</em> on every execution path. This conservative approach is essential for guaranteeing safety.</p>
+<p>And so, we've traveled from a concrete sequence of operations, to a semantic interpreter (the M-set), all the way to an abstract
+summary of behavior used in modern type and effect systems to help us write safer, more predictable code. Lots of open
+questions here how information expressed in this language of effects (the annotations on the types) could be used for
+checking - we cannot talk about runtime values, only refer to them indirectly through expressions that talk about
+some set of locations. Unrestricted aliasing may make it impossible to decide whether two expressions refer to an overlapping set
+of memory locations. It does seem like a step towards something interesting.</p>
+<p>We started with a modest goal: have an answer to the question on the semantics of effects. It looks like we got there:
+effects (effect annotations) are may-approximations of runtime effects.</p>
+
+</p>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']]
+    }
+  };
+</script>
+<script type="text/javascript" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
+
+
+
+    </div>
+  </section>
+</body>
+
+<div class="footer">
+  <a href="/"></a>&emsp;&copy; Burak Emir<br>
+  powered by <a href="https://www.getzola.org/">Zola</a>, theme <a
+    href="https://github.com/kyoheiu/emily_zola_theme">emily</a>.
+  <a rel='me' href='https://discuss.systems/@burakemir'>Mastodon</a>
+</div>
+
+</html>

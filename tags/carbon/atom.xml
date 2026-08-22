@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title> - carbon</title>
+    <link rel="self" type="application/atom+xml" href="https://burakemir.ch/tags/carbon/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://burakemir.ch"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2025-09-04T00:00:00+00:00</updated>
+    <id>https://burakemir.ch/tags/carbon/atom.xml</id>
+    <entry xml:lang="en">
+        <title>Memory Safety - the missing definition</title>
+        <published>2025-09-04T00:00:00+00:00</published>
+        <updated>2025-09-04T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://burakemir.ch/post/memory-safety-the-missing-def/"/>
+        <id>https://burakemir.ch/post/memory-safety-the-missing-def/</id>
+        
+        <content type="html" xml:base="https://burakemir.ch/post/memory-safety-the-missing-def/">&lt;p&gt;There is still no standard, precise definition of memory safety. Here is a modest proposal.&lt;&#x2F;p&gt;
+&lt;!-- 
+Yet, we need one.
+
+A definition that is both broadly applicable and precise is also not easy to come by. 
+In the following, I argue for a particular position. Depending on your background, you may find it 
+natural, straightforward or even trivial. However, I fully expect there to be competent people who
+find themselves in disagreement.
+
+What I propose is simple: I say, let&#x27;s anchor memory safety in the realm of **language safety**.
+This amounts to separating it from **memory safety of execution environments**. 
+
+Coming to agreement on definitions, and framing is a communication challenge on more than one level.
+The 21 authors who wrote [&quot;It is time to standardize memory safety&quot;](https:&#x2F;&#x2F;dl.acm.org&#x2F;doi&#x2F;10.1145&#x2F;3708553) paper 
+mention &quot;memory-safe and type-safe languages&quot; as one among many things. I appreciate the quest for
+vendor-neutral and technology-neutral terminology and &quot;intellectual framework&quot;, and I realize that
+there are many programming languages out there. Yet, I do not think it is helpful to ignore the
+central position programming language design.
+
+--&gt; 
+&lt;blockquote&gt;
+&lt;p&gt;Fact. A programming language (PL) consists of a &lt;strong&gt;specification&lt;&#x2F;strong&gt; and &lt;strong&gt;implementation&lt;&#x2F;strong&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;The specification lays out precisely what the set of accepted programs is and how the code should behave
+when the program is executed. An implementation must &lt;em&gt;conform&lt;&#x2F;em&gt; to the specification and is what enables
+programmers to actually use the PL to translate programs to executable code and execute them.&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Fact. Programs are executed in an &lt;strong&gt;execution environment&lt;&#x2F;strong&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;An execution environment is not necessarily part of an implementation, but it can be (interpreter).
+CPU, operating system and system resources are all part of the execution environment.&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Fact. A specification can, implicitly or explicitly, leave the possibility of &lt;strong&gt;execution errors&lt;&#x2F;strong&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Definition. There are two classes of execution errors:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;trapped&lt;&#x2F;strong&gt; errors: these are reliably detected and dealt with by the execution environment&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;untrapped&lt;&#x2F;strong&gt; errors: these are not detected, and execution goes on. The specification cannot prescribe what
+behavior take place.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;A trapped error may lead to invocation of an error handler or to execution being aborted (&quot;fail-stop&quot;).
+In contrast, untrapped errors include highly problematic situations like undetected out-of-bounds accesses, use-after-free, integer overflows. They can lead to silent data corruption,
+hard-to-debug crashes, and also to security vulnerabilities that can be exploited by malicious actors.&lt;&#x2F;p&gt;
+&lt;!--
+A very simple model by security researcher Thomas Dullien is the _intended finite state machine_[^1]. The program code reflects the programmer&#x27;s intention of how we want a program to behave, which we can think of as a big finite state machine. However, it ultimately gets executed on a real machine (CPU) that may offer many more states. Some of these states may be outside the programmer&#x27;s intention, but enable attackers to breach security properties while continuing execution of the program.
+
+The difference between intention and actual possible behaviors applies in particular to provisioning and accessing memory. In PL with automatic memory management, the execution environment takes care of interaction with the operating system to obtain or release memory. This eliminates many execution errors that stem from programmer mistakes such as _dangling reference _bugs.
+
+Without automatic memory management, it is the programmer&#x27;s job to ensure that all memory accesses are valid. When an invalid access happens, we cannot know what state the execution environment will be in and therefore cannot predict what is going to happen. Bug classes include _out-of-bounds access, use-after-free, _often classified as temporal or spatial memory safety_._
+
+Untrapped errors from invalid memory access are particularly harmful when the system does not manage memory. Such an untrapped error gives the attacker pathways to a large state space of actual behaviors. In contrast, untrapped errors in languages with automatic memory management, while problematic, are less likely to cause harm as the additional invalid states are less exploitable.
+
+**Undefined behavior.** To make things complicated, compiler writers &quot;weaponized&quot; the specification: when source
+code does not satisfy assumptions, leading to statically detected case of untrapped errors, this is taken as
+a license for compiler to generate code with *arbitrary* behavior. While this can be justified logically &quot;from a contradiction, anything follows&quot;, it is hard to see this as rational: users of compilers would (and should) rather exclude the possibility of untrapped errors, instead of having a program whose output cannot be predicted.
+
+We now have all ingredients in place to appreciate a ~~standard~~[^2], technical definition of safety. Other definitions are possible, but this captures an important part of language safety.  \
+
+--&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Definition: Execution Safety&lt;&#x2F;p&gt;
+&lt;p&gt;A program is &lt;strong&gt;execution safe&lt;&#x2F;strong&gt; if its execution never leads to untrapped errors.&lt;&#x2F;p&gt;
+&lt;p&gt;A language L is &lt;strong&gt;execution safe&lt;&#x2F;strong&gt; if all L-programs are execution-safe.&lt;&#x2F;p&gt;
+&lt;p&gt;An execution environment is &lt;strong&gt;execution safe for a language L&lt;&#x2F;strong&gt; if execution of L-programs can never lead to untrapped L-errors.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;Execution-safety does &lt;strong&gt;not&lt;&#x2F;strong&gt; guarantee absence of crashes, absence of memory leaks, or possibility to perform modular reasoning on programs. Nevertheless, it is a very strong guarantee and many PLs in widespread use do not have this property. Execution environments can deal with the consequences of untrapped errors, which may limit the harm even if the language used to write these programs may not be execution-safe.&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Definition: Memory Safety&lt;&#x2F;p&gt;
+&lt;p&gt;A program is &lt;strong&gt;memory safe&lt;&#x2F;strong&gt; if no memory access ever leads to untrapped errors.&lt;&#x2F;p&gt;
+&lt;p&gt;A language L is &lt;strong&gt;memory safe&lt;&#x2F;strong&gt; if all L programs are memory-safe.&lt;&#x2F;p&gt;
+&lt;p&gt;An execution environment is &lt;strong&gt;memory safe for a language L&lt;&#x2F;strong&gt; if execution of L-programs can never lead to
+untrapped L-errors due to an operation involving memory access.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Brief discussion&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;These definitions are directly derived from Luca Cardelli&#x27;s &quot;Type Systems&quot; article (2004) from the
+CRC Handbook of Computer Science and Engineering, 2nd Edition, Ch. 97. You can find it.&lt;&#x2F;p&gt;
+&lt;p&gt;Safety is commonly defined as &quot;absence of unacceptable loss&quot;. Turning this into an effective
+definition in the context of programming requires to clarify what unacceptable loss is. Our
+definitions above are focused on the mechanics of execution: we do not talk about logic errors,
+stealing your private key from the .ssh directory or causing crashes. So our definition of memory safety
+is a &quot;technical definition&quot;.&lt;&#x2F;p&gt;
+&lt;p&gt;Nevertheless, it seems useful: it applies to a range of programming languages, and thus over
+a range of possible language designs.&lt;&#x2F;p&gt;
+&lt;p&gt;For safety of execution environment with respoect to a language, it is subtle and important that
+the definition of error is tied to language spec L. When an implementation translates to a target language
+of CPU instructions, an operation like &quot;dereferencing a dangling pointer&quot; may turn into
+&quot;loading memory from an address&quot; which may not be erroneous from the target language point of view.
+What makes the operation in the execution environment erroneous is the intent. This intent,
+as far as safety guarantees go, has to be grounded in the language specification.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Rust and Carbon, why not both</title>
+        <published>2025-08-27T00:00:00+00:00</published>
+        <updated>2025-08-27T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://burakemir.ch/post/rust-carbon-why-not-both/"/>
+        <id>https://burakemir.ch/post/rust-carbon-why-not-both/</id>
+        
+        <content type="html" xml:base="https://burakemir.ch/post/rust-carbon-why-not-both/">&lt;p&gt;Today&#x27;s post is a little different. Instead of delving into discussiong of formal type systems, I&#x27;d like to step back and talk generally about some aspects of linear type systems
+as they show up in real life. That means: programming languages and the memory safety discussion today, C++ and Rust. Disclaimer: while the content of this post is very much
+related to memory safety which is something I work on at Google, this is my personal blog and everything here is my personal opinion.&lt;&#x2F;p&gt;
+&lt;p&gt;In programming, managing memory and resources is one of the most critical and error-prone tasks. Getting it wrong can lead to nasty bugs, from crashes to security vulnerabilities. Two languages that take this challenge seriously, but with vastly different philosophies, are C++ and Rust.&lt;&#x2F;p&gt;
+&lt;p&gt;At the heart of this difference lies how their type systems handle the concepts of &lt;strong&gt;copying&lt;&#x2F;strong&gt; and &lt;strong&gt;moving&lt;&#x2F;strong&gt; data. While both languages have syntax for these operations, Rust&#x27;s type system acts as a strict guardian, preventing common errors at compile time, whereas C++ offers more flexibility at the cost of placing the burden of safety squarely on the developer.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;the-c-way-a-set-of-powerful-conventions&quot;&gt;The C++ Way: A Set of Powerful Conventions&lt;&#x2F;h3&gt;
+&lt;p&gt;In C++, the ability for an object to be copied or moved is defined by a set of special member functions. If you&#x27;ve written any C++, you&#x27;ve likely encountered the &lt;strong&gt;&quot;Rule of Five&quot;&lt;&#x2F;strong&gt;:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Copy Constructor:&lt;&#x2F;strong&gt; &lt;code&gt;MyType(const MyType&amp;amp; other);&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Copy Assignment Operator:&lt;&#x2F;strong&gt; &lt;code&gt;MyType&amp;amp; operator=(const MyType&amp;amp; other);&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Move Constructor:&lt;&#x2F;strong&gt; &lt;code&gt;MyType(MyType&amp;amp;&amp;amp; other);&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Move Assignment Operator:&lt;&#x2F;strong&gt; &lt;code&gt;MyType&amp;amp; operator=(MyType&amp;amp;&amp;amp; other);&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Destructor:&lt;&#x2F;strong&gt; &lt;code&gt;~MyType();&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;When you create a type that manages a resource, like a memory buffer, you implement these functions to define what it means to copy or move it. A copy usually involves a &quot;deep copy&quot;—allocating new memory and copying the data over. A move is an optimization that &quot;steals&quot; the internal resource from a temporary object, avoiding a costly allocation.&lt;&#x2F;p&gt;
+&lt;p&gt;Let&#x27;s look at a classic example: a simple string-like class.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;C++&quot; style=&quot;background-color:#383838;color:#e6e1dc;&quot; class=&quot;language-C++ &quot;&gt;&lt;code class=&quot;language-C++&quot; data-lang=&quot;C++&quot;&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;#include &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a5c261;&quot;&gt;&amp;lt;cstring&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;#include &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a5c261;&quot;&gt;&amp;lt;iostream&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;class &lt;&#x2F;span&gt;&lt;span style=&quot;text-decoration:underline;color:#ffc66d;&quot;&gt;NaiveString &lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;public&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffc66d;&quot;&gt;NaiveString&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;const &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;char&lt;&#x2F;span&gt;&lt;span&gt;\&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;* &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#fd971f;&quot;&gt;s&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;        std::cout &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;&amp;lt;&amp;lt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;Allocating memory for &amp;#39;&amp;quot; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;&amp;lt;&amp;lt;&lt;&#x2F;span&gt;&lt;span&gt; s &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;&amp;lt;&amp;lt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#519f50;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;        size &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span&gt;std::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#da4939;&quot;&gt;strlen&lt;&#x2F;span&gt;&lt;span&gt;(s) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;+ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a5c261;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;        data &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= new &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;char&lt;&#x2F;span&gt;&lt;span&gt;[size];
+&lt;&#x2F;span&gt;&lt;span&gt;        std::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#da4939;&quot;&gt;memcpy&lt;&#x2F;span&gt;&lt;span&gt;(data, s, size);
+&lt;&#x2F;span&gt;&lt;span&gt;    }
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;&#x2F;&#x2F; Move constructor: &amp;quot;steals&amp;quot; the pointer
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffc66d;&quot;&gt;NaiveString&lt;&#x2F;span&gt;&lt;span&gt;(NaiveString&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;&amp;amp;&amp;amp; &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#fd971f;&quot;&gt;other&lt;&#x2F;span&gt;&lt;span&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;noexcept
+&lt;&#x2F;span&gt;&lt;span&gt;        : &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d0d0ff;&quot;&gt;data&lt;&#x2F;span&gt;&lt;span&gt;(other.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d0d0ff;&quot;&gt;data&lt;&#x2F;span&gt;&lt;span&gt;), &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d0d0ff;&quot;&gt;size&lt;&#x2F;span&gt;&lt;span&gt;(other.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d0d0ff;&quot;&gt;size&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;        std::cout &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;&amp;lt;&amp;lt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;Moving from &amp;#39;&amp;quot; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;&amp;lt;&amp;lt; &lt;&#x2F;span&gt;&lt;span&gt;(other.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d0d0ff;&quot;&gt;data &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;?&lt;&#x2F;span&gt;&lt;span&gt; other.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d0d0ff;&quot;&gt;data &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;&amp;lt;&amp;lt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#519f50;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;&#x2F;&#x2F; Invalidate the source object!
+&lt;&#x2F;span&gt;&lt;span&gt;        other.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d0d0ff;&quot;&gt;data &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6e9cbe;&quot;&gt;nullptr&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;        other.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d0d0ff;&quot;&gt;size &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a5c261;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;    }
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffc66d;&quot;&gt;~NaiveString&lt;&#x2F;span&gt;&lt;span&gt;() {
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;(data) {
+&lt;&#x2F;span&gt;&lt;span&gt;            std::cout &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;&amp;lt;&amp;lt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;Freeing memory for &amp;#39;&amp;quot; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;&amp;lt;&amp;lt;&lt;&#x2F;span&gt;&lt;span&gt; data &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;&amp;lt;&amp;lt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#519f50;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;        } &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;else &lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;            std::cout &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;&amp;lt;&amp;lt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;Destructing a moved-from object&lt;&#x2F;span&gt;&lt;span style=&quot;color:#519f50;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;        }
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;delete[]&lt;&#x2F;span&gt;&lt;span&gt; data;
+&lt;&#x2F;span&gt;&lt;span&gt;    }
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;char&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;*&lt;&#x2F;span&gt;&lt;span&gt; data;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;size_t&lt;&#x2F;span&gt;&lt;span&gt; size;
+&lt;&#x2F;span&gt;&lt;span&gt;};
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;int &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffc66d;&quot;&gt;main&lt;&#x2F;span&gt;&lt;span&gt;() {
+&lt;&#x2F;span&gt;&lt;span&gt;    NaiveString s1(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;hello&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;);
+&lt;&#x2F;span&gt;&lt;span&gt;    std::cout &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;&amp;lt;&amp;lt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;s1.data = &amp;quot; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;&amp;lt;&amp;lt; &lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;void&lt;&#x2F;span&gt;&lt;span&gt;\&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;*&lt;&#x2F;span&gt;&lt;span&gt;)s1.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d0d0ff;&quot;&gt;data &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;&amp;lt;&amp;lt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#519f50;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;&#x2F;&#x2F; Move s1 into s2
+&lt;&#x2F;span&gt;&lt;span&gt;    NaiveString s2 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span&gt;std::move(s1);
+&lt;&#x2F;span&gt;&lt;span&gt;    std::cout &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;&amp;lt;&amp;lt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;s2.data = &amp;quot; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;&amp;lt;&amp;lt; &lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;void&lt;&#x2F;span&gt;&lt;span&gt;\&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;*&lt;&#x2F;span&gt;&lt;span&gt;)s2.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d0d0ff;&quot;&gt;data &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;&amp;lt;&amp;lt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#519f50;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;&#x2F;&#x2F; What about s1 now?
+&lt;&#x2F;span&gt;&lt;span&gt;    std::cout &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;&amp;lt;&amp;lt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;s1.data after move = &amp;quot; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;&amp;lt;&amp;lt; &lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;void&lt;&#x2F;span&gt;&lt;span&gt;\&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;*&lt;&#x2F;span&gt;&lt;span&gt;)s1.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d0d0ff;&quot;&gt;data &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;&amp;lt;&amp;lt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#519f50;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;&#x2F;&#x2F; This is the danger zone! C++ lets you do this.
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;&#x2F;&#x2F; Accessing s1.data here is undefined behavior.
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;&#x2F;&#x2F; if (s1.data) {
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;&#x2F;&#x2F;     std::cout &amp;lt;&amp;lt; &amp;quot;s1 still contains: &amp;quot; &amp;lt;&amp;lt; s1.data &amp;lt;&amp;lt; &amp;quot;\n&amp;quot;; &#x2F;&#x2F; CRASH!
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;&#x2F;&#x2F; }
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a5c261;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The problem here isn&#x27;t the move itself; it&#x27;s what happens &lt;em&gt;after&lt;&#x2F;em&gt;. The C++ type system doesn&#x27;t stop you from trying to use s1 after its resources have been moved to s2. The s1 object is left in a &quot;valid but unspecified state.&quot; Accessing it is a landmine waiting to be stepped on. &lt;strong&gt;The compiler trusts you not to mess up&lt;&#x2F;strong&gt;, but offers no guarantee.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;the-rust-way-a-contract-with-the-compiler&quot;&gt;The Rust Way: A Contract with the Compiler&lt;&#x2F;h3&gt;
+&lt;p&gt;Rust builds memory safety directly into its type system through three core principles:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;Each value has a single &lt;strong&gt;owner&lt;&#x2F;strong&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;There can only be &lt;strong&gt;one owner at a time&lt;&#x2F;strong&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;When the owner goes out of scope, the value is &lt;strong&gt;dropped&lt;&#x2F;strong&gt; (i.e., its resources are freed).&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;In Rust, &lt;strong&gt;moving is the default behavior&lt;&#x2F;strong&gt; for any type that manages resources. When you assign a variable to another, ownership is transferred.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;Rust&quot; style=&quot;background-color:#383838;color:#e6e1dc;&quot; class=&quot;language-Rust &quot;&gt;&lt;code class=&quot;language-Rust&quot; data-lang=&quot;Rust&quot;&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffc66d;&quot;&gt;main&lt;&#x2F;span&gt;&lt;span&gt;() {
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;&#x2F;&#x2F; String owns heap-allocated memory
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; s1 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;String&lt;&#x2F;span&gt;&lt;span&gt;::from(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;hello&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;);
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;&#x2F;&#x2F; Ownership of the data is MOVED from s1 to s2.
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;&#x2F;&#x2F; s1 is now considered uninitialized.
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; s2 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; s1;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;&#x2F;&#x2F; This line will not compile! 
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;&#x2F;&#x2F; The compiler prevents a &amp;quot;use after move&amp;quot; error.
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;&#x2F;&#x2F; println!(&amp;quot;The value of s1 is: {}&amp;quot;, s1); 
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;&#x2F;&#x2F;                                      ^^ value borrowed here after move
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    println!(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;The value of s2 is: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6d9cbe;&quot;&gt;{}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;, s2);
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This is the crucial difference. The Rust compiler &lt;em&gt;tracks ownership&lt;&#x2F;em&gt;. It knows that s1 is no longer valid after the move and turns a potential runtime bug into a &lt;strong&gt;compile-time error&lt;&#x2F;strong&gt;. It&#x27;s not a convention; it&#x27;s a hard-and-fast rule enforced by the type system.&lt;&#x2F;p&gt;
+&lt;h4 id=&quot;so-how-do-you-copy-in-rust&quot;&gt;So, How Do You Copy in Rust?&lt;&#x2F;h4&gt;
+&lt;p&gt;What if you have data that is simple, lives entirely on the stack (like an integer), and is cheap to copy? For this, Rust has the Copy trait.&lt;&#x2F;p&gt;
+&lt;p&gt;A type is Copy if making a bit-for-bit copy of it is a complete and valid clone. Think of types like i32, f64, bool, or a struct containing only other Copy types.&lt;&#x2F;p&gt;
+&lt;p&gt;When you assign a Copy type, the original variable remains valid.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;Rust&quot; style=&quot;background-color:#383838;color:#e6e1dc;&quot; class=&quot;language-Rust &quot;&gt;&lt;code class=&quot;language-Rust&quot; data-lang=&quot;Rust&quot;&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffc66d;&quot;&gt;main&lt;&#x2F;span&gt;&lt;span&gt;() {
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;&#x2F;&#x2F; i32 implements the Copy trait
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; x &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a5c261;&quot;&gt;5&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;&#x2F;&#x2F; A copy is made. Both x and y are valid.
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; y &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; x;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    println!(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;x = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6d9cbe;&quot;&gt;{}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;, y = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6d9cbe;&quot;&gt;{}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;, x, y); &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;&#x2F;&#x2F; This works perfectly!
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The compiler enforces a critical rule: &lt;strong&gt;you cannot implement Copy for a type that manages a resource&lt;&#x2F;strong&gt;. For example, String cannot be Copy because it owns a pointer to heap memory. If you could copy a String, you&#x27;d have two variables pointing to the same memory, leading to a &quot;double free&quot; error when both go out of scope. The compiler forbids this, neatly closing another door to memory corruption.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;the-philosophical-divide-monocle-face&quot;&gt;The Philosophical Divide 🧐&lt;&#x2F;h3&gt;
+&lt;p&gt;The difference boils down to two philosophies:&lt;&#x2F;p&gt;
+&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;C++&lt;&#x2F;th&gt;&lt;th&gt;Rust&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;&lt;tbody&gt;
+&lt;tr&gt;&lt;td&gt;&lt;strong&gt;Trusts the Developer:&lt;&#x2F;strong&gt; Provides powerful tools (move semantics) and trusts the programmer to use them correctly. Safety is a matter of discipline and convention (e.g., not using an object after moving from it).&lt;&#x2F;td&gt;&lt;td&gt;&lt;strong&gt;Verifies with the Compiler:&lt;&#x2F;strong&gt; Bakes ownership and moving directly into the type system. The compiler &lt;em&gt;guarantees&lt;&#x2F;em&gt; at compile time that you cannot use a moved value or accidentally create multiple owners of the same resource.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;strong&gt;Opt-out Safety:&lt;&#x2F;strong&gt; By default, types can be copied or moved if the syntax is valid. The developer must explicitly delete functions (e.g., = delete;) to make a type non-copyable or non-movable.&lt;&#x2F;td&gt;&lt;td&gt;&lt;strong&gt;Opt-in Simplicity:&lt;&#x2F;strong&gt; Moving is the default for complex types. Simple, bit-wise copying is an opt-in behavior via the Copy trait, which the compiler validates to ensure it&#x27;s used safely.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;strong&gt;Runtime Errors:&lt;&#x2F;strong&gt; Mistakes like use-after-move or double-frees manifest as crashes or undefined behavior at runtime, which can be difficult to debug.&lt;&#x2F;td&gt;&lt;td&gt;&lt;strong&gt;Compile-time Errors:&lt;&#x2F;strong&gt; The same mistakes are caught by the compiler before the program can even run, providing clear, actionable feedback.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;&lt;&#x2F;table&gt;
+&lt;h3 id=&quot;under-the-hood-a-glimpse-into-rust-s-type-theory&quot;&gt;Under the Hood: A Glimpse into Rust&#x27;s Type Theory&lt;&#x2F;h3&gt;
+&lt;p&gt;So how does the Rust compiler pull this off? It&#x27;s not magic; it&#x27;s the practical application of ideas from programming language research, specifically a &lt;strong&gt;substructural type system&lt;&#x2F;strong&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;At its core, this system treats variables that own resources as, well, &lt;em&gt;resources&lt;&#x2F;em&gt;. A resource can be used, and once it&#x27;s fully given away (or &quot;consumed&quot;), it&#x27;s gone. This is where the idea of a &lt;strong&gt;linear type system&lt;&#x2F;strong&gt; comes in—a specific flavor of substructural system where a resource must be consumed &lt;em&gt;exactly once&lt;&#x2F;em&gt;. When you write let s2 = s1;, the String owned by s1 is consumed by the move. The type system then invalidates s1 to prevent it from being used a second time, thus upholding the &quot;use once&quot; rule.&lt;&#x2F;p&gt;
+&lt;p&gt;To enforce this, the compiler uses &lt;strong&gt;flow-sensitive typing&lt;&#x2F;strong&gt;. This means it doesn&#x27;t just know a variable&#x27;s type; it tracks its &lt;em&gt;state&lt;&#x2F;em&gt; as it flows through your code. It knows that s1 is valid &lt;em&gt;before&lt;&#x2F;em&gt; the move, but invalid &lt;em&gt;after&lt;&#x2F;em&gt; it. Finally, this system extends to references (&amp;amp; and &amp;amp;mut), which are more than just pointers. They are special types that come with compiler-enforced &lt;strong&gt;invariants&lt;&#x2F;strong&gt;, or rules that must always hold true. The most famous of these is that you can have either many immutable references (readers) or exactly one mutable reference (a writer), but never both at the same time.&lt;&#x2F;p&gt;
+&lt;p&gt;Together, these ingredients—a type system that understands consumption, tracks state through program flow, and enforces strict rules on references—form the foundation of Rust&#x27;s &quot;borrow checker&quot; and its celebrated compile-time safety guarantees.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;bridging-the-divide-interoperability-with-c&quot;&gt;Bridging the Divide: Interoperability with C++&lt;&#x2F;h3&gt;
+&lt;p&gt;This brings us to a crucial question: What happens when we interface with existing C++ code? Rust&#x27;s strict safety discipline, while a huge benefit, can prevent the direct porting of some perfectly valid C++ APIs. In C++, it&#x27;s common to write APIs that are safe due to specific, documented invariants that a compiler can&#x27;t necessarily understand.&lt;&#x2F;p&gt;
+&lt;p&gt;A fantastic example is &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;abseil&#x2F;abseil-cpp&#x2F;blob&#x2F;master&#x2F;absl&#x2F;container&#x2F;node_hash_map.h&quot;&gt;&lt;code&gt;absl::node_hash_map&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;. This data structure guarantees &lt;strong&gt;pointer stability&lt;&#x2F;strong&gt;: you can look up an element and hold onto a pointer to it, and that pointer will remain valid even if you later mutate the map by adding new elements. This pattern is fundamentally incompatible with Rust&#x27;s standard aliasing rules. An insert operation on a Rust HashMap requires a unique mutable reference (&amp;amp;mut self), which invalidates all other references to its elements. The Rust compiler has no way to know that Abseil&#x27;s implementation is special; it sees a violation of its core &quot;aliasing XOR mutability&quot; rule and forbids the code.&lt;&#x2F;p&gt;
+&lt;p&gt;So, what would it take to teach Rust&#x27;s type system about the unique guarantees of &lt;code&gt;absl::node_hash_map&lt;&#x2F;code&gt;? You don&#x27;t. Instead, Rust provides a controlled escape hatch for these situations: the &lt;strong&gt;unsafe&lt;&#x2F;strong&gt; keyword. To wrap such a library, you would write a safe public API that internally uses unsafe blocks to call the C++ code. The Rust wrapper&#x27;s creator takes on the responsibility of manually upholding the safety invariants that the borrow checker can no longer verify.&lt;&#x2F;p&gt;
+&lt;p&gt;This is often accomplished using &lt;strong&gt;interior mutability&lt;&#x2F;strong&gt; primitives like UnsafeCell&amp;lt;T&amp;gt;. This type tells the compiler, &quot;Don&#x27;t worry about the borrowing rules for this data; I will manage them myself.&quot; By wrapping the C++ map pointer in a type that uses UnsafeCell, you can expose methods like insert that take a shared reference (&amp;amp;self) while still performing mutation internally. The key is that this unsafe logic is contained within a small, well-audited boundary, allowing the rest of the Rust application to interact with it in a completely safe and idiomatic way.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;the-path-forward-beyond-unsafe&quot;&gt;The Path Forward: Beyond &quot;Unsafe&quot;&lt;&#x2F;h3&gt;
+&lt;p&gt;By using unsafe, we&#x27;ve told the Rust compiler to look away, allowing us to manually uphold the invariants of our C++ library. While this violates Rust&#x27;s standard rules, it&#x27;s a pragmatic necessity for interoperability. A lot of code will be written this way, and despite this compromise, the resulting programs are still a massive improvement. The vast majority of the application benefits from Rust&#x27;s static checking, containing the potential for memory bugs to small, auditable sections—a far safer world than a pure C++ program.&lt;&#x2F;p&gt;
+&lt;p&gt;The problem here isn&#x27;t a flaw in Rust. Its powerful invariants were simply not designed for the C++ ecosystem, where code may arbitrarily hold on to pointers. The manual reasoning required for unsafe blocks is fragile; a future change elsewhere could unknowingly invalidate the assumptions and reintroduce a bug. This highlights a gap in the programming language landscape: there is no smooth gradient from the &quot;no guarantees&quot; world of C++ to the &quot;full, statically checked&quot; world of safe Rust.&lt;&#x2F;p&gt;
+&lt;p&gt;This is the gap that experimental projects like &lt;strong&gt;Carbon&lt;&#x2F;strong&gt; aim to fill. Carbon&#x27;s goal is to devise a language that enables a gradual migration from C++, combining it with the need for full, statically checked memory safety. To succeed, its type system must find a way to provide guarantees around mutable access even in the presence of aliasing. If Carbon can express a concept like pointer stability directly in its types, it would require a different set of global guarantees and aliasing rules than Rust&#x27;s. The ultimate challenge lies in safely composing programs written in a &quot;legacy C++&quot; style with new code written in a stricter, safer mode, creating a true bridge to a memory-safe future.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;conclusion-two-paths-to-a-safer-future&quot;&gt;Conclusion: Two Paths to a Safer Future&lt;&#x2F;h3&gt;
+&lt;p&gt;Throughout this journey, we&#x27;ve seen how a language&#x27;s type system is the bedrock of memory safety. C++ provides the tools for manual resource management, but places the burden of correctness on the developer. Rust, with its revolutionary ownership, move semantics, and &lt;code&gt;Copy&lt;&#x2F;code&gt; trait, shifts that burden to the compiler, turning potential runtime disasters into compile-time errors.&lt;&#x2F;p&gt;
+&lt;p&gt;While Rust&#x27;s model is a monumental step forward, its strictness creates a philosophical divide at the boundary with C++. The &lt;code&gt;unsafe&lt;&#x2F;code&gt; keyword offers a pragmatic bridge, but it underscores a fundamental challenge: fitting flexible C++ idioms into Rust&#x27;s rigid world of invariants.&lt;&#x2F;p&gt;
+&lt;p&gt;This is precisely why &lt;strong&gt;Rust and Carbon should not be seen as competitors&lt;&#x2F;strong&gt;, but as different tools for different, equally important jobs.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Rust&lt;&#x2F;strong&gt; 🚀 excels in new, &quot;greenfield&quot; projects where safety is paramount from day one. It&#x27;s the ideal choice for building new systems or for creating self-contained, high-performance components that integrate with a larger ecosystem through clear API boundaries compatible with its aliasing rules.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Carbon&lt;&#x2F;strong&gt; 🏗️ is designed to tackle a different beast entirely: the gradual and interoperable migration of massive, existing C++ codebases. Its goal is to provide an evolutionary path, allowing teams to incrementally bring parts of their code into a world of statically-checked safety without a complete, high-risk rewrite.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Ultimately, both languages are vital to the future of systems programming. They represent a shared mission to eliminate memory bugs, but they approach it from different starting points—one building a new, safe foundation, and the other building a bridge from the world we already have.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+</feed>

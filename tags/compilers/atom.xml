@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title> - compilers</title>
+    <link rel="self" type="application/atom+xml" href="https://burakemir.ch/tags/compilers/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://burakemir.ch"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2025-12-12T00:00:00+00:00</updated>
+    <id>https://burakemir.ch/tags/compilers/atom.xml</id>
+    <entry xml:lang="en">
+        <title>Indexed Reverse Polish Notation, an Alternative to AST</title>
+        <published>2025-12-12T00:00:00+00:00</published>
+        <updated>2025-12-12T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://burakemir.ch/post/indexed-rpn/"/>
+        <id>https://burakemir.ch/post/indexed-rpn/</id>
+        
+        <content type="html" xml:base="https://burakemir.ch/post/indexed-rpn/">&lt;p&gt;&quot;Why study compiler construction? Because knowing how a programming language is specified
+and implemented makes you a better programmer.&quot; I still remember these words,
+pronounced as matter-of-fact introduction to an undergrad course of compilers.&lt;&#x2F;p&gt;
+&lt;p&gt;Compiler engineers have come up with many useful programming techniques and representations.&lt;&#x2F;p&gt;
+&lt;p&gt;Today, I want to write about one such technique, an alternative to Abstract Syntax Trees (ASTs).
+Inspired by the parse tree representation in the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;carbon-language&#x2F;carbon-lang&quot;&gt;Carbon compiler&lt;&#x2F;a&gt;,
+this post explains a way to represent parsed source code using a variation of Reverse Polish Notation (RPN),
+in a contiguous array.&lt;&#x2F;p&gt;
+&lt;p&gt;We call this &lt;strong&gt;Indexed RPN&lt;&#x2F;strong&gt;. Ordering program parts in a linear sequence very naturally leads to
+machine interpretation, which is well-known for calculators but maybe a little less well-known
+when there are scoped definitions and control flow structures.&lt;&#x2F;p&gt;
+&lt;p&gt;This is by no means a new way of doing things, but with modern machines having plenty of memory,
+there may have been less pressure to reach for techniques that memory-friendly.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;1-from-arithmetic-to-indices&quot;&gt;1. From Arithmetic to Indices&lt;&#x2F;h2&gt;
+&lt;p&gt;Let’s start with an arithmetic expression example: We want to represent (3 + 4) * 5.&lt;&#x2F;p&gt;
+&lt;p&gt;In a standard AST, this is a tree of pointers. In a standard stack-machine RPN, this looks like 3 4 + 5 *.
+Now we want something slightly different, because we want to operate on tree structure.
+For example, if we deal with this expression in a compiler that translates and optimizes.
+We want to be able to refer to specific sub-expressions later.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;the-administrative-normal-form-perspective&quot;&gt;The &quot;Administrative Normal Form&quot; Perspective&lt;&#x2F;h3&gt;
+&lt;p&gt;Before we look at the memory layout, let&#x27;s imagine breaking up this expression by &lt;em&gt;naming&lt;&#x2F;em&gt; subexpression.
+If we had local definitions in our language this would give us Administrative Normal Form (ANF).
+In ANF, we give a name to every intermediate result:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#383838;color:#e6e1dc;&quot;&gt;&lt;code&gt;&lt;span&gt;&#x2F;&#x2F; Source: (3 + 4) * 5
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;val t0 = 3 
+&lt;&#x2F;span&gt;&lt;span&gt;val t1 = 4
+&lt;&#x2F;span&gt;&lt;span&gt;val t2 = add(t0, t1)
+&lt;&#x2F;span&gt;&lt;span&gt;val t3 = 5
+&lt;&#x2F;span&gt;&lt;span&gt;val t4 = mul(t2, t3)
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The expression now takes a lot more to write, but for a compiler it is much more structured.
+The arguments of the operations are always names, which makes the data flow and also the
+order in which arguments get evaluated fully explicit. Here, &lt;code&gt;t2&lt;&#x2F;code&gt; depends entirely on &lt;code&gt;t0&lt;&#x2F;code&gt; and &lt;code&gt;t1&lt;&#x2F;code&gt;,
+and &lt;code&gt;t0&lt;&#x2F;code&gt; is evaluated before &lt;code&gt;t1&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;the-in-memory-representation&quot;&gt;The In-Memory Representation&lt;&#x2F;h3&gt;
+&lt;p&gt;We don&#x27;t want local definitions just yet, the above is just to motivate flattening of a tree structure.
+If we store the instructions in a contiguous array (e.g., a vector or Vec), the &lt;strong&gt;index&lt;&#x2F;strong&gt; of the node becomes its name.&lt;&#x2F;p&gt;
+&lt;p&gt;The internal names are merely indices into the sequence of nodes.&lt;&#x2F;p&gt;
+&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th style=&quot;text-align: left&quot;&gt;Index (ID)&lt;&#x2F;th&gt;&lt;th style=&quot;text-align: left&quot;&gt;Node Kind&lt;&#x2F;th&gt;&lt;th style=&quot;text-align: left&quot;&gt;Operands &#x2F; Data&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;&lt;tbody&gt;
+&lt;tr&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;strong&gt;0&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;IntLiteral&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;3&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;strong&gt;1&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;IntLiteral&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;4&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;strong&gt;2&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;BinaryOp&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;Add(lhs: 0, rhs: 1)&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;strong&gt;3&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;IntLiteral&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;5&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;strong&gt;4&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;BinaryOp&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;Mul(lhs: 2, rhs: 3)&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;&lt;&#x2F;table&gt;
+&lt;p&gt;This is similar to Reverse Polish Notation (RPN), but there is a difference. In standard RPN, there is an implicit stack from which &lt;code&gt;Add&lt;&#x2F;code&gt; consumes items blindly. In &lt;strong&gt;Indexed RPN&lt;&#x2F;strong&gt;, &lt;code&gt;Add&lt;&#x2F;code&gt; explicitly refers to indices 0 and 1. This provides a stable reference to every sub-expression, allowing us to traverse the code and locate nodes without necessarily having to build up a stack.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;2-dealing-with-let-and-scope&quot;&gt;2. Dealing with &quot;Let&quot; and Scope&lt;&#x2F;h2&gt;
+&lt;p&gt;Let us make the language more realistic by adding local let-declarations and scoping.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#383838;color:#e6e1dc;&quot;&gt;&lt;code&gt;&lt;span&gt;&#x2F;&#x2F; Source
+&lt;&#x2F;span&gt;&lt;span&gt;let a = 10;
+&lt;&#x2F;span&gt;&lt;span&gt;let b = a + 5;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Here we face a problem: Source variables (a, b) are different from our internal indices (0, 1, 2...). We need a node that bridges this gap — an &lt;strong&gt;&quot;Introducer&quot;&lt;&#x2F;strong&gt;.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;the-bind-node&quot;&gt;The Bind Node&lt;&#x2F;h3&gt;
+&lt;p&gt;We introduce a Bind node. This node represents the action of bringing a name into existence in the current scope.
+Depending on the language you are working with, a binding may have semantic significance. For example, if references to the binding are objects of the language like Rust or C++ references.&lt;&#x2F;p&gt;
+&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th style=&quot;text-align: left&quot;&gt;Index&lt;&#x2F;th&gt;&lt;th style=&quot;text-align: left&quot;&gt;Node Kind&lt;&#x2F;th&gt;&lt;th style=&quot;text-align: left&quot;&gt;Operands&lt;&#x2F;th&gt;&lt;th style=&quot;text-align: left&quot;&gt;Meaning&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;&lt;tbody&gt;
+&lt;tr&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;strong&gt;0&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;IntLiteral&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;10&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;The raw value 10.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;strong&gt;1&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;Bind&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;name: &quot;a&quot;, val: 0&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;strong&gt;Introducer&lt;&#x2F;strong&gt;: &quot;a&quot; exists, bound to Index 0.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;strong&gt;2&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;NameRef&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;ref: 1&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;A reference back to the introducer node.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;strong&gt;3&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;IntLiteral&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;5&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;The raw value 5.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;strong&gt;4&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;BinaryOp&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;Add(2, 3)&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;Adds the NameRef and the Literal.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;strong&gt;5&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;Bind&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;name: &quot;b&quot;, val: 4&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;strong&gt;Introducer&lt;&#x2F;strong&gt;: &quot;b&quot; exists, bound to Index 4.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;&lt;&#x2F;table&gt;
+&lt;h3 id=&quot;the-stack-returns-for-compilation&quot;&gt;The Stack Returns (For Compilation)&lt;&#x2F;h3&gt;
+&lt;p&gt;In order to deal with this data, we traverse it but we will also want to build up a stack. You might ask: &lt;em&gt;If we flattened the tree, why do we need a stack?&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;While the &lt;strong&gt;storage&lt;&#x2F;strong&gt; is flat, the &lt;strong&gt;compilation process&lt;&#x2F;strong&gt; requires a stack to handle scopes. Because let declarations can be nested, we cannot simply scan linearly and remember everything forever. We need to handle when names go &lt;em&gt;out&lt;&#x2F;em&gt; of scope (shadowing).&lt;&#x2F;p&gt;
+&lt;p&gt;Let&#x27;s add &lt;code&gt;BlockStart&lt;&#x2F;code&gt; and &lt;code&gt;BlockEnd&lt;&#x2F;code&gt; nodes that indicate nested blocks.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#383838;color:#e6e1dc;&quot;&gt;&lt;code&gt;&lt;span&gt;&#x2F;&#x2F; Source Code
+&lt;&#x2F;span&gt;&lt;span&gt;let x = 10;       &#x2F;&#x2F; Outer &amp;#39;x&amp;#39;
+&lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;    let x = 20;   &#x2F;&#x2F; Inner &amp;#39;x&amp;#39; (shadows outer)
+&lt;&#x2F;span&gt;&lt;span&gt;    print(x);     &#x2F;&#x2F; Should print 20
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;print(x);         &#x2F;&#x2F; Should print 10
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h3 id=&quot;the-resolve-names-algorithm&quot;&gt;The resolve_names Algorithm&lt;&#x2F;h3&gt;
+&lt;p&gt;I am too lazy for full code examples, just the idea.&lt;&#x2F;p&gt;
+&lt;p&gt;We use a SymbolTableStack during the resolution pass.
+We iterate through the array once. We maintain a stack of scopes, where each scope maps a string name to an integer index.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;Python&quot; style=&quot;background-color:#383838;color:#e6e1dc;&quot; class=&quot;language-Python &quot;&gt;&lt;code class=&quot;language-Python&quot; data-lang=&quot;Python&quot;&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;function resolve_names(nodes):
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;# A stack of scopes. Each scope is a Map: String -&amp;gt; Index
+&lt;&#x2F;span&gt;&lt;span&gt;    scope_stack &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span&gt;[ new Map() ]
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;for &lt;&#x2F;span&gt;&lt;span&gt;i, node &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;in &lt;&#x2F;span&gt;&lt;span style=&quot;color:#da4939;&quot;&gt;enumerate&lt;&#x2F;span&gt;&lt;span&gt;(nodes):
+&lt;&#x2F;span&gt;&lt;span&gt;        
+&lt;&#x2F;span&gt;&lt;span&gt;        match node.kind:
+&lt;&#x2F;span&gt;&lt;span&gt;            case BlockStart:
+&lt;&#x2F;span&gt;&lt;span&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;# Push a new, empty scope onto the stack
+&lt;&#x2F;span&gt;&lt;span&gt;                scope_stack.push( new Map() )
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;            case BlockEnd:
+&lt;&#x2F;span&gt;&lt;span&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;# Pop the top scope. Inner variables are forgotten.
+&lt;&#x2F;span&gt;&lt;span&gt;                scope_stack.pop()
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;            case Bind(name, value_index):
+&lt;&#x2F;span&gt;&lt;span&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;# Register the variable in the CURRENT (top) scope.
+&lt;&#x2F;span&gt;&lt;span&gt;                current_scope &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span&gt;scope_stack.top()
+&lt;&#x2F;span&gt;&lt;span&gt;                current_scope.set(name, i)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;            case NameRef(name):
+&lt;&#x2F;span&gt;&lt;span&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;# Look for the name, starting from the top scope down.
+&lt;&#x2F;span&gt;&lt;span&gt;                target_index &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span&gt;find_in_stack(scope_stack, name)
+&lt;&#x2F;span&gt;&lt;span&gt;                
+&lt;&#x2F;span&gt;&lt;span&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;# PATCH THE NODE:
+&lt;&#x2F;span&gt;&lt;span&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;# The node no longer holds &amp;quot;x&amp;quot;. It holds the index (e.g., 4).
+&lt;&#x2F;span&gt;&lt;span&gt;                node.resolved_index &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span&gt;target_index
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;After this pass, the stack is discarded. The IR is now &quot;wired.&quot; Every variable usage points directly to the instruction that created it.&lt;&#x2F;p&gt;
+&lt;p&gt;When representing source as AST, we would use an algebraic data type. One could use mutable data structures there, or build up a symbol table.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;3-breaking-the-line-control-flow&quot;&gt;3. Breaking the Line: Control Flow&lt;&#x2F;h2&gt;
+&lt;p&gt;So far, execution has been linear: Index 0, then 1, then 2. But branching constructs like if, else, and while break this line.&lt;&#x2F;p&gt;
+&lt;p&gt;In a tree-based AST, an If node has children pointers to &quot;Then&quot; and &quot;Else&quot; blocks. In our flat array, we may prefer to have in the same contiguous vector, instead of blocks
+floating in separate memory. So we introduce &lt;strong&gt;Jump&lt;&#x2F;strong&gt; nodes.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;the-linear-layout&quot;&gt;The Linear Layout&lt;&#x2F;h3&gt;
+&lt;p&gt;Consider this source:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#383838;color:#e6e1dc;&quot;&gt;&lt;code&gt;&lt;span&gt;if (a) { print(1); } else { print(2); }
+&lt;&#x2F;span&gt;&lt;span&gt;print(3);
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Here is the Indexed RPN layout. Note the use of &lt;code&gt;BrFalse&lt;&#x2F;code&gt; (Branch if False) and &lt;code&gt;Jmp&lt;&#x2F;code&gt; (Unconditional Jump).&lt;&#x2F;p&gt;
+&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th style=&quot;text-align: left&quot;&gt;Index&lt;&#x2F;th&gt;&lt;th style=&quot;text-align: left&quot;&gt;Node Kind&lt;&#x2F;th&gt;&lt;th style=&quot;text-align: left&quot;&gt;Data&lt;&#x2F;th&gt;&lt;th style=&quot;text-align: left&quot;&gt;Explanation&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;&lt;tbody&gt;
+&lt;tr&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;strong&gt;0&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;NameRef&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;&quot;a&quot;&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;Load variable &lt;code&gt;a&lt;&#x2F;code&gt;.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;strong&gt;1&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;BrFalse&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;target: 5&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;If &lt;code&gt;a&lt;&#x2F;code&gt; is false, jump to Index 5 (Else).&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;strong&gt;2&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;Int&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;1&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;Start of &quot;Then&quot; block.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;strong&gt;3&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;Print&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;2&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;strong&gt;4&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;Jmp&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;target: 7&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;Jump over the &quot;Else&quot; block.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;strong&gt;5&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;Int&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;2&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;Start of &quot;Else&quot; block (Target of node 1).&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;strong&gt;6&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;Print&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;5&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;strong&gt;7&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;Int&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;3&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;strong&gt;Merge Point.&lt;&#x2F;strong&gt; Execution continues here.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;strong&gt;8&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;Print&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;code&gt;7&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: left&quot;&gt;&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;&lt;&#x2F;table&gt;
+&lt;h3 id=&quot;building-it-backpatching&quot;&gt;Building It: Backpatching&lt;&#x2F;h3&gt;
+&lt;p&gt;When we emit the BrFalse instruction at index 1, we haven&#x27;t written the Else block yet, so we don&#x27;t know the target index.&lt;&#x2F;p&gt;
+&lt;p&gt;It is quite straightforward to deal with that:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;Emit BrFalse with a placeholder target. Save the index.&lt;&#x2F;li&gt;
+&lt;li&gt;Emit the &quot;Then&quot; block.&lt;&#x2F;li&gt;
+&lt;li&gt;Emit Jmp with a placeholder target. Save the index.&lt;&#x2F;li&gt;
+&lt;li&gt;Mark the current index as the start of &quot;Else&quot;. &lt;strong&gt;Backpatch&lt;&#x2F;strong&gt; (update) the BrFalse at index 1.&lt;&#x2F;li&gt;
+&lt;li&gt;Emit the &quot;Else&quot; block.&lt;&#x2F;li&gt;
+&lt;li&gt;Mark the current index as the end. &lt;strong&gt;Backpatch&lt;&#x2F;strong&gt; the Jmp at index 4.&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;This effectively flattens the logic of the program into a shape that mirrors how hardware executes instructions: predictable, linear memory access with explicit jumps.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;4-towards-interpretation-and-code-gen&quot;&gt;4. Towards Interpretation and Code Gen&lt;&#x2F;h2&gt;
+&lt;p&gt;We have successfully flattened our source code. We have resolved variable names into absolute indices and lowered high-level control flow into jumps. Now comes the reward.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;the-interpreter-the-big-switch&quot;&gt;The Interpreter: The &quot;Big Switch&quot;&lt;&#x2F;h3&gt;
+&lt;p&gt;Because our code is a flat array, we can come up with a Virtual Machine (VM) that looks exactly like a hardware CPU: it has an Instruction Pointer (ip) and a big loop.
+As a reminder — I will never get tired of repeating this — the difference between a virtual machine and abstract machine is that a virtual machine
+has &lt;em&gt;instructions&lt;&#x2F;em&gt;, whereas an abstract machine has &lt;em&gt;transitions&lt;&#x2F;em&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;A translation to a low-level format and a virtual machine plays the role of an interpreter, which provides an implementation of our language. We &lt;em&gt;can&lt;&#x2F;em&gt; also use it to
+specify the &lt;em&gt;operational semantics&lt;&#x2F;em&gt;, roughly: however you implement this language,
+it should produce the same result as the reference interpreter. For &quot;real&quot; languages, often specification comes as an afterthought but there
+are plenty of situations where one really would like to know how a piece of source code is supposed to behave. For example, to find out
+if the &quot;real&quot; implementation is correct. Somehow, educated people who really should know better can parrot statements like &quot;undefined behavior is all about compiler optimizations&quot;
+and completely ignore that &quot;undefined behavior&quot; is first and foremost a gap in the specification.&lt;&#x2F;p&gt;
+&lt;p&gt;Back to our interpreter: we can do something really simple: since we used ANF, (where every node index represents a runtime value), we don&#x27;t even need a runtime stack for intermediate calculations. We can simply map the nodes array to a parallel values array. A real implementation would not do this, but if we use an interpreter solely to specify behavior, this is sufficient, and we can defer optimizations.
+Note that since we have already resolved names to indices, instructions like &lt;code&gt;Bind&lt;&#x2F;code&gt; or &lt;code&gt;BlockStart&lt;&#x2F;code&gt; are effectively metadata. The interpreter can simply skip them.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;Python&quot; style=&quot;background-color:#383838;color:#e6e1dc;&quot; class=&quot;language-Python &quot;&gt;&lt;code class=&quot;language-Python&quot; data-lang=&quot;Python&quot;&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;function run_vm(nodes):
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;# Holds the runtime result of every node.
+&lt;&#x2F;span&gt;&lt;span&gt;    values &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span&gt;new Array(&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#fd971f;&quot;&gt;size&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#da4939;&quot;&gt;len&lt;&#x2F;span&gt;&lt;span&gt;(nodes))
+&lt;&#x2F;span&gt;&lt;span&gt;    ip &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a5c261;&quot;&gt;0
+&lt;&#x2F;span&gt;&lt;span&gt;    
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;while &lt;&#x2F;span&gt;&lt;span&gt;ip &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;&amp;lt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#da4939;&quot;&gt;len&lt;&#x2F;span&gt;&lt;span&gt;(nodes):
+&lt;&#x2F;span&gt;&lt;span&gt;        node &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span&gt;nodes[ip]
+&lt;&#x2F;span&gt;&lt;span&gt;        
+&lt;&#x2F;span&gt;&lt;span&gt;        match node.kind:
+&lt;&#x2F;span&gt;&lt;span&gt;            case IntLiteral:
+&lt;&#x2F;span&gt;&lt;span&gt;                values[ip] &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span&gt;node.raw_value
+&lt;&#x2F;span&gt;&lt;span&gt;                ip &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;+= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a5c261;&quot;&gt;1
+&lt;&#x2F;span&gt;&lt;span&gt;                
+&lt;&#x2F;span&gt;&lt;span&gt;            case Add:
+&lt;&#x2F;span&gt;&lt;span&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;# Direct access by index! No stack popping needed.
+&lt;&#x2F;span&gt;&lt;span&gt;                lhs_val &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span&gt;values[node.lhs_index]
+&lt;&#x2F;span&gt;&lt;span&gt;                rhs_val &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span&gt;values[node.rhs_index]
+&lt;&#x2F;span&gt;&lt;span&gt;                values[ip] &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span&gt;lhs_val &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;+ &lt;&#x2F;span&gt;&lt;span&gt;rhs_val
+&lt;&#x2F;span&gt;&lt;span&gt;                ip &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;+= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a5c261;&quot;&gt;1
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;            case BrFalse:
+&lt;&#x2F;span&gt;&lt;span&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;values[node.cond_index] &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;== &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6e9cbe;&quot;&gt;False&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;                    ip &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span&gt;node.target_index &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;# JUMP
+&lt;&#x2F;span&gt;&lt;span&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;else&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;                    ip &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;+= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a5c261;&quot;&gt;1 
+&lt;&#x2F;span&gt;&lt;span&gt;            
+&lt;&#x2F;span&gt;&lt;span&gt;            case Jmp:
+&lt;&#x2F;span&gt;&lt;span&gt;                ip &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span&gt;node.target_index &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;# Unconditional JUMP
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;            case &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d0d0ff;&quot;&gt;_&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;                 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;# Skip metadata nodes (Bind, BlockStart, etc.)
+&lt;&#x2F;span&gt;&lt;span&gt;                 ip &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;+= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a5c261;&quot;&gt;1
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h3 id=&quot;the-code-generator&quot;&gt;The Code Generator&lt;&#x2F;h3&gt;
+&lt;p&gt;We could also do a source-to-source translation and generate C code. The Indexed RPN shines again, because the complexity of the source language is reduced quite a bit.
+Since instructions are topologically sorted and dependencies are explicit, generating C can be as simple as a single for loop where every node becomes a temporary variable t{i}.&lt;&#x2F;p&gt;
+&lt;p&gt;This is maybe not a great way to specify what a language means, but a clear implementation advantage of translating to an existing language is that one can build
+on top of an existing whole compiler, with optimizations, native code generation backends. How exactly the semantics and runtime aspects of the source language
+and the target language are connected is of course a design choice and can be wildly different.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;Python&quot; style=&quot;background-color:#383838;color:#e6e1dc;&quot; class=&quot;language-Python &quot;&gt;&lt;code class=&quot;language-Python&quot; data-lang=&quot;Python&quot;&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;function generate_c_code(nodes):
+&lt;&#x2F;span&gt;&lt;span&gt;    output &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span&gt;StringBuilder()
+&lt;&#x2F;span&gt;&lt;span&gt;    output.append(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;int main() {&lt;&#x2F;span&gt;&lt;span style=&quot;color:#519f50;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;    
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;for &lt;&#x2F;span&gt;&lt;span&gt;i, node &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;in &lt;&#x2F;span&gt;&lt;span style=&quot;color:#da4939;&quot;&gt;enumerate&lt;&#x2F;span&gt;&lt;span&gt;(nodes):
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;# 1. Create a label for every instruction so Jumps can find it
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;#    e.g., &amp;quot;L_0:&amp;quot;, &amp;quot;L_1:&amp;quot;, etc.
+&lt;&#x2F;span&gt;&lt;span&gt;        output.append(&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;f&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;L_&lt;&#x2F;span&gt;&lt;span&gt;{i}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;: ;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#519f50;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;        
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;# 2. Create a variable name for this node&amp;#39;s result
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;#    e.g., &amp;quot;t_0&amp;quot;, &amp;quot;t_1&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;        var_name &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;f&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;t_&lt;&#x2F;span&gt;&lt;span&gt;{i}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;        
+&lt;&#x2F;span&gt;&lt;span&gt;        match node.kind:
+&lt;&#x2F;span&gt;&lt;span&gt;            case IntLiteral:
+&lt;&#x2F;span&gt;&lt;span&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;# int t_0 = 10;
+&lt;&#x2F;span&gt;&lt;span&gt;                output.append(&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;f&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;    int &lt;&#x2F;span&gt;&lt;span&gt;{var_name}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt; = &lt;&#x2F;span&gt;&lt;span&gt;{node.value}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#519f50;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;                
+&lt;&#x2F;span&gt;&lt;span&gt;            case Add:
+&lt;&#x2F;span&gt;&lt;span&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;# int t_2 = t_0 + t_1;
+&lt;&#x2F;span&gt;&lt;span&gt;                lhs &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;f&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;t_&lt;&#x2F;span&gt;&lt;span&gt;{node.lhs_index}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;                rhs &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;f&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;t_&lt;&#x2F;span&gt;&lt;span&gt;{node.rhs_index}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;                output.append(&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;f&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;    int &lt;&#x2F;span&gt;&lt;span&gt;{var_name}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt; = &lt;&#x2F;span&gt;&lt;span&gt;{lhs}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt; + &lt;&#x2F;span&gt;&lt;span&gt;{rhs}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#519f50;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;            
+&lt;&#x2F;span&gt;&lt;span&gt;            case Print:
+&lt;&#x2F;span&gt;&lt;span&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;# printf(&amp;quot;%d\n&amp;quot;, t_5);
+&lt;&#x2F;span&gt;&lt;span&gt;                arg &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;f&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;t_&lt;&#x2F;span&gt;&lt;span&gt;{node.arg_index}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;                output.append(&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;f&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;    printf(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#519f50;&quot;&gt;\&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;%d&lt;&#x2F;span&gt;&lt;span style=&quot;color:#519f50;&quot;&gt;\\&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;n&lt;&#x2F;span&gt;&lt;span style=&quot;color:#519f50;&quot;&gt;\&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span&gt;{arg}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;);&lt;&#x2F;span&gt;&lt;span style=&quot;color:#519f50;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;            
+&lt;&#x2F;span&gt;&lt;span&gt;            case BrFalse:
+&lt;&#x2F;span&gt;&lt;span&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;# if (!t_1) goto L_5;
+&lt;&#x2F;span&gt;&lt;span&gt;                cond &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;f&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;t_&lt;&#x2F;span&gt;&lt;span&gt;{node.cond_index}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;                target &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;f&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;L_&lt;&#x2F;span&gt;&lt;span&gt;{node.target_index}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;                output.append(&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;f&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;    if (!&lt;&#x2F;span&gt;&lt;span&gt;{cond}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;) goto &lt;&#x2F;span&gt;&lt;span&gt;{target}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#519f50;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;            
+&lt;&#x2F;span&gt;&lt;span&gt;            case Jmp:
+&lt;&#x2F;span&gt;&lt;span&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#95815e;&quot;&gt;# goto L_7;
+&lt;&#x2F;span&gt;&lt;span&gt;                target &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;f&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;L_&lt;&#x2F;span&gt;&lt;span&gt;{node.target_index}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;                output.append(&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#6e9cbe;&quot;&gt;f&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;    goto &lt;&#x2F;span&gt;&lt;span&gt;{target}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#519f50;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    output.append(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;&amp;quot;    return 0;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#519f50;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c1be91;&quot;&gt;}&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cc7833;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span&gt;output.toString()
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h3 id=&quot;conclusion&quot;&gt;Conclusion&lt;&#x2F;h3&gt;
+&lt;p&gt;People will always build more languages, especially domain-specific ones.
+A realistic work-in-progress language that uses indexed RPN is &lt;a href=&quot;http:&#x2F;&#x2F;github.com&#x2F;carbon-language&#x2F;carbon-lang&#x2F;&quot;&gt;Carbon&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;By moving from a tree to an &lt;strong&gt;Indexed RPN&lt;&#x2F;strong&gt;, we replace heap allocations with a single contiguous vector. What was recursive tree-walking of AST can in many cases become index lookups.
+So there should be a lot less memory-traffic, and when programs get large, memory traffic can have a significant impact on performance.&lt;&#x2F;p&gt;
+&lt;p&gt;If you are like me and build toy programming language implementations for fun, consider trying this out and see how it works for you!&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+</feed>

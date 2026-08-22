@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  
+<title>Rust and Carbon, why not both | </title>
+
+
+  <link rel="shortcut icon" type="image/png" href="&#x2F;images&#x2F;favicon-32x32.png">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <link id="stylesheet" rel="stylesheet" type="text/css" href="/dark.css">
+
+  <script type="text/javascript" src="/js/theme.js"></script>
+
+</head>
+
+<div class="header">
+  <div class="site_title">
+    <p><a href="/"><img src="https:&#x2F;&#x2F;burakemir.ch&#x2F;images&#x2F;totoro.jpg" alt=""
+          width="70" height=auto></a></p>
+    <p><a href="/">&nbsp;</a></p>
+  </div>
+  <div class="menu">
+    <a href="/post">>archives</a>
+    &nbsp;<a href="/pages/artifacts">>artifacts</a>
+    &nbsp;<a href="/about">>about</a>
+  </div>
+</div>
+
+<body onload="getTheme()">
+  <section class="section">
+    <div class="container">
+      
+<p>
+  <div class="title_postpage">Rust and Carbon, why not both</div>
+</p>
+<p>
+  <div class="date_postpage">2025-08-27</div>
+  <div class="taxonomies_postpage">
+  
+      
+      <a href="https://burakemir.ch/categories/blog/">/blog</a>
+      
+  
+  
+      
+      &emsp;<a href="https://burakemir.ch/tags/rust/">#rust</a>
+      
+      &emsp;<a href="https://burakemir.ch/tags/carbon/">#carbon</a>
+      
+      &emsp;<a href="https://burakemir.ch/tags/c/">#c++</a>
+      
+  
+  </div>
+</p>
+
+<p>
+  <p>Today's post is a little different. Instead of delving into discussiong of formal type systems, I'd like to step back and talk generally about some aspects of linear type systems
+as they show up in real life. That means: programming languages and the memory safety discussion today, C++ and Rust. Disclaimer: while the content of this post is very much
+related to memory safety which is something I work on at Google, this is my personal blog and everything here is my personal opinion.</p>
+<p>In programming, managing memory and resources is one of the most critical and error-prone tasks. Getting it wrong can lead to nasty bugs, from crashes to security vulnerabilities. Two languages that take this challenge seriously, but with vastly different philosophies, are C++ and Rust.</p>
+<p>At the heart of this difference lies how their type systems handle the concepts of <strong>copying</strong> and <strong>moving</strong> data. While both languages have syntax for these operations, Rust's type system acts as a strict guardian, preventing common errors at compile time, whereas C++ offers more flexibility at the cost of placing the burden of safety squarely on the developer.</p>
+<h3 id="the-c-way-a-set-of-powerful-conventions">The C++ Way: A Set of Powerful Conventions</h3>
+<p>In C++, the ability for an object to be copied or moved is defined by a set of special member functions. If you've written any C++, you've likely encountered the <strong>"Rule of Five"</strong>:</p>
+<ul>
+<li><strong>Copy Constructor:</strong> <code>MyType(const MyType&amp; other);</code></li>
+<li><strong>Copy Assignment Operator:</strong> <code>MyType&amp; operator=(const MyType&amp; other);</code></li>
+<li><strong>Move Constructor:</strong> <code>MyType(MyType&amp;&amp; other);</code></li>
+<li><strong>Move Assignment Operator:</strong> <code>MyType&amp; operator=(MyType&amp;&amp; other);</code></li>
+<li><strong>Destructor:</strong> <code>~MyType();</code></li>
+</ul>
+<p>When you create a type that manages a resource, like a memory buffer, you implement these functions to define what it means to copy or move it. A copy usually involves a "deep copy"—allocating new memory and copying the data over. A move is an optimization that "steals" the internal resource from a temporary object, avoiding a costly allocation.</p>
+<p>Let's look at a classic example: a simple string-like class.</p>
+<pre data-lang="C++" style="background-color:#383838;color:#e6e1dc;" class="language-C++ "><code class="language-C++" data-lang="C++"><span style="color:#cc7833;">#include </span><span style="color:#a5c261;">&lt;cstring&gt;
+</span><span style="color:#cc7833;">#include </span><span style="color:#a5c261;">&lt;iostream&gt;
+</span><span>
+</span><span style="font-style:italic;color:#6e9cbe;">class </span><span style="text-decoration:underline;color:#ffc66d;">NaiveString </span><span>{
+</span><span style="color:#cc7833;">public</span><span>:
+</span><span>    </span><span style="color:#ffc66d;">NaiveString</span><span>(</span><span style="color:#cc7833;">const </span><span style="font-style:italic;color:#6e9cbe;">char</span><span>\</span><span style="color:#cc7833;">* </span><span style="font-style:italic;color:#fd971f;">s</span><span>) {
+</span><span>        std::cout </span><span style="color:#cc7833;">&lt;&lt; </span><span style="color:#c1be91;">&quot;Allocating memory for &#39;&quot; </span><span style="color:#cc7833;">&lt;&lt;</span><span> s </span><span style="color:#cc7833;">&lt;&lt; </span><span style="color:#c1be91;">&quot;&#39;</span><span style="color:#519f50;">\n</span><span style="color:#c1be91;">&quot;</span><span>;
+</span><span>        size </span><span style="color:#cc7833;">= </span><span>std::</span><span style="color:#da4939;">strlen</span><span>(s) </span><span style="color:#cc7833;">+ </span><span style="color:#a5c261;">1</span><span>;
+</span><span>        data </span><span style="color:#cc7833;">= new </span><span style="font-style:italic;color:#6e9cbe;">char</span><span>[size];
+</span><span>        std::</span><span style="color:#da4939;">memcpy</span><span>(data, s, size);
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#95815e;">// Move constructor: &quot;steals&quot; the pointer
+</span><span>    </span><span style="color:#ffc66d;">NaiveString</span><span>(NaiveString</span><span style="color:#cc7833;">&amp;&amp; </span><span style="font-style:italic;color:#fd971f;">other</span><span>) </span><span style="color:#cc7833;">noexcept
+</span><span>        : </span><span style="color:#d0d0ff;">data</span><span>(other.</span><span style="color:#d0d0ff;">data</span><span>), </span><span style="color:#d0d0ff;">size</span><span>(other.</span><span style="color:#d0d0ff;">size</span><span>) {
+</span><span>        std::cout </span><span style="color:#cc7833;">&lt;&lt; </span><span style="color:#c1be91;">&quot;Moving from &#39;&quot; </span><span style="color:#cc7833;">&lt;&lt; </span><span>(other.</span><span style="color:#d0d0ff;">data </span><span style="color:#cc7833;">?</span><span> other.</span><span style="color:#d0d0ff;">data </span><span style="color:#cc7833;">: </span><span style="color:#c1be91;">&quot;&quot;</span><span>) </span><span style="color:#cc7833;">&lt;&lt; </span><span style="color:#c1be91;">&quot;&#39;</span><span style="color:#519f50;">\n</span><span style="color:#c1be91;">&quot;</span><span>;
+</span><span>        </span><span style="color:#95815e;">// Invalidate the source object!
+</span><span>        other.</span><span style="color:#d0d0ff;">data </span><span style="color:#cc7833;">= </span><span style="color:#6e9cbe;">nullptr</span><span>;
+</span><span>        other.</span><span style="color:#d0d0ff;">size </span><span style="color:#cc7833;">= </span><span style="color:#a5c261;">0</span><span>;
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#ffc66d;">~NaiveString</span><span>() {
+</span><span>        </span><span style="color:#cc7833;">if </span><span>(data) {
+</span><span>            std::cout </span><span style="color:#cc7833;">&lt;&lt; </span><span style="color:#c1be91;">&quot;Freeing memory for &#39;&quot; </span><span style="color:#cc7833;">&lt;&lt;</span><span> data </span><span style="color:#cc7833;">&lt;&lt; </span><span style="color:#c1be91;">&quot;&#39;</span><span style="color:#519f50;">\n</span><span style="color:#c1be91;">&quot;</span><span>;
+</span><span>        } </span><span style="color:#cc7833;">else </span><span>{
+</span><span>            std::cout </span><span style="color:#cc7833;">&lt;&lt; </span><span style="color:#c1be91;">&quot;Destructing a moved-from object</span><span style="color:#519f50;">\n</span><span style="color:#c1be91;">&quot;</span><span>;
+</span><span>        }
+</span><span>        </span><span style="color:#cc7833;">delete[]</span><span> data;
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">char</span><span style="color:#cc7833;">*</span><span> data;
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">size_t</span><span> size;
+</span><span>};
+</span><span>
+</span><span style="font-style:italic;color:#6e9cbe;">int </span><span style="color:#ffc66d;">main</span><span>() {
+</span><span>    NaiveString s1(</span><span style="color:#c1be91;">&quot;hello&quot;</span><span>);
+</span><span>    std::cout </span><span style="color:#cc7833;">&lt;&lt; </span><span style="color:#c1be91;">&quot;s1.data = &quot; </span><span style="color:#cc7833;">&lt;&lt; </span><span>(</span><span style="font-style:italic;color:#6e9cbe;">void</span><span>\</span><span style="color:#cc7833;">*</span><span>)s1.</span><span style="color:#d0d0ff;">data </span><span style="color:#cc7833;">&lt;&lt; </span><span style="color:#c1be91;">&quot;</span><span style="color:#519f50;">\n</span><span style="color:#c1be91;">&quot;</span><span>;
+</span><span>
+</span><span>    </span><span style="color:#95815e;">// Move s1 into s2
+</span><span>    NaiveString s2 </span><span style="color:#cc7833;">= </span><span>std::move(s1);
+</span><span>    std::cout </span><span style="color:#cc7833;">&lt;&lt; </span><span style="color:#c1be91;">&quot;s2.data = &quot; </span><span style="color:#cc7833;">&lt;&lt; </span><span>(</span><span style="font-style:italic;color:#6e9cbe;">void</span><span>\</span><span style="color:#cc7833;">*</span><span>)s2.</span><span style="color:#d0d0ff;">data </span><span style="color:#cc7833;">&lt;&lt; </span><span style="color:#c1be91;">&quot;</span><span style="color:#519f50;">\n</span><span style="color:#c1be91;">&quot;</span><span>;
+</span><span>
+</span><span>    </span><span style="color:#95815e;">// What about s1 now?
+</span><span>    std::cout </span><span style="color:#cc7833;">&lt;&lt; </span><span style="color:#c1be91;">&quot;s1.data after move = &quot; </span><span style="color:#cc7833;">&lt;&lt; </span><span>(</span><span style="font-style:italic;color:#6e9cbe;">void</span><span>\</span><span style="color:#cc7833;">*</span><span>)s1.</span><span style="color:#d0d0ff;">data </span><span style="color:#cc7833;">&lt;&lt; </span><span style="color:#c1be91;">&quot;</span><span style="color:#519f50;">\n</span><span style="color:#c1be91;">&quot;</span><span>;
+</span><span>
+</span><span>    </span><span style="color:#95815e;">// This is the danger zone! C++ lets you do this.
+</span><span>    </span><span style="color:#95815e;">// Accessing s1.data here is undefined behavior.
+</span><span>    </span><span style="color:#95815e;">// if (s1.data) {
+</span><span>    </span><span style="color:#95815e;">//     std::cout &lt;&lt; &quot;s1 still contains: &quot; &lt;&lt; s1.data &lt;&lt; &quot;\n&quot;; // CRASH!
+</span><span>    </span><span style="color:#95815e;">// }
+</span><span>
+</span><span>    </span><span style="color:#cc7833;">return </span><span style="color:#a5c261;">0</span><span>;
+</span><span>}
+</span></code></pre>
+<p>The problem here isn't the move itself; it's what happens <em>after</em>. The C++ type system doesn't stop you from trying to use s1 after its resources have been moved to s2. The s1 object is left in a "valid but unspecified state." Accessing it is a landmine waiting to be stepped on. <strong>The compiler trusts you not to mess up</strong>, but offers no guarantee.</p>
+<h3 id="the-rust-way-a-contract-with-the-compiler">The Rust Way: A Contract with the Compiler</h3>
+<p>Rust builds memory safety directly into its type system through three core principles:</p>
+<ol>
+<li>Each value has a single <strong>owner</strong>.</li>
+<li>There can only be <strong>one owner at a time</strong>.</li>
+<li>When the owner goes out of scope, the value is <strong>dropped</strong> (i.e., its resources are freed).</li>
+</ol>
+<p>In Rust, <strong>moving is the default behavior</strong> for any type that manages resources. When you assign a variable to another, ownership is transferred.</p>
+<pre data-lang="Rust" style="background-color:#383838;color:#e6e1dc;" class="language-Rust "><code class="language-Rust" data-lang="Rust"><span style="font-style:italic;color:#6e9cbe;">fn </span><span style="color:#ffc66d;">main</span><span>() {
+</span><span>    </span><span style="color:#95815e;">// String owns heap-allocated memory
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> s1 </span><span style="color:#cc7833;">= </span><span style="font-style:italic;color:#6e9cbe;">String</span><span>::from(</span><span style="color:#c1be91;">&quot;hello&quot;</span><span>);
+</span><span>
+</span><span>    </span><span style="color:#95815e;">// Ownership of the data is MOVED from s1 to s2.
+</span><span>    </span><span style="color:#95815e;">// s1 is now considered uninitialized.
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> s2 </span><span style="color:#cc7833;">=</span><span> s1;
+</span><span>
+</span><span>    </span><span style="color:#95815e;">// This line will not compile! 
+</span><span>    </span><span style="color:#95815e;">// The compiler prevents a &quot;use after move&quot; error.
+</span><span>    </span><span style="color:#95815e;">// println!(&quot;The value of s1 is: {}&quot;, s1); 
+</span><span>    </span><span style="color:#95815e;">//                                      ^^ value borrowed here after move
+</span><span>
+</span><span>    println!(</span><span style="color:#c1be91;">&quot;The value of s2 is: </span><span style="color:#6d9cbe;">{}</span><span style="color:#c1be91;">&quot;</span><span>, s2);
+</span><span>}
+</span></code></pre>
+<p>This is the crucial difference. The Rust compiler <em>tracks ownership</em>. It knows that s1 is no longer valid after the move and turns a potential runtime bug into a <strong>compile-time error</strong>. It's not a convention; it's a hard-and-fast rule enforced by the type system.</p>
+<h4 id="so-how-do-you-copy-in-rust">So, How Do You Copy in Rust?</h4>
+<p>What if you have data that is simple, lives entirely on the stack (like an integer), and is cheap to copy? For this, Rust has the Copy trait.</p>
+<p>A type is Copy if making a bit-for-bit copy of it is a complete and valid clone. Think of types like i32, f64, bool, or a struct containing only other Copy types.</p>
+<p>When you assign a Copy type, the original variable remains valid.</p>
+<pre data-lang="Rust" style="background-color:#383838;color:#e6e1dc;" class="language-Rust "><code class="language-Rust" data-lang="Rust"><span style="font-style:italic;color:#6e9cbe;">fn </span><span style="color:#ffc66d;">main</span><span>() {
+</span><span>    </span><span style="color:#95815e;">// i32 implements the Copy trait
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> x </span><span style="color:#cc7833;">= </span><span style="color:#a5c261;">5</span><span>;
+</span><span>
+</span><span>    </span><span style="color:#95815e;">// A copy is made. Both x and y are valid.
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> y </span><span style="color:#cc7833;">=</span><span> x;
+</span><span>
+</span><span>    println!(</span><span style="color:#c1be91;">&quot;x = </span><span style="color:#6d9cbe;">{}</span><span style="color:#c1be91;">, y = </span><span style="color:#6d9cbe;">{}</span><span style="color:#c1be91;">&quot;</span><span>, x, y); </span><span style="color:#95815e;">// This works perfectly!
+</span><span>}
+</span></code></pre>
+<p>The compiler enforces a critical rule: <strong>you cannot implement Copy for a type that manages a resource</strong>. For example, String cannot be Copy because it owns a pointer to heap memory. If you could copy a String, you'd have two variables pointing to the same memory, leading to a "double free" error when both go out of scope. The compiler forbids this, neatly closing another door to memory corruption.</p>
+<h3 id="the-philosophical-divide-monocle-face">The Philosophical Divide 🧐</h3>
+<p>The difference boils down to two philosophies:</p>
+<table><thead><tr><th>C++</th><th>Rust</th></tr></thead><tbody>
+<tr><td><strong>Trusts the Developer:</strong> Provides powerful tools (move semantics) and trusts the programmer to use them correctly. Safety is a matter of discipline and convention (e.g., not using an object after moving from it).</td><td><strong>Verifies with the Compiler:</strong> Bakes ownership and moving directly into the type system. The compiler <em>guarantees</em> at compile time that you cannot use a moved value or accidentally create multiple owners of the same resource.</td></tr>
+<tr><td><strong>Opt-out Safety:</strong> By default, types can be copied or moved if the syntax is valid. The developer must explicitly delete functions (e.g., = delete;) to make a type non-copyable or non-movable.</td><td><strong>Opt-in Simplicity:</strong> Moving is the default for complex types. Simple, bit-wise copying is an opt-in behavior via the Copy trait, which the compiler validates to ensure it's used safely.</td></tr>
+<tr><td><strong>Runtime Errors:</strong> Mistakes like use-after-move or double-frees manifest as crashes or undefined behavior at runtime, which can be difficult to debug.</td><td><strong>Compile-time Errors:</strong> The same mistakes are caught by the compiler before the program can even run, providing clear, actionable feedback.</td></tr>
+</tbody></table>
+<h3 id="under-the-hood-a-glimpse-into-rust-s-type-theory">Under the Hood: A Glimpse into Rust's Type Theory</h3>
+<p>So how does the Rust compiler pull this off? It's not magic; it's the practical application of ideas from programming language research, specifically a <strong>substructural type system</strong>.</p>
+<p>At its core, this system treats variables that own resources as, well, <em>resources</em>. A resource can be used, and once it's fully given away (or "consumed"), it's gone. This is where the idea of a <strong>linear type system</strong> comes in—a specific flavor of substructural system where a resource must be consumed <em>exactly once</em>. When you write let s2 = s1;, the String owned by s1 is consumed by the move. The type system then invalidates s1 to prevent it from being used a second time, thus upholding the "use once" rule.</p>
+<p>To enforce this, the compiler uses <strong>flow-sensitive typing</strong>. This means it doesn't just know a variable's type; it tracks its <em>state</em> as it flows through your code. It knows that s1 is valid <em>before</em> the move, but invalid <em>after</em> it. Finally, this system extends to references (&amp; and &amp;mut), which are more than just pointers. They are special types that come with compiler-enforced <strong>invariants</strong>, or rules that must always hold true. The most famous of these is that you can have either many immutable references (readers) or exactly one mutable reference (a writer), but never both at the same time.</p>
+<p>Together, these ingredients—a type system that understands consumption, tracks state through program flow, and enforces strict rules on references—form the foundation of Rust's "borrow checker" and its celebrated compile-time safety guarantees.</p>
+<h3 id="bridging-the-divide-interoperability-with-c">Bridging the Divide: Interoperability with C++</h3>
+<p>This brings us to a crucial question: What happens when we interface with existing C++ code? Rust's strict safety discipline, while a huge benefit, can prevent the direct porting of some perfectly valid C++ APIs. In C++, it's common to write APIs that are safe due to specific, documented invariants that a compiler can't necessarily understand.</p>
+<p>A fantastic example is <a href="https://github.com/abseil/abseil-cpp/blob/master/absl/container/node_hash_map.h"><code>absl::node_hash_map</code></a>. This data structure guarantees <strong>pointer stability</strong>: you can look up an element and hold onto a pointer to it, and that pointer will remain valid even if you later mutate the map by adding new elements. This pattern is fundamentally incompatible with Rust's standard aliasing rules. An insert operation on a Rust HashMap requires a unique mutable reference (&amp;mut self), which invalidates all other references to its elements. The Rust compiler has no way to know that Abseil's implementation is special; it sees a violation of its core "aliasing XOR mutability" rule and forbids the code.</p>
+<p>So, what would it take to teach Rust's type system about the unique guarantees of <code>absl::node_hash_map</code>? You don't. Instead, Rust provides a controlled escape hatch for these situations: the <strong>unsafe</strong> keyword. To wrap such a library, you would write a safe public API that internally uses unsafe blocks to call the C++ code. The Rust wrapper's creator takes on the responsibility of manually upholding the safety invariants that the borrow checker can no longer verify.</p>
+<p>This is often accomplished using <strong>interior mutability</strong> primitives like UnsafeCell&lt;T&gt;. This type tells the compiler, "Don't worry about the borrowing rules for this data; I will manage them myself." By wrapping the C++ map pointer in a type that uses UnsafeCell, you can expose methods like insert that take a shared reference (&amp;self) while still performing mutation internally. The key is that this unsafe logic is contained within a small, well-audited boundary, allowing the rest of the Rust application to interact with it in a completely safe and idiomatic way.</p>
+<h3 id="the-path-forward-beyond-unsafe">The Path Forward: Beyond "Unsafe"</h3>
+<p>By using unsafe, we've told the Rust compiler to look away, allowing us to manually uphold the invariants of our C++ library. While this violates Rust's standard rules, it's a pragmatic necessity for interoperability. A lot of code will be written this way, and despite this compromise, the resulting programs are still a massive improvement. The vast majority of the application benefits from Rust's static checking, containing the potential for memory bugs to small, auditable sections—a far safer world than a pure C++ program.</p>
+<p>The problem here isn't a flaw in Rust. Its powerful invariants were simply not designed for the C++ ecosystem, where code may arbitrarily hold on to pointers. The manual reasoning required for unsafe blocks is fragile; a future change elsewhere could unknowingly invalidate the assumptions and reintroduce a bug. This highlights a gap in the programming language landscape: there is no smooth gradient from the "no guarantees" world of C++ to the "full, statically checked" world of safe Rust.</p>
+<p>This is the gap that experimental projects like <strong>Carbon</strong> aim to fill. Carbon's goal is to devise a language that enables a gradual migration from C++, combining it with the need for full, statically checked memory safety. To succeed, its type system must find a way to provide guarantees around mutable access even in the presence of aliasing. If Carbon can express a concept like pointer stability directly in its types, it would require a different set of global guarantees and aliasing rules than Rust's. The ultimate challenge lies in safely composing programs written in a "legacy C++" style with new code written in a stricter, safer mode, creating a true bridge to a memory-safe future.</p>
+<h3 id="conclusion-two-paths-to-a-safer-future">Conclusion: Two Paths to a Safer Future</h3>
+<p>Throughout this journey, we've seen how a language's type system is the bedrock of memory safety. C++ provides the tools for manual resource management, but places the burden of correctness on the developer. Rust, with its revolutionary ownership, move semantics, and <code>Copy</code> trait, shifts that burden to the compiler, turning potential runtime disasters into compile-time errors.</p>
+<p>While Rust's model is a monumental step forward, its strictness creates a philosophical divide at the boundary with C++. The <code>unsafe</code> keyword offers a pragmatic bridge, but it underscores a fundamental challenge: fitting flexible C++ idioms into Rust's rigid world of invariants.</p>
+<p>This is precisely why <strong>Rust and Carbon should not be seen as competitors</strong>, but as different tools for different, equally important jobs.</p>
+<ul>
+<li><strong>Rust</strong> 🚀 excels in new, "greenfield" projects where safety is paramount from day one. It's the ideal choice for building new systems or for creating self-contained, high-performance components that integrate with a larger ecosystem through clear API boundaries compatible with its aliasing rules.</li>
+<li><strong>Carbon</strong> 🏗️ is designed to tackle a different beast entirely: the gradual and interoperable migration of massive, existing C++ codebases. Its goal is to provide an evolutionary path, allowing teams to incrementally bring parts of their code into a world of statically-checked safety without a complete, high-risk rewrite.</li>
+</ul>
+<p>Ultimately, both languages are vital to the future of systems programming. They represent a shared mission to eliminate memory bugs, but they approach it from different starting points—one building a new, safe foundation, and the other building a bridge from the world we already have.</p>
+
+</p>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']]
+    }
+  };
+</script>
+<script type="text/javascript" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
+
+
+
+    </div>
+  </section>
+</body>
+
+<div class="footer">
+  <a href="/"></a>&emsp;&copy; Burak Emir<br>
+  powered by <a href="https://www.getzola.org/">Zola</a>, theme <a
+    href="https://github.com/kyoheiu/emily_zola_theme">emily</a>.
+  <a rel='me' href='https://discuss.systems/@burakemir'>Mastodon</a>
+</div>
+
+</html>
